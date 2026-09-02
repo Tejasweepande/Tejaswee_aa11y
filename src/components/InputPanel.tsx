@@ -4,7 +4,6 @@ import {
   UploadCloud,
   Layers,
   Globe,
-  Sliders,
   Play,
   Key,
   Sparkles,
@@ -165,11 +164,6 @@ export const InputPanel: React.FC<Props> = ({
         {/* Header */}
         <div>
           <h2 className="text-sm font-bold text-lab-text flex items-center gap-2">
-            {currentInput === 'history' ? (
-              <History className="w-4 h-4 text-amber-500" aria-hidden="true" />
-            ) : (
-              <Sliders className="w-4 h-4 text-sky-500 dark:text-sky-400" aria-hidden="true" />
-            )}
             {currentInput === 'history'
               ? 'Audit History'
               : currentInput === 'image'
@@ -255,7 +249,7 @@ export const InputPanel: React.FC<Props> = ({
           {/* Export Scale Selector (Rule R5 live demonstration) */}
           <div className="bg-lab-subtle rounded_SM p-3 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-lab-muted">Export Scale (Rule R5)</label>
+              <label className="text-xs font-semibold text-lab-muted">Export Scale</label>
             </div>
 
             <div className="grid grid-cols-4 gap-1">

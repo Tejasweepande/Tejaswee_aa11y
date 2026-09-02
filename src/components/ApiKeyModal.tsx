@@ -66,7 +66,7 @@ export const ApiKeyModal: React.FC<Props> = ({
         <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded_SM p-3 mb-4 flex items-start gap-2.5">
           <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <p className="text-xs text-amber-900 dark:text-amber-200/90 leading-relaxed">
-            <strong className="font-semibold">Rule R6 Compliance:</strong> API keys reside strictly in React memory for this active session. They are never saved to localStorage, disk, or telemetry.
+            <strong className="font-semibold">Privacy:</strong> API keys reside strictly in React memory for this active session. They are never saved to localStorage, disk, or telemetry.
           </p>
         </div>
 
