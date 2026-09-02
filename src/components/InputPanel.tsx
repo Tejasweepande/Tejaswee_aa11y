@@ -213,32 +213,34 @@ export const InputPanel: React.FC<Props> = ({
 
       {currentInput !== 'history' && (
         <>
-          {/* Export Scale Selector (Rule R5 live demonstration) */}
-          <div className="bg-lab-subtle rounded_SM p-3 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-lab-muted">Export Scale</label>
-            </div>
+          {/* Export Scale Selector (image mode only — Figma/URL provide real pixel dimensions) */}
+          {currentInput === 'image' && (
+            <div className="bg-lab-subtle rounded_SM p-3 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-lab-muted">Export Scale</label>
+              </div>
 
-            <div className="grid grid-cols-4 gap-1">
-              {(['unknown', '1x', '2x', '3x'] as ExportScale[]).map((sc) => (
-                <button
-                  key={sc}
-                  type="button"
-                  onClick={() => onChangeScale(sc)}
-                  className={`py-1.5 text-xs font-mono rounded transition-all shadow-sm ${
-                    exportScale === sc
-                      ? 'bg-sky-500 text-white dark:text-lab-bg font-bold shadow-glow-cyan'
-                      : 'bg-lab-card text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
-                  }`}
-                >
-                  {sc === 'unknown' ? 'Unknown' : `@${sc}`}
-                </button>
-              ))}
+              <div className="grid grid-cols-4 gap-1">
+                {(['unknown', '1x', '2x', '3x'] as ExportScale[]).map((sc) => (
+                  <button
+                    key={sc}
+                    type="button"
+                    onClick={() => onChangeScale(sc)}
+                    className={`py-1.5 text-xs font-mono rounded transition-all shadow-sm ${
+                      exportScale === sc
+                        ? 'bg-sky-500 text-white dark:text-lab-bg font-bold shadow-glow-cyan'
+                        : 'bg-lab-card text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
+                    }`}
+                  >
+                    {sc === 'unknown' ? 'Unknown' : `@${sc}`}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-lab-dim mt-2 leading-tight">
+                Declaring export ratio moves 2.5.8 target size from Predicted to Measured.
+              </p>
             </div>
-            <p className="text-[10px] text-lab-dim mt-2 leading-tight">
-              Declaring export ratio moves 2.5.8 target size from Predicted to Measured.
-            </p>
-          </div>
+          )}
       {currentInput === 'figma' && (
         <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
           <div className="flex items-center justify-between">
