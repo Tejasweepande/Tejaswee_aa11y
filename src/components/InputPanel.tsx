@@ -172,9 +172,9 @@ export const InputPanel: React.FC<Props> = ({
               ? 'Figma Upload'
               : 'Live Link'}
           </h2>
-          <p className="text-[11px] text-lab-muted mt-0.5">
-            {currentInput === 'history' ? 'Past audits done on this product' : 'Configure input source and rules.'}
-          </p>
+          {currentInput === 'history' && (
+            <p className="text-[11px] text-lab-muted mt-0.5">Past audits done on this product</p>
+          )}
         </div>
 
       {/* Mode Specific Inputs */}
