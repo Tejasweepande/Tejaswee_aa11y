@@ -7,7 +7,6 @@ import {
   Sliders,
   Play,
   Key,
-  HelpCircle,
   Sparkles,
   CheckCircle2,
   ChevronLeft,
@@ -171,7 +170,13 @@ export const InputPanel: React.FC<Props> = ({
             ) : (
               <Sliders className="w-4 h-4 text-sky-500 dark:text-sky-400" aria-hidden="true" />
             )}
-            {currentInput === 'history' ? 'Audit History' : 'Audit Parameters'}
+            {currentInput === 'history'
+              ? 'Audit History'
+              : currentInput === 'image'
+              ? 'Image Upload'
+              : currentInput === 'figma'
+              ? 'Figma Upload'
+              : 'Live Link'}
           </h2>
           <p className="text-[11px] text-lab-muted mt-0.5">
             {currentInput === 'history' ? 'Past audits done on this product' : 'Configure input source and rules.'}
@@ -250,24 +255,7 @@ export const InputPanel: React.FC<Props> = ({
           {/* Export Scale Selector (Rule R5 live demonstration) */}
           <div className="bg-lab-subtle rounded_SM p-3 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs font-semibold text-lab-muted">Export Scale (Rule R5)</label>
-                <div className="group relative">
-                  <HelpCircle className="w-3 h-3 text-lab-dim cursor-help" aria-hidden="true" />
-                  <div className="sr-only">
-                    Export scale declaration moves Target Size from Predicted to Measured
-                  </div>
-                </div>
-              </div>
-              <span
-                className={`text-[10px] font-mono px-1.5 py-0.5 rounded shadow-sm ${
-                  exportScale !== 'unknown'
-                    ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'bg-amber-500/15 text-amber-400'
-                }`}
-              >
-                {exportScale !== 'unknown' ? 'Measured Unit' : 'Predicted Unit'}
-              </span>
+              <label className="text-xs font-semibold text-lab-muted">Export Scale (Rule R5)</label>
             </div>
 
             <div className="grid grid-cols-4 gap-1">
@@ -319,9 +307,6 @@ export const InputPanel: React.FC<Props> = ({
         <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-lab-text">Website URL</span>
-            <span className="text-[10px] font-mono text-sky-400 bg-sky-950/60 px-1.5 py-0.5 rounded">
-              Required for visual screenshot
-            </span>
           </div>
           <input
             type="text"
@@ -332,13 +317,16 @@ export const InputPanel: React.FC<Props> = ({
           />
           
           <div className="pt-2 border-t border-lab-border">
-            <span className="text-xs font-semibold text-lab-text block mb-2">HTML Fallback (Optional)</span>
+            <span className="text-xs font-semibold text-lab-text block mb-2">HTML Fallback</span>
             <textarea
               value={pastedHtml}
               onChange={(e) => onChangePastedHtml(e.target.value)}
               placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
               className="w-full h-24 bg-lab-card shadow-inner rounded_SM px-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
             />
+            <p className="text-[11px] text-lab-dim leading-relaxed mt-1.5">
+              On the target page, right-click and choose "View Page Source", then select all and copy the HTML into the box above.
+            </p>
           </div>
           
           <p className="text-[11px] text-lab-dim leading-relaxed">
