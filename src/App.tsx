@@ -17,7 +17,6 @@ import {
   extractRegionsFromImageViaGemini,
   extractRegionsFromLocalAI,
   generateHeuristicRegions,
-  isLocalAIConfigured,
 } from './adapters/imageAdapter';
 import { validateLiveUrl, prepareIframeSrcdoc, fetchUrlFromLocalAI } from './adapters/urlAdapter';
 import { extractFromDOM } from './engine/domEngine';
@@ -441,22 +440,14 @@ export const App: React.FC = () => {
         html = pastedHtml;
         setAuditNotice({ type: 'info', message: 'Processing pasted HTML fallback...' });
       } else if (cleanUrl !== 'about:blank') {
-        let localAiFailed = !isLocalAIConfigured;
-
-        if (isLocalAIConfigured) {
-          setAuditNotice({ type: 'info', message: `Fetching ${cleanUrl} via Local AI Playwright...` });
-          try {
-            const res = await fetchUrlFromLocalAI(cleanUrl);
-            html = res.html;
-            currentUrlImageSrc = res.screenshot;
-            setImageSrc(res.screenshot);
-          } catch (err) {
-            localAiFailed = true;
-          }
-        }
-
-        if (localAiFailed) {
-          setAuditNotice({ type: 'info', message: `Fetching ${cleanUrl} via public CORS proxy...` });
+        setAuditNotice({ type: 'info', message: `Fetching ${cleanUrl} via Local AI Playwright...` });
+        try {
+          const res = await fetchUrlFromLocalAI(cleanUrl);
+          html = res.html;
+          currentUrlImageSrc = res.screenshot;
+          setImageSrc(res.screenshot);
+        } catch (err) {
+          setAuditNotice({ type: 'warning', message: `Local AI failed, falling back to public CORS proxy...` });
           try {
             const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(cleanUrl)}`);
             if (!res.ok) throw new Error(`Proxy returned ${res.status}`);
@@ -580,9 +571,8 @@ export const App: React.FC = () => {
           }
         }
 
-        // 3. Try Local Offline AI (Python Backend) if Gemini was not used or failed,
-        // and only when a backend is actually configured for this deployment.
-        if (targetRegions.length === 0 && isLocalAIConfigured) {
+        // 3. Try Local Offline AI (Python Backend) if Gemini was not used or failed
+        if (targetRegions.length === 0) {
           setAuditNotice({ type: 'info', message: 'Calling Local AI Backend (Hugging Face YOLOv11) to identify UI elements...' });
           try {
             const res = await extractRegionsFromLocalAI(imageSrc);
