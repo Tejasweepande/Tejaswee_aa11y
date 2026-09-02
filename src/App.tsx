@@ -707,6 +707,28 @@ export const App: React.FC = () => {
     }
   }, [canvasMode]);
 
+  const auditNoticeBanner = auditNotice && (
+    <div
+      role="alert"
+      className={`p-3 rounded_SM border flex items-start gap-2.5 text-xs animate-fade-in ${
+        auditNotice.type === 'error'
+          ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-700/70 text-red-900 dark:text-red-200'
+          : auditNotice.type === 'warning'
+          ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
+          : auditNotice.type === 'success'
+          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200'
+          : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-200'
+      }`}
+    >
+      <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+        auditNotice.type === 'error' ? 'text-red-600 dark:text-red-400' :
+        auditNotice.type === 'warning' ? 'text-amber-600 dark:text-amber-400' :
+        auditNotice.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-sky-600 dark:text-sky-400'
+      }`} aria-hidden="true" />
+      <span>{auditNotice.message}</span>
+    </div>
+  );
+
   return (
     <div className="h-screen overflow-hidden bg-lab-bg text-lab-text flex flex-col font-sans">
       {/* WCAG 2.2 Live Region Announcement (Rule R3) */}
@@ -778,7 +800,9 @@ export const App: React.FC = () => {
 
       {viewStep === 'upload' ? (
         /* Step 1: Full-page Upload & Configure */
-        <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 h-[calc(100vh-76px)] overflow-hidden">
+        <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 h-[calc(100vh-76px)] overflow-hidden flex flex-col gap-4">
+          {auditNoticeBanner}
+          <div className="flex-1 min-h-0">
           <InputPanel
             currentInput={inputMode}
             onSelectInput={setInputMode}
@@ -805,6 +829,7 @@ export const App: React.FC = () => {
             hasImage={!!imageSrc}
             onLoadHistoryItem={handleLoadHistoryItem}
           />
+          </div>
         </main>
       ) : (
         /* Step 2: Preview & Issues List */
@@ -820,28 +845,7 @@ export const App: React.FC = () => {
               Back to Upload
             </button>
 
-            {/* Audit Notice Alert if any */}
-            {auditNotice && (
-              <div
-                role="alert"
-                className={`p-3 rounded_SM border flex items-start gap-2.5 text-xs animate-fade-in ${
-                  auditNotice.type === 'error'
-                    ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-700/70 text-red-900 dark:text-red-200'
-                    : auditNotice.type === 'warning'
-                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
-                    : auditNotice.type === 'success'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200'
-                    : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-200'
-                }`}
-              >
-                <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                  auditNotice.type === 'error' ? 'text-red-600 dark:text-red-400' :
-                  auditNotice.type === 'warning' ? 'text-amber-600 dark:text-amber-400' :
-                  auditNotice.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-sky-600 dark:text-sky-400'
-                }`} aria-hidden="true" />
-                <span>{auditNotice.message}</span>
-              </div>
-            )}
+            {auditNoticeBanner}
 
             <PreviewCanvas
               imageSrc={imageSrc}
