@@ -2,6 +2,14 @@ import { UIElementRegion } from '../types/finding';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// True in local dev (default localhost:8000 is a reasonable guess — the
+// developer likely has the Python backend running), or in any build where
+// a real backend URL was explicitly configured (VITE_API_URL). False in a
+// production build with no backend configured, where attempting
+// localhost:8000 would always fail for a real visitor and surface a
+// dev-oriented "start the Python server" error that means nothing to them.
+export const isLocalAIConfigured = import.meta.env.DEV || Boolean(import.meta.env.VITE_API_URL);
+
 interface RawRegionOutput {
   k?: 'heading' | 'button' | 'input' | 'link' | 'image' | 'text' | 'dialog';
   kind?: 'heading' | 'button' | 'input' | 'link' | 'image' | 'text' | 'dialog';
