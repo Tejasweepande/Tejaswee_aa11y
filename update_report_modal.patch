@@ -1,0 +1,100 @@
+--- src/components/ReportModal.tsx
++++ src/components/ReportModal.tsx
+@@ -13,4 +13,5 @@
+   AlertTriangle,
+   Printer,
++  Send,
++  Loader2
+ } from 'lucide-react';
+@@ -18,4 +19,6 @@
+   findings: Finding[];
+   inputMode: InputMode;
+   exportScale: ExportScale;
++  figmaUrl?: string;
++  figmaToken?: string;
+ }
+@@ -25,6 +28,10 @@
+   inputMode,
+   exportScale,
++  figmaUrl,
++  figmaToken
+ }) => {
+   const [copiedFigma, setCopiedFigma] = useState(false);
++  const [pushingToFigma, setPushingToFigma] = useState(false);
++  const [pushSuccess, setPushSuccess] = useState(false);
+   const modalRef = useRef<HTMLDivElement>(null);
+   const closeButtonRef = useRef<HTMLButtonElement>(null);
+@@ -112,4 +119,43 @@
+ 
++  const handlePushToFigmaAPI = async () => {
++    if (!figmaUrl || !figmaToken) return;
++    
++    // Extract fileKey from URL
++    let fileKey = '';
++    try {
++      const urlObj = new URL(figmaUrl);
++      const pathParts = urlObj.pathname.split('/');
++      fileKey = pathParts[2];
++      if (!fileKey) return;
++    } catch (e) {
++      return;
++    }
++
++    setPushingToFigma(true);
++    
++    try {
++      for (let i = 0; i < findings.length; i++) {
++        const f = findings[i];
++        const message = `[#${i + 1} A11y Barrier: WCAG ${f.wcag.sc} ${f.wcag.name} (${f.severity.toUpperCase()})]\nEvidence: ${f.evidence}\nImpact: ${f.impact || 'Requires remediation'}\nFix: ${f.fix || 'Update design per WCAG AA'}`;
++        
++        await fetch(`https://api.figma.com/v1/files/${fileKey}/comments`, {
++          method: 'POST',
++          headers: {
++            'X-Figma-Token': figmaToken,
++            'Content-Type': 'application/json',
++          },
++          body: JSON.stringify({
++            message,
++            client_meta: f.target.figmaNodePath ? { node_id: f.target.figmaNodePath } : undefined
++          })
++        });
++        
++        // Wait a bit to avoid hitting rate limits too hard
++        await new Promise(resolve => setTimeout(resolve, 200));
++      }
++      
++      setPushSuccess(true);
++      setTimeout(() => setPushSuccess(false), 3000);
++    } catch (err) {
++      console.error('Failed to push comments to Figma', err);
++    } finally {
++      setPushingToFigma(false);
++    }
++  };
++
+   const handlePrint = () => {
+@@ -279,4 +325,24 @@
+ 
++          {inputMode === 'figma' && figmaUrl && figmaToken && (
++            <button
++              type="button"
++              onClick={handlePushToFigmaAPI}
++              disabled={pushingToFigma}
++              className={`px-3 py-2 rounded_SM text-xs font-bold shadow-glow-cyan flex items-center gap-1.5 transition-all ${
++                pushSuccess
++                  ? 'bg-emerald-500 hover:bg-emerald-400 text-black'
++                  : 'bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50'
++              }`}
++            >
++              {pushingToFigma ? (
++                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
++              ) : pushSuccess ? (
++                <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
++              ) : (
++                <Send className="w-3.5 h-3.5" aria-hidden="true" />
++              )}
++              <span>{pushingToFigma ? 'Pushing...' : pushSuccess ? 'Pushed Successfully!' : 'Push to Figma'}</span>
++            </button>
++          )}
++
+           <div className="flex items-center gap-2">

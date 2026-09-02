@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: a11y-lab-backend
+    runtime: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    plan: starter
+    healthCheckPath: /docs
+    envVars:
+      - key: PORT
+        value: 8000

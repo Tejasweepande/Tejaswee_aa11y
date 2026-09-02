@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="result"></div>
+  <iframe id="iframe_none" style="display: none;" srcdoc="<body><button>Test</button></body>"></iframe>
+  <iframe id="iframe_offscreen" style="position: absolute; left: -9999px; width: 1024px; height: 768px; visibility: hidden;" srcdoc="<body><button>Test</button></body>"></iframe>
+  <script>
+    setTimeout(() => {
+        try {
+            const docNone = document.getElementById('iframe_none').contentDocument;
+            const btnNone = docNone.querySelector('button');
+            const rectNone = btnNone.getBoundingClientRect();
+            
+            const docOff = document.getElementById('iframe_offscreen').contentDocument;
+            const btnOff = docOff.querySelector('button');
+            const rectOff = btnOff.getBoundingClientRect();
+            
+            console.log("None:", rectNone.width, rectNone.height);
+            console.log("Off:", rectOff.width, rectOff.height);
+        } catch (e) {
+            console.log(e);
+        }
+    }, 500);
+  </script>
+</body>
+</html>
