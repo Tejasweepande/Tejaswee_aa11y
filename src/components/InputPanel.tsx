@@ -36,8 +36,6 @@ interface Props {
   onChangeWebUrl: (url: string) => void;
   pastedHtml: string;
   onChangePastedHtml: (html: string) => void;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
   pastAudits: AuditHistoryItem[];
   hasImage: boolean;
   onLoadHistoryItem: (item: AuditHistoryItem) => void;
@@ -65,8 +63,6 @@ export const InputPanel: React.FC<Props> = ({
   onChangeWebUrl,
   pastedHtml,
   onChangePastedHtml,
-  isCollapsed,
-  onToggleCollapse,
   pastAudits,
   hasImage,
   onLoadHistoryItem,
@@ -100,57 +96,27 @@ export const InputPanel: React.FC<Props> = ({
     reader.readAsDataURL(file);
   };
 
-  if (isCollapsed) {
-    return (
-      <aside
-        aria-label="Audit Configuration Panel (Collapsed)"
-        className="bg-lab-card/95 backdrop-blur-md border-r border-lab-border flex flex-col h-full py-5 items-center gap-6 shadow-panel"
-      >
-        <div className="flex flex-col gap-4 w-full px-2">
-           <button onClick={() => { onSelectInput('image'); onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'image' ? 'bg-sky-500/20 text-sky-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Image Upload">
-             <UploadCloud className="w-5 h-5" />
-           </button>
-           <button onClick={() => { onSelectInput('figma'); onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'figma' ? 'bg-fuchsia-500/20 text-fuchsia-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Figma Link">
-             <Layers className="w-5 h-5" />
-           </button>
-           <button onClick={() => { onSelectInput('url'); onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'url' ? 'bg-indigo-500/20 text-indigo-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Live URL">
-             <Globe className="w-5 h-5" />
-           </button>
-           
-           <hr className="border-lab-border w-full my-1" />
-           
-           <button onClick={() => { onSelectInput('history'); onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors relative ${currentInput === 'history' ? 'bg-amber-500/20 text-amber-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Audit History">
-             <History className="w-5 h-5" />
-             {pastAudits.length > 0 && (
-               <span className="absolute top-1 right-1 w-2 h-2 bg-sky-500 rounded-full"></span>
-             )}
-           </button>
-        </div>
-      </aside>
-    );
-  }
-
   return (
     <aside
       aria-label="Audit Configuration Panel"
-      className="bg-lab-card/95 backdrop-blur-md border-r border-lab-border shadow-panel flex flex-row h-full overflow-hidden"
+      className="bg-lab-card/95 backdrop-blur-md border border-lab-border rounded shadow-panel flex flex-row h-full overflow-hidden"
     >
       {/* Left Navigation */}
       <div className="w-16 shrink-0 border-r border-lab-border flex flex-col items-center py-5 gap-6 bg-lab-card/50">
         <div className="flex flex-col gap-4 w-full px-2">
-           <button onClick={() => { onSelectInput('image'); if (isCollapsed) onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'image' ? 'bg-sky-500/20 text-sky-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Image Upload">
+           <button onClick={() => onSelectInput('image')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'image' ? 'bg-sky-500/20 text-sky-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Image Upload">
              <UploadCloud className="w-5 h-5" />
            </button>
-           <button onClick={() => { onSelectInput('figma'); if (isCollapsed) onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'figma' ? 'bg-fuchsia-500/20 text-fuchsia-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Figma Link">
+           <button onClick={() => onSelectInput('figma')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'figma' ? 'bg-fuchsia-500/20 text-fuchsia-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Figma Link">
              <Layers className="w-5 h-5" />
            </button>
-           <button onClick={() => { onSelectInput('url'); if (isCollapsed) onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'url' ? 'bg-indigo-500/20 text-indigo-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Live URL">
+           <button onClick={() => onSelectInput('url')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'url' ? 'bg-indigo-500/20 text-indigo-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Live URL">
              <Globe className="w-5 h-5" />
            </button>
 
            <hr className="border-lab-border w-full my-1" />
-           
-           <button onClick={() => { onSelectInput('history'); if (isCollapsed) onToggleCollapse(); }} className={`p-2 rounded flex justify-center transition-colors relative ${currentInput === 'history' ? 'bg-amber-500/20 text-amber-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Audit History">
+
+           <button onClick={() => onSelectInput('history')} className={`p-2 rounded flex justify-center transition-colors relative ${currentInput === 'history' ? 'bg-amber-500/20 text-amber-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Audit History">
              <History className="w-5 h-5" />
              {pastAudits.length > 0 && (
                <span className="absolute top-1 right-1 w-2 h-2 bg-sky-500 rounded-full"></span>
@@ -160,7 +126,8 @@ export const InputPanel: React.FC<Props> = ({
       </div>
 
       {/* Right Content Area */}
-      <div className="flex-1 flex flex-col py-5 px-4 sm:px-5 gap-5 overflow-y-auto">
+      <div className="flex-1 flex flex-col py-8 px-4 sm:px-8 overflow-y-auto">
+       <div className="w-full max-w-xl mx-auto flex flex-col gap-5 flex-1">
         {/* Header */}
         <div>
           <h2 className="text-sm font-bold text-lab-text flex items-center gap-2">
@@ -397,6 +364,7 @@ export const InputPanel: React.FC<Props> = ({
           );
         })()
       )}
+       </div>
       </div>
     </aside>
   );

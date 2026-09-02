@@ -34,6 +34,7 @@ import {
   AlertCircle,
   Sun,
   Moon,
+  ArrowLeft,
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -56,7 +57,7 @@ export const App: React.FC = () => {
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('overlay');
   const [hasAudited, setHasAudited] = useState<boolean>(false);
   const [pastAudits, setPastAudits] = useState<AuditHistoryItem[]>([]);
-  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState<boolean>(true);
+  const [viewStep, setViewStep] = useState<'upload' | 'results'>('upload');
 
   const [moduleToggles, setModuleToggles] = useState<Record<ModuleType, boolean>>({
     contrast: true,
@@ -238,6 +239,7 @@ export const App: React.FC = () => {
     setScreenReaderItems(srItems);
     setHasAudited(true);
     setIsAuditing(false);
+    setViewStep('results');
 
     saveToHistory(
       currentInputMode,
@@ -277,7 +279,8 @@ export const App: React.FC = () => {
     setExportScale(item.exportScale);
     setHasAudited(true);
     setInputMode(item.inputMode);
-    
+    setViewStep('results');
+
     // Switch to overlay mode on load
     setCanvasMode('overlay');
   }, []);
@@ -504,6 +507,7 @@ export const App: React.FC = () => {
                setFindings(activeFindings);
                setScreenReaderItems(srItems);
                setHasAudited(true);
+               setViewStep('results');
                setLiveAnnouncement(`Audit complete. Found ${activeFindings.length} accessibility barriers.`);
                setAuditNotice({ type: 'success', message: `Live DOM Audited: ${domRegions.length} elements mapped deterministically.` });
 
@@ -720,12 +724,7 @@ export const App: React.FC = () => {
       {/* Top Application Header */}
       <header className="border-b border-lab-border bg-lab-card/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-3.5">
         <div className="w-full mx-auto flex items-center justify-between gap-4">
-          <button 
-            type="button"
-            onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
-            className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded_SM"
-            title={isLeftPanelCollapsed ? "Expand Panel" : "Collapse Panel"}
-          >
+          <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded_SM bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-lab-bg font-extrabold shadow-glow-cyan">
               <Sparkles className="w-5 h-5 fill-current" aria-hidden="true" />
             </div>
@@ -742,7 +741,7 @@ export const App: React.FC = () => {
                 Accessibility auditor &amp; barrier perception simulator
               </p>
             </div>
-          </button>
+          </div>
           <div className="flex items-center gap-2">
             {/* Light / Dark Mode Toggle */}
             <button
@@ -777,14 +776,9 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main 2-Column Layout (Left Panel is absolute) */}
-      <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-76px)] overflow-hidden relative">
-        {/* Left Column: Input Parameters Panel (Absolute OVER the content) */}
-        <div 
-          className={`absolute top-0 left-0 bottom-0 z-30 transition-all duration-300 ease-in-out flex flex-col min-h-0 ${
-            isLeftPanelCollapsed ? 'w-16' : 'w-80 shadow-2xl'
-          }`}
-        >
+      {viewStep === 'upload' ? (
+        /* Step 1: Full-page Upload & Configure */
+        <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 h-[calc(100vh-76px)] overflow-hidden">
           <InputPanel
             currentInput={inputMode}
             onSelectInput={setInputMode}
@@ -807,75 +801,83 @@ export const App: React.FC = () => {
             onChangeWebUrl={setWebUrl}
             pastedHtml={pastedHtml}
             onChangePastedHtml={setPastedHtml}
-            isCollapsed={isLeftPanelCollapsed}
-            onToggleCollapse={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
             pastAudits={pastAudits}
             hasImage={!!imageSrc}
-            onRunAudit={handleRunAudit}
-            isAuditing={isAuditing}
             onLoadHistoryItem={handleLoadHistoryItem}
           />
-        </div>
-
-        {/* Centre Column: Preview Canvas + Interactive Multi-modal Barrier Simulator (Takes 75% = 9 cols) */}
-        <div className="lg:col-span-9 flex flex-col gap-4 h-full overflow-hidden min-h-0 pl-0 lg:pl-20 transition-all duration-300">
-          {/* Audit Notice Alert if any */}
-          {auditNotice && (
-            <div
-              role="alert"
-              className={`p-3 rounded_SM border flex items-start gap-2.5 text-xs animate-fade-in ${
-                auditNotice.type === 'error'
-                  ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-700/70 text-red-900 dark:text-red-200'
-                  : auditNotice.type === 'warning'
-                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
-                  : auditNotice.type === 'success'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200'
-                  : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-200'
-              }`}
+        </main>
+      ) : (
+        /* Step 2: Preview & Issues List */
+        <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-76px)] overflow-hidden">
+          {/* Centre Column: Preview Canvas + Interactive Multi-modal Barrier Simulator (Takes 75% = 9 cols) */}
+          <div className="lg:col-span-9 flex flex-col gap-4 h-full overflow-hidden min-h-0">
+            <button
+              type="button"
+              onClick={() => setViewStep('upload')}
+              className="self-start flex items-center gap-1.5 text-xs font-semibold text-lab-muted hover:text-lab-text transition-colors"
             >
-              <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                auditNotice.type === 'error' ? 'text-red-600 dark:text-red-400' :
-                auditNotice.type === 'warning' ? 'text-amber-600 dark:text-amber-400' :
-                auditNotice.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-sky-600 dark:text-sky-400'
-              }`} aria-hidden="true" />
-              <span>{auditNotice.message}</span>
-            </div>
-          )}
+              <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
+              Back to Upload
+            </button>
 
-          <PreviewCanvas
-            imageSrc={imageSrc}
-            iframeHtml={iframeHtml}
-            regions={regions}
-            findings={findings}
-            screenReaderItems={screenReaderItems}
-            selectedFindingId={selectedFindingId}
-            onSelectFinding={handleSelectFinding}
-            hoveredFindingId={hoveredFindingId}
-            onHoverFinding={setHoveredFindingId}
-            canvasMode={canvasMode}
-            onChangeMode={setCanvasMode}
-            hasAudited={hasAudited}
-            onRunAudit={handleRunAudit}
-            isAuditing={isAuditing}
-          />
-        </div>
+            {/* Audit Notice Alert if any */}
+            {auditNotice && (
+              <div
+                role="alert"
+                className={`p-3 rounded_SM border flex items-start gap-2.5 text-xs animate-fade-in ${
+                  auditNotice.type === 'error'
+                    ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-700/70 text-red-900 dark:text-red-200'
+                    : auditNotice.type === 'warning'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
+                    : auditNotice.type === 'success'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200'
+                    : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-200'
+                }`}
+              >
+                <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                  auditNotice.type === 'error' ? 'text-red-600 dark:text-red-400' :
+                  auditNotice.type === 'warning' ? 'text-amber-600 dark:text-amber-400' :
+                  auditNotice.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-sky-600 dark:text-sky-400'
+                }`} aria-hidden="true" />
+                <span>{auditNotice.message}</span>
+              </div>
+            )}
 
-        {/* Right Column: Issue Rail (Takes 25% = 3 cols) */}
-        <div className="lg:col-span-3 flex flex-col h-full overflow-hidden min-h-0 bg-lab-card/80 border border-lab-border rounded shadow-panel">
-          <IssueRail
-            findings={findings}
-            selectedFindingId={selectedFindingId}
-            onSelectFinding={handleSelectFinding}
-            hoveredFindingId={hoveredFindingId}
-            onHoverFinding={setHoveredFindingId}
-            onOpenReportModal={() => setReportModalOpen(true)}
-            onExportJson={handleExportJson}
-            hasAudited={hasAudited}
-            onRunAudit={handleRunAudit}
-            isAuditing={isAuditing}
-          />
-        </div>
-      </main>
+            <PreviewCanvas
+              imageSrc={imageSrc}
+              iframeHtml={iframeHtml}
+              regions={regions}
+              findings={findings}
+              screenReaderItems={screenReaderItems}
+              selectedFindingId={selectedFindingId}
+              onSelectFinding={handleSelectFinding}
+              hoveredFindingId={hoveredFindingId}
+              onHoverFinding={setHoveredFindingId}
+              canvasMode={canvasMode}
+              onChangeMode={setCanvasMode}
+              hasAudited={hasAudited}
+              onRunAudit={handleRunAudit}
+              isAuditing={isAuditing}
+            />
+          </div>
+
+          {/* Right Column: Issue Rail (Takes 25% = 3 cols) */}
+          <div className="lg:col-span-3 flex flex-col h-full overflow-hidden min-h-0 bg-lab-card/80 border border-lab-border rounded shadow-panel">
+            <IssueRail
+              findings={findings}
+              selectedFindingId={selectedFindingId}
+              onSelectFinding={handleSelectFinding}
+              hoveredFindingId={hoveredFindingId}
+              onHoverFinding={setHoveredFindingId}
+              onOpenReportModal={() => setReportModalOpen(true)}
+              onExportJson={handleExportJson}
+              hasAudited={hasAudited}
+              onRunAudit={handleRunAudit}
+              isAuditing={isAuditing}
+            />
+          </div>
+        </main>
+      )}
 
       {/* Modals */}
       <ApiKeyModal
