@@ -454,7 +454,17 @@ export const App: React.FC = () => {
         try {
           const doc = hiddenIframe.contentDocument;
           if (doc) {
-             const { regions: domRegions, samples } = extractFromDOM(doc, { width: 1024, height: 768 });
+             // Use the page's real full content height for every pin's percentage
+             // math, not the fixed 768px measuring box - real pages are almost
+             // always taller than that, and dividing by a fixed height stretched
+             // every pin's box hugely out of proportion once shown against the
+             // actual (correctly full-height) preview container.
+             const actualHeight = Math.max(
+               doc.documentElement?.scrollHeight || 0,
+               doc.body?.scrollHeight || 0,
+               768
+             );
+             const { regions: domRegions, samples } = extractFromDOM(doc, { width: 1024, height: actualHeight });
              
              if (domRegions.length < 3) {
                setAuditNotice({ type: 'warning', message: 'Fewer than 3 elements extracted from DOM. Verify URL allows proxying, or paste HTML directly.' });
