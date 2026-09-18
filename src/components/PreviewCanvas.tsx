@@ -59,6 +59,15 @@ export const PreviewCanvas: React.FC<Props> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const [transformOrigin, setTransformOrigin] = useState('50% 50%');
+  
+  // Real measured content height of the fallback DOM iframe (used only when
+  // there's no screenshot to show instead). Starts null until the iframe
+  // actually loads and reports its true height, so we're not locked to a
+  // guessed aspect ratio that doesn't match the real page.
+  const [fallbackIframeHeight, setFallbackIframeHeight] = useState<number | null>(null);
+  useEffect(() => {
+    setFallbackIframeHeight(null);
+  }, [iframeHtml]);
 
   const handleWheel = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -297,12 +306,33 @@ export const PreviewCanvas: React.FC<Props> = ({
                     className="w-full h-auto block select-none pointer-events-none opacity-95 mix-blend-multiply dark:mix-blend-normal relative z-10"
                   />
                 ) : (
-                  <div className="w-full" style={{ aspectRatio: '1024/768' }} />
+                  <div
+                    className="w-full"
+                    style={
+                      fallbackIframeHeight
+                        ? { height: `${fallbackIframeHeight}px` }
+                        : { aspectRatio: '1024/768' }
+                    }
+                  />
                 )}
                 <iframe
                   ref={iframeRef}
                   srcDoc={iframeHtml}
                   sandbox="allow-same-origin"
+                  onLoad={() => {
+                    if (imageSrc) return; // only matters when the iframe is what's actually shown
+                    try {
+                      const innerDoc = iframeRef.current?.contentDocument;
+                      const realHeight = Math.max(
+                        innerDoc?.documentElement?.scrollHeight || 0,
+                        innerDoc?.body?.scrollHeight || 0,
+                        768
+                      );
+                      setFallbackIframeHeight(realHeight);
+                    } catch {
+                      // Cross-origin or sandbox restriction - keep the placeholder guess.
+                    }
+                  }}
                   className={`absolute inset-0 w-full h-full block select-none z-0 ${imageSrc ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
                 />
               </div>
