@@ -21,7 +21,7 @@ export const CapabilityMatrix: React.FC<Props> = ({ currentInput, exportScale })
 
   const isScaleDeclared = exportScale !== 'unknown';
 
-  const matrixData: Record<InputMode, Record<ModuleType, CellMeta>> = {
+  const matrixData: Record<Exclude<InputMode, 'history'>, Record<ModuleType, CellMeta>> = {
     figma: {
       contrast: {
         status: 'Measured',
@@ -80,7 +80,7 @@ export const CapabilityMatrix: React.FC<Props> = ({ currentInput, exportScale })
     },
   };
 
-  const inputs: { id: InputMode; label: string }[] = [
+  const inputs: { id: Exclude<InputMode, 'history'>; label: string }[] = [
     { id: 'image', label: 'Image Upload' },
     { id: 'figma', label: 'Figma Link' },
     { id: 'url', label: 'Live Website' },

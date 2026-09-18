@@ -58,7 +58,7 @@ export function auditElements(
     if (threshold.ratio === null) return;
 
     const exceptionCtx: ExceptionContext = {
-      source: context.inputMode === 'url' ? 'html' : context.inputMode,
+      source: (context.inputMode === 'url' || context.inputMode === 'history') ? 'html' : context.inputMode,
       unitsAreCssPx: isScaleDeclared,
       isDisabled: null, // Hard to infer from static regions without more info, defaults to null
       isLogo: region.kind === 'image' && region.text?.toLowerCase().includes('logo') ? true : null,
@@ -152,7 +152,7 @@ export function auditElements(
       if (targetBox.isUndersized) {
         
         const exceptionCtx: ExceptionContext = {
-           source: context.inputMode === 'url' ? 'html' : context.inputMode,
+           source: (context.inputMode === 'url' || context.inputMode === 'history') ? 'html' : context.inputMode,
            unitsAreCssPx: isScaleDeclared,
            allTargets,
            isInline: null,

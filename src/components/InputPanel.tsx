@@ -5,11 +5,6 @@ import {
   Layers,
   Globe,
   Play,
-  Key,
-  Sparkles,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   History,
   Clock,
 } from 'lucide-react';
@@ -24,10 +19,6 @@ interface Props {
   onToggleModule: (mod: ModuleType) => void;
   onRunAudit: () => void;
   isAuditing: boolean;
-  onOpenApiKeyModal: () => void;
-  hasApiKey: boolean;
-  geminiApiKey: string;
-  onChangeApiKey: (key: string) => void;
   figmaUrl: string;
   onChangeFigmaUrl: (url: string) => void;
   figmaPat: string;
@@ -51,10 +42,6 @@ export const InputPanel: React.FC<Props> = ({
   onToggleModule,
   onRunAudit,
   isAuditing,
-  onOpenApiKeyModal,
-  hasApiKey,
-  geminiApiKey,
-  onChangeApiKey,
   figmaUrl,
   onChangeFigmaUrl,
   figmaPat,

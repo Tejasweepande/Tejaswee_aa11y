@@ -50,7 +50,6 @@ export const ReportModal: React.FC<Props> = ({
   figmaUrl,
   figmaToken,
   exemptedCount = 0,
-  exemptedDetails = [],
   imageSrc,
   iframeHtml,
 }) => {
@@ -127,10 +126,6 @@ export const ReportModal: React.FC<Props> = ({
       status
     };
   });
-
-  const failuresCount = criteriaRows.filter(r => r.status === 'failure').length;
-  const warningsCount = criteriaRows.filter(r => r.status === 'warning').length;
-  const passedCount = criteriaRows.filter(r => r.status === 'passed').length;
 
   const handleDownloadJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(findings, null, 2));

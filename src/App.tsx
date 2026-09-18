@@ -6,7 +6,6 @@ import {
   Finding,
   UIElementRegion,
   ScreenReaderItem,
-  BoundingBox,
   AuditHistoryItem,
 } from './types/finding';
 import { SAMPLE_MOCKUPS } from './data/sampleMockups';
@@ -285,32 +284,6 @@ export const App: React.FC = () => {
     setCanvasMode('overlay');
   }, []);
 
-  const loadSample = useCallback((sampleId: string) => {
-    const sample = SAMPLE_MOCKUPS.find((s) => s.id === sampleId);
-    if (!sample) return;
-
-    setSelectedSampleId(sampleId);
-    setExportScale(sample.defaultScale);
-    setSelectedFindingId(null);
-    setHoveredFindingId(null);
-
-    // Convert SVG to data URL
-    const svgBlob = new Blob([sample.svgContent], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-
-    const img = new Image();
-    img.onload = () => {
-      setImageSrc(url);
-      setRegions(sample.regions);
-      executeAuditOnRegions(sample.regions, img, sample.defaultScale, 'image', url, null, sample.name, '', '', '');
-      setAuditNotice({
-        type: 'info',
-        message: `Sample "${sample.name}" loaded & audited against WCAG 2.2 AA. Explore Barrier Pins, Focus Trajectory & Speech HUD in the canvas.`,
-      });
-    };
-    img.src = url;
-  }, [executeAuditOnRegions]);
-
   // Removed initial sample mockup on mount to require explicit user upload
 
 
@@ -341,10 +314,6 @@ export const App: React.FC = () => {
       }
     };
     img.src = dataUrl;
-  };
-
-  const handleChangeApiKey = (key: string) => {
-    setGeminiApiKey(key.trim());
   };
 
   /**
@@ -622,6 +591,7 @@ export const App: React.FC = () => {
         setHasAudited(true);
         setFindings([]);
         setAuditNotice({
+          type: 'warning',
           message: 'Fewer than 3 usable regions detected. Try a higher contrast screenshot.',
         });
         setLiveAnnouncement('Audit warning: Fewer than 3 usable regions detected.');
@@ -684,7 +654,7 @@ export const App: React.FC = () => {
     if (imageSrc && hasAudited) {
       const img = new Image();
       img.onload = () => {
-        executeAuditOnRegions(regions, img, newScale, inputMode);
+        executeAuditOnRegions(regions, img, newScale, inputMode, imageSrc, iframeHtml, imageFileName, figmaUrl, webUrl, pastedHtml);
       };
       img.src = imageSrc;
     }
@@ -813,10 +783,6 @@ export const App: React.FC = () => {
             onToggleModule={handleToggleModule}
             onRunAudit={handleRunAudit}
             isAuditing={isAuditing}
-            onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
-            hasApiKey={!!geminiApiKey}
-            geminiApiKey={geminiApiKey}
-            onChangeApiKey={handleChangeApiKey}
             figmaUrl={figmaUrl}
             onChangeFigmaUrl={setFigmaUrl}
             figmaPat={figmaPat}
@@ -876,8 +842,6 @@ export const App: React.FC = () => {
               onOpenReportModal={() => setReportModalOpen(true)}
               onExportJson={handleExportJson}
               hasAudited={hasAudited}
-              onRunAudit={handleRunAudit}
-              isAuditing={isAuditing}
             />
           </div>
         </main>

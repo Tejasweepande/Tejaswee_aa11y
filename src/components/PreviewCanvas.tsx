@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Finding, UIElementRegion, ScreenReaderItem, BoundingBox } from '../types/finding';
+import { Finding, UIElementRegion, ScreenReaderItem } from '../types/finding';
 import {
   Eye,
   Keyboard,

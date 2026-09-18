@@ -9,7 +9,6 @@ import {
   Sparkles,
   ExternalLink,
   SlidersHorizontal,
-  Play,
   Type,
   ImageIcon,
   Copy,
@@ -24,8 +23,6 @@ interface Props {
   onOpenReportModal: () => void;
   onExportJson: () => void;
   hasAudited: boolean;
-  onRunAudit: () => void;
-  isAuditing: boolean;
 }
 
 export const IssueRail: React.FC<Props> = ({
@@ -37,8 +34,6 @@ export const IssueRail: React.FC<Props> = ({
   onOpenReportModal,
   onExportJson,
   hasAudited,
-  onRunAudit,
-  isAuditing,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState<Severity | 'all'>('all');
