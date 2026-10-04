@@ -30,11 +30,18 @@ export interface FindingTarget {
   snippet?: string;            // HTML snippet or layer label
   elementKind?: string;        // 'button' | 'heading' | 'input' | 'image' | 'link' | 'text' | 'card' | 'dialog'
   visibleText?: string;        // visible text label
+  headingLevel?: number;       // 1-6, when the element is a heading
 }
 
 export interface ColorSwatch {
   fg: string; // sampled hex, e.g. "#8A8A8A"
   bg: string; // sampled hex, e.g. "#FFFFFF"
+}
+
+// Measured vs. required value shown on the finding card, e.g. 3.55:1 / 4.5:1
+export interface FindingMetric {
+  current: string;
+  required: string;
 }
 
 export interface ColorRemediation {
@@ -56,6 +63,7 @@ export interface Finding {
   target: FindingTarget;
   evidence: string;              // MUST contain real numbers computed by code
   swatch?: ColorSwatch;          // sampled pair rendered as chips
+  metric?: FindingMetric;        // current vs. required value for measured rules
   note?: string;                 // caveat on threshold used
   impact?: string;               // plain-language impact text
   fix?: string;                  // plain-language remediation copy

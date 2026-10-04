@@ -1,18 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Finding, ModuleType, Severity } from '../types/finding';
-import {
-  CheckCircle2,
-  Search,
-  ChevronDown,
-  ChevronUp,
-  FileDown,
-  Sparkles,
-  ExternalLink,
-  SlidersHorizontal,
-  Type,
-  ImageIcon,
-  Copy,
-} from 'lucide-react';
+import { CheckCircle2, Search, FileDown, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { FindingCard } from './FindingCard';
+import { SuggestionPanel } from './SuggestionPanel';
 
 interface Props {
   findings: Finding[];
@@ -38,11 +28,17 @@ export const IssueRail: React.FC<Props> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState<Severity | 'all'>('all');
   const [selectedModule, setSelectedModule] = useState<ModuleType | 'all'>('all');
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCopySingle = (f: Finding, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Suggestions view: opened from a card's bulb icon, replaces the list inside this
+  // same panel. Search, filters and scroll position are kept so Back lands exactly
+  // where the user left.
+  const [suggestionId, setSuggestionId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const savedScroll = useRef(0);
+  const lastTriggerId = useRef<string | null>(null);
+
+  const handleCopySingle = (f: Finding) => {
     const index = findings.findIndex((item) => item.id === f.id);
     const formatted = `[#${index + 1} A11y Barrier: WCAG ${f.wcag.sc} ${f.wcag.name} (${f.severity.toUpperCase()})]\nEvidence: ${f.evidence}\nImpact: ${f.impact || 'Requires remediation'}\nFix: ${f.fix || 'Update design per WCAG AA'}\n`;
     navigator.clipboard.writeText(formatted);
@@ -50,27 +46,38 @@ export const IssueRail: React.FC<Props> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const toggleExpand = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const openSuggestion = (id: string) => {
+    savedScroll.current = listRef.current?.scrollTop ?? 0;
+    lastTriggerId.current = id;
+    onSelectFinding(id); // keep the matching pin highlighted while reading
+    setSuggestionId(id);
   };
 
-  React.useEffect(() => {
-    if (selectedFindingId) {
-      const el = document.getElementById(`finding-${selectedFindingId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        // Expand if not already expanded
-        if (!expandedIds.has(selectedFindingId)) {
-          toggleExpand(selectedFindingId);
-        }
-      }
+  const closeSuggestion = () => setSuggestionId(null);
+
+  // Back: put the list scroll position and keyboard focus back where they were.
+  useLayoutEffect(() => {
+    if (suggestionId === null && lastTriggerId.current) {
+      if (listRef.current) listRef.current.scrollTop = savedScroll.current;
+      document.getElementById(`finding-${lastTriggerId.current}-suggestions`)?.focus();
+      lastTriggerId.current = null;
     }
-  }, [selectedFindingId, expandedIds]);
+  }, [suggestionId]);
+
+  // Picking a different pin on the preview while reading suggestions returns to the list.
+  useEffect(() => {
+    if (suggestionId && selectedFindingId && selectedFindingId !== suggestionId) {
+      lastTriggerId.current = null;
+      setSuggestionId(null);
+    }
+  }, [selectedFindingId, suggestionId]);
+
+  // Keep the selected card in view when a pin on the preview is clicked.
+  useEffect(() => {
+    if (selectedFindingId && !suggestionId) {
+      document.getElementById(`finding-${selectedFindingId}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedFindingId, suggestionId]);
 
   // Filter findings
   const filteredFindings = findings.filter((f) => {
@@ -90,6 +97,8 @@ export const IssueRail: React.FC<Props> = ({
     }
     return true;
   });
+
+  const suggestionFinding = suggestionId ? findings.find((f) => f.id === suggestionId) || null : null;
 
   const severityCounts = {
     critical: findings.filter((f) => f.severity === 'critical').length,
@@ -146,6 +155,14 @@ export const IssueRail: React.FC<Props> = ({
             Target input loaded. Press the "Run Accessibility Audit" button on the left panel to run deterministic WCAG 2.2 checks, pixel decile-core contrast sampling, and focus order inspection.
           </p>
         </div>
+      ) : suggestionFinding ? (
+        <SuggestionPanel
+          finding={suggestionFinding}
+          number={findings.findIndex((f) => f.id === suggestionFinding.id) + 1}
+          onBack={closeSuggestion}
+          onCopyComment={() => handleCopySingle(suggestionFinding)}
+          copied={copiedId === suggestionFinding.id}
+        />
       ) : (
         /* Post-Audit Findings View */
         <>
@@ -252,9 +269,11 @@ export const IssueRail: React.FC<Props> = ({
 
           {/* Findings List (Scrollable) */}
           <div
+            ref={listRef}
             role="feed"
+            aria-label="Accessibility findings"
             aria-busy={false}
-            className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1"
+            className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 pb-1"
           >
             {filteredFindings.length === 0 ? (
               <div className="text-center py-10 px-4 bg-lab-subtle/50 rounded_SM shadow-inner">
@@ -265,225 +284,20 @@ export const IssueRail: React.FC<Props> = ({
                 </p>
               </div>
             ) : (
-              filteredFindings.map((finding) => {
-                const isSelected = selectedFindingId === finding.id;
-                const isHovered = hoveredFindingId === finding.id;
-                const isExpanded = expandedIds.has(finding.id);
-
-                const severityBadge =
-                  finding.severity === 'critical'
-                    ? 'bg-red-500/20 text-red-700 dark:text-red-300'
-                    : finding.severity === 'serious'
-                    ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300'
-                    : finding.severity === 'moderate'
-                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
-                    : 'bg-sky-500/20 text-sky-700 dark:text-sky-300';
-
-                return (
-                  <div
-                    key={finding.id}
-                    id={`finding-${finding.id}`}
-                    className={`rounded_SM transition-all shadow-md ${
-                      isSelected || isHovered
-                        ? 'bg-lab-elevated ring-2 ring-sky-500/50 shadow-lg shadow-sky-500/10'
-                        : 'bg-lab-card hover:bg-lab-subtle hover:shadow-lg'
-                    }`}
-                    onMouseEnter={() => onHoverFinding(finding.id)}
-                    onMouseLeave={() => onHoverFinding(null)}
-                  >
-                    {/* Collapsed Header / Single Accessible Button (Rule R3) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectFinding(isSelected ? null : finding.id);
-                        toggleExpand(finding.id);
-                      }}
-                      className="w-full text-left p-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded_SM"
-                      aria-expanded={isExpanded}
-                      aria-label={`${finding.wcag.sc} ${finding.wcag.name} severity ${finding.severity}`}
-                    >
-                      {/* Top Meta Line */}
-                      <span className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className="flex items-center gap-1.5 flex-wrap">
-                          <span
-                            className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded shadow-sm ${severityBadge}`}
-                          >
-                            {finding.severity.toUpperCase()}
-                          </span>
-
-                          <span className="text-[10px] font-mono text-sky-700 dark:text-sky-300 bg-sky-500/15 px-1.5 py-0.2 rounded font-semibold shadow-sm">
-                            {finding.wcag.sc} {finding.wcag.level}
-                          </span>
-
-                          {finding.wcag.sc === '1.4.3' && (
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded shadow-sm border border-purple-500/30 bg-purple-500/15 text-purple-700 dark:text-purple-300 flex items-center gap-1">
-                              <Type className="w-3 h-3" /> Text on bg
-                            </span>
-                          )}
-                          {finding.wcag.sc === '1.4.11' && (
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded shadow-sm border border-fuchsia-500/30 bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 flex items-center gap-1">
-                              <ImageIcon className="w-3 h-3" /> Icon on bg
-                            </span>
-                          )}
-
-                          <span
-                            className={`text-[10px] font-mono px-1.5 py-0.2 rounded shadow-sm ${
-                              finding.confidence === 'measured'
-                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                            }`}
-                          >
-                            {finding.confidence === 'measured' ? 'Measured' : 'Predicted'}
-                          </span>
-
-                          {finding.nearMiss && (
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded shadow-sm border border-yellow-500/30 bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 font-bold ml-1">
-                              Near Miss
-                            </span>
-                          )}
-                        </span>
-
-                        <span className="text-lab-dim">
-                          {isExpanded ? (
-                            <ChevronUp className="w-4 h-4" aria-hidden="true" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" aria-hidden="true" />
-                          )}
-                        </span>
-                      </span>
-
-                      {/* Finding Title & Target */}
-                      <span className="block text-xs font-bold text-lab-text mb-1">
-                        #{findings.findIndex(f => f.id === finding.id) + 1} - {finding.wcag.name}
-                      </span>
-
-                      {finding.target.snippet && (
-                        <span className="block text-[11px] font-mono text-lab-dim truncate mb-1.5">
-                          Target: {finding.target.snippet}
-                        </span>
-                      )}
-
-                      {/* Code-computed Exact Evidence (Rule R1) */}
-                      <span className="block text-xs font-mono text-sky-900 dark:text-sky-300 bg-sky-500/10 px-2 py-1 rounded shadow-inner mb-1.5 font-medium">
-                        {finding.evidence}
-                      </span>
-
-                      {/* Sampled Color Chips for Contrast findings */}
-                      {finding.swatch && (
-                        <span className="flex items-center gap-2 mb-1.5">
-                          <span className="flex items-center gap-1">
-                            <span
-                              className="w-4 h-4 rounded shadow-sm border border-lab-border"
-                              style={{ backgroundColor: finding.swatch.fg }}
-                            />
-                            <span className="text-[11px] font-mono text-lab-muted">
-                              {finding.swatch.fg} ({finding.wcag.sc === '1.4.11' ? 'Icon' : 'Text'})
-                            </span>
-                          </span>
-                          <span className="text-lab-dim text-xs">on</span>
-                          <span className="flex items-center gap-1">
-                            <span
-                              className="w-4 h-4 rounded shadow-sm border border-lab-border"
-                              style={{ backgroundColor: finding.swatch.bg }}
-                            />
-                            <span className="text-[11px] font-mono text-lab-muted">
-                              {finding.swatch.bg} (Bg)
-                            </span>
-                          </span>
-                        </span>
-                      )}
-
-                      {/* Confidence Reason Callout (Rule R2) */}
-                      {finding.confidenceReason && (
-                        <span className="block text-[11px] text-amber-700 dark:text-amber-400 italic mb-1 font-medium">
-                          ℹ️ {finding.confidenceReason}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Expanded Details Body */}
-                    {isExpanded && (
-                      <div className="px-3.5 pb-3.5 pt-1 text-xs space-y-3 bg-lab-card/50 rounded-b-xl animate-fade-in">
-                        {finding.impact && (
-                          <div>
-                            <span className="text-[10px] uppercase font-mono font-bold text-red-400 block mb-0.5">
-                              User Experience Impact
-                            </span>
-                            <p className="text-xs text-lab-muted leading-relaxed">
-                              {finding.impact}
-                            </p>
-                          </div>
-                        )}
-
-                        {finding.fix && (
-                          <div className="bg-sky-500/10 shadow-inner rounded_SM p-2.5">
-                            <span className="text-[10px] uppercase font-mono font-bold text-sky-500 dark:text-sky-400 block mb-0.5 flex items-center gap-1">
-                              <Sparkles className="w-3 h-3 text-sky-500 dark:text-sky-400" aria-hidden="true" />
-                              Recommended Remediation
-                            </span>
-                            <p className="text-xs text-sky-900 dark:text-sky-200 leading-relaxed">
-                              {finding.fix}
-                            </p>
-                          </div>
-                        )}
-
-                        {finding.remediation && (
-                          <div className="flex items-center justify-between bg-lab-subtle p-2 rounded shadow-sm text-[11px]">
-                            <span className="text-lab-muted font-medium">Bounded Hue Suggestion:</span>
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className="w-3.5 h-3.5 rounded shadow-sm"
-                                style={{ backgroundColor: finding.remediation.suggestedFg }}
-                              />
-                              <span className="font-mono text-emerald-600 dark:text-emerald-300 font-bold">
-                                {finding.remediation.suggestedFg}
-                              </span>
-                              <span className="text-lab-dim">
-                                ({finding.remediation.ratio.toFixed(2)}:1)
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between text-[11px] text-lab-dim pt-3">
-                          <div className="flex items-center gap-3">
-                            <span>Principle: {finding.wcag.principle || 'WCAG 2.2'}</span>
-                            {finding.wcag.url && (
-                              <a
-                                href={finding.wcag.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sky-400 hover:underline flex items-center gap-1"
-                              >
-                                <span>WCAG Spec</span>
-                                <ExternalLink className="w-3 h-3" aria-hidden="true" />
-                              </a>
-                            )}
-                          </div>
-                          
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopySingle(finding, e)}
-                            className="px-2 py-1 rounded text-xs font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5 transition-colors"
-                          >
-                            {copiedId === finding.id ? (
-                              <>
-                                <CheckCircle2 className="w-3 h-3 text-emerald-400" aria-hidden="true" />
-                                <span>Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3 h-3 text-sky-400" aria-hidden="true" />
-                                <span>Copy Comment</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
+              filteredFindings.map((finding) => (
+                <FindingCard
+                  key={finding.id}
+                  finding={finding}
+                  number={findings.findIndex((f) => f.id === finding.id) + 1}
+                  isSelected={selectedFindingId === finding.id}
+                  isHovered={hoveredFindingId === finding.id}
+                  onSelect={() => onSelectFinding(selectedFindingId === finding.id ? null : finding.id)}
+                  onHover={(hovering) => onHoverFinding(hovering ? finding.id : null)}
+                  onOpenSuggestion={() => openSuggestion(finding.id)}
+                  onCopyComment={() => handleCopySingle(finding)}
+                  copied={copiedId === finding.id}
+                />
+              ))
             )}
           </div>
         </>
