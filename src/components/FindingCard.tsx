@@ -222,7 +222,7 @@ export const FindingCard: React.FC<Props> = ({
                 </span>
                 <span aria-hidden="true">
                   {model.value.current}
-                  <span className={`font-normal ${GREY}`}>/{model.value.required}</span>
+                  <span className={`font-light ${GREY}`}>/{model.value.required}</span>
                 </span>
               </p>
             ) : (

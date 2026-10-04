@@ -32,8 +32,9 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['Fira Code', 'monospace'],
+        sans: ['Urbanist', 'system-ui', 'sans-serif'],
+        // The UI uses font-mono as a label style (numbers, chips, WCAG codes), so it follows Urbanist too.
+        mono: ['Urbanist', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         'glow-cyan': '0 0 24px -4px rgba(56, 189, 248, 0.25)',
