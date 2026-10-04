@@ -261,6 +261,7 @@ function parseRawRegions(rawList: RawRegionOutput[], prefix: string): UIElementR
         h: Math.max(1.5, Math.min(100 - Math.max(0, y), h)),
       },
       headingLevel: kind === 'heading' ? (headingLevel ? Number(headingLevel) : 1) : undefined,
+      headingLevelInferred: kind === 'heading' && !headingLevel ? true : undefined,
       readingOrder,
       isInteractive,
       role:
@@ -440,6 +441,7 @@ export function generateHeuristicRegions(
       text: `Zone ${idx + 1} (${quality})`,
       bbox: { x: pctX, y: pctY, w: pctW, h: pctH },
       headingLevel: kind === 'heading' ? 1 : undefined,
+      headingLevelInferred: kind === 'heading' ? true : undefined,
       readingOrder: idx + 1,
       isInteractive,
       role:

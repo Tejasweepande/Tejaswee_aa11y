@@ -145,6 +145,8 @@ export function extractFromDOM(
         isInteractive,
         role: node.getAttribute('role') || kind,
         headingLevel,
+        tag,
+        inputType: tag === 'input' ? (node.getAttribute('type') || 'text').toLowerCase() : undefined,
       };
 
       // -------------------------------------------------------------

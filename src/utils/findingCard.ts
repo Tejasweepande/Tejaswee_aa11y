@@ -66,13 +66,56 @@ const PLACEHOLDER_SNIPPETS = new Set(['<img>', '<button>']);
 
 export const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
+/** Friendly names for the HTML tags that show up as plain "text" elements. */
+const TEXT_TAG_NAMES: Record<string, string> = {
+  p: 'Paragraph',
+  li: 'List item',
+  label: 'Label',
+  td: 'Table cell',
+  th: 'Table header',
+  span: 'Span',
+  div: 'Div',
+  blockquote: 'Quote',
+  figcaption: 'Caption',
+  caption: 'Caption',
+  legend: 'Legend',
+  dt: 'Term',
+  dd: 'Definition',
+  summary: 'Summary',
+  small: 'Small print',
+};
+
+/**
+ * Title = what the element is, plus the detail from the code that tells it apart:
+ *   Heading (H3)        level read from <h3>
+ *   Button (Div)        role="button" on a non-button tag
+ *   Input (Checkbox)    <input type="checkbox">; Select / Textarea for those tags
+ *   Text (Paragraph)    <p>; List item, Label, Table cell, Span, Div, ...
+ * Detail is only shown when the code actually provided it. Figma and Image audits
+ * have no tags, and their heading levels are guesses, so those titles stay plain.
+ */
 export function getTitle(finding: Finding): string {
-  const kind = finding.target.elementKind || '';
+  const { elementKind, htmlTag, inputType, headingLevel, headingLevelInferred } = finding.target;
+  const kind = elementKind || '';
+  const tag = (htmlTag || '').toLowerCase();
   const base = KIND_LABELS[kind] || capitalize(kind) || 'Element';
-  if (kind === 'heading' && finding.target.headingLevel) {
-    return `${base} (H${finding.target.headingLevel})`;
+
+  switch (kind) {
+    case 'heading':
+      return headingLevel && !headingLevelInferred ? `${base} (H${headingLevel})` : base;
+    case 'button':
+      return tag && tag !== 'button' ? `${base} (${capitalize(tag)})` : base;
+    case 'input':
+      if (tag === 'select') return 'Select';
+      if (tag === 'textarea') return 'Textarea';
+      return inputType ? `${base} (${capitalize(inputType)})` : base;
+    case 'text':
+      return tag ? `${base} (${TEXT_TAG_NAMES[tag] || capitalize(tag)})` : base;
+    case 'image':
+      return tag ? `${base} (${tag.toUpperCase()})` : base;
+    default:
+      return base;
   }
-  return base;
 }
 
 export function getIdentifier(finding: Finding): string | null {

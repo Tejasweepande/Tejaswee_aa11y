@@ -163,10 +163,11 @@ export function extractFromFigma(
       else if (node.type === 'IMAGE' || node.type === 'VECTOR' || nameLower.includes('image') || nameLower.includes('icon') || nameLower.includes('img') || nameLower.includes('vector')) kind = 'image';
       
       let headingLevel = undefined;
+      let headingLevelInferred = false;
       if (kind === 'heading') {
         const match = nameLower.match(/h([1-6])/);
         if (match) headingLevel = parseInt(match[1], 10);
-        else headingLevel = 2; // fallback
+        else { headingLevel = 2; headingLevelInferred = true; } // fallback is a guess
       }
 
       // We only consider leaf nodes or explicitly semantic component nodes as interactive regions
@@ -185,6 +186,7 @@ export function extractFromFigma(
             h: Math.max(0, Math.min(100, relH)),
           },
           headingLevel,
+          headingLevelInferred: headingLevelInferred || undefined,
           readingOrder: index,
           styles: {
             backgroundColor: currentBg, // Inherited or literal

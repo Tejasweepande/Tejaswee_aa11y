@@ -31,6 +31,9 @@ export interface FindingTarget {
   elementKind?: string;        // 'button' | 'heading' | 'input' | 'image' | 'link' | 'text' | 'card' | 'dialog'
   visibleText?: string;        // visible text label
   headingLevel?: number;       // 1-6, when the element is a heading
+  headingLevelInferred?: boolean; // true when the level was guessed (Figma/Image modes), not read from code
+  htmlTag?: string;            // lowercase tag name from the live DOM, e.g. 'p', 'div'
+  inputType?: string;          // <input type=...>, e.g. 'checkbox'
 }
 
 export interface ColorSwatch {
@@ -83,6 +86,9 @@ export interface UIElementRegion {
   text: string;
   bbox: BoundingBox; // 0-100 relative coordinates or px
   headingLevel?: number; // 1, 2, 3, etc.
+  headingLevelInferred?: boolean; // level guessed by an adapter, not read from code
+  tag?: string; // lowercase HTML tag name (live DOM only)
+  inputType?: string; // <input type=...> (live DOM only)
   readingOrder: number; // 1, 2, 3...
   isInteractive?: boolean;
   accessibleName?: string;
