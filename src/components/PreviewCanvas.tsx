@@ -199,7 +199,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             role="tab"
             aria-selected={canvasMode === 'overlay'}
             onClick={() => onChangeMode('overlay')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'overlay'
                 ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
@@ -213,7 +213,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             role="tab"
             aria-selected={canvasMode === 'keyboard'}
             onClick={() => onChangeMode('keyboard')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'keyboard'
                 ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
@@ -227,7 +227,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             role="tab"
             aria-selected={canvasMode === 'screenreader'}
             onClick={() => onChangeMode('screenreader')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'screenreader'
                 ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
@@ -239,7 +239,7 @@ export const PreviewCanvas: React.FC<Props> = ({
         </div>
 
         {/* Zoom & Canvas Actions */}
-        <div className="flex items-center gap-1.5 text-xs text-lab-muted">
+        <div className="flex items-center gap-1.5 text-sm text-lab-muted">
           <button
             type="button"
             onClick={() => setZoom((z) => Math.max(0.6, z - 0.1))}
@@ -248,7 +248,7 @@ export const PreviewCanvas: React.FC<Props> = ({
           >
             <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <span className="font-mono text-[11px] px-1.5 min-w-[42px] text-center">
+          <span className="font-mono text-xs px-1.5 min-w-[42px] text-center">
             {Math.round(zoom * 100)}%
           </span>
           <button
@@ -280,8 +280,8 @@ export const PreviewCanvas: React.FC<Props> = ({
             <div className="w-12 h-12 rounded bg-sky-500/10 text-sky-500 dark:text-sky-400 mx-auto flex items-center justify-center mb-3 shadow-sm">
               <Sparkles className="w-6 h-6" aria-hidden="true" />
             </div>
-            <h3 className="text-sm font-bold text-lab-text mb-1">Canvas Ready</h3>
-            <p className="text-xs text-lab-muted leading-relaxed">
+            <h3 className="text-base font-bold text-lab-text mb-1">Canvas Ready</h3>
+            <p className="text-sm text-lab-muted leading-relaxed">
               Upload a design mockup or load a benchmark case on the left to inspect.
             </p>
           </div>
@@ -411,7 +411,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                         : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
                     }`}
                   >
-                    <span className="bg-black/90 text-white font-mono text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-md -translate-x-2 -translate-y-2">
+                    <span className="bg-black/90 text-white font-mono text-xs font-bold min-w-[24px] h-6 px-1 flex items-center justify-center rounded-full shadow-md -translate-x-2 -translate-y-2">
                       {idx + 1}
                     </span>
                   </div>
@@ -443,7 +443,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                     }`}
                   >
                     <span
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold font-mono shadow-lg ${
+                      className={`min-w-[24px] h-6 px-1 rounded-full flex items-center justify-center text-xs font-bold font-mono shadow-lg ${
                         isActive
                           ? 'bg-sky-400 text-lab-bg'
                           : 'bg-lab-card text-lab-text'
@@ -495,7 +495,7 @@ export const PreviewCanvas: React.FC<Props> = ({
       {/* State Banner: Before Audit Execution */}
       {!hasAudited && imageSrc && (
         <div className="bg-lab-elevated/90 backdrop-blur-md px-5 py-3 flex items-center justify-between flex-wrap gap-3 z-20 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center gap-2.5 text-xs text-lab-muted">
+          <div className="flex items-center gap-2.5 text-sm text-lab-muted">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
             <span>
               <strong>Screenshot Ready:</strong> Click &ldquo;Run Accessibility Audit&rdquo; to execute deterministic checks.
@@ -505,7 +505,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             type="button"
             onClick={onRunAudit}
             disabled={isAuditing}
-            className="px-4 py-1.5 rounded_SM text-xs font-bold uppercase tracking-wider bg-sky-500 hover:bg-sky-400 text-lab-bg flex items-center gap-1.5 shadow-glow-cyan transition-all"
+            className="px-4 py-1.5 rounded_SM text-sm font-bold uppercase tracking-wider bg-sky-500 hover:bg-sky-400 text-lab-bg flex items-center gap-1.5 shadow-glow-cyan transition-all"
           >
             <Play className={`w-3.5 h-3.5 fill-current ${isAuditing ? 'animate-spin' : ''}`} />
             <span>{isAuditing ? 'Auditing...' : 'Run Accessibility Audit'}</span>
@@ -519,11 +519,11 @@ export const PreviewCanvas: React.FC<Props> = ({
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full bg-sky-400 animate-ping" />
             <div>
-              <p className="text-xs font-bold text-lab-text">
+              <p className="text-sm font-bold text-lab-text">
                 Tab Stop #{activeTabIdx + 1} of {interactiveRegions.length}: &ldquo;
                 {interactiveRegions[activeTabIdx]?.text || 'Interactive Target'}&rdquo;
               </p>
-              <p className="text-[11px] font-mono text-lab-dim">
+              <p className="text-xs font-mono text-lab-dim">
                 Role: {interactiveRegions[activeTabIdx]?.role || 'button'} • Press{' '}
                 <kbd className="px-1 py-0.5 bg-lab-bg rounded shadow-sm text-sky-400">
                   Tab
@@ -542,7 +542,7 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={() =>
                 setActiveTabIdx((prev) => (prev > 0 ? prev - 1 : interactiveRegions.length - 1))
               }
-              className="px-3 py-1.5 rounded text-xs font-medium bg-lab-card hover:bg-lab-subtle shadow-sm text-lab-text"
+              className="px-3 py-1.5 rounded text-sm font-medium bg-lab-card hover:bg-lab-subtle shadow-sm text-lab-text"
             >
               Previous Stop
             </button>
@@ -551,14 +551,14 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={() =>
                 setActiveTabIdx((prev) => (prev + 1) % interactiveRegions.length)
               }
-              className="px-3 py-1.5 rounded text-xs font-medium bg-lab-card hover:bg-lab-subtle shadow-sm text-lab-text"
+              className="px-3 py-1.5 rounded text-sm font-medium bg-lab-card hover:bg-lab-subtle shadow-sm text-lab-text"
             >
               Next Stop
             </button>
             <button
               type="button"
               onClick={() => setIsAutoplaying(!isAutoplaying)}
-              className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isAutoplaying
                   ? 'bg-amber-500 text-lab-bg shadow-glow-amber'
                   : 'bg-sky-500 text-lab-bg hover:bg-sky-400 shadow-glow-cyan'
@@ -593,15 +593,15 @@ export const PreviewCanvas: React.FC<Props> = ({
               <Volume2 className="w-4 h-4" aria-hidden="true" />
             </div>
             <div>
-              <p className="text-xs font-bold text-lab-text flex items-center gap-2">
+              <p className="text-sm font-bold text-lab-text flex items-center gap-2">
                 <span>Announces: &ldquo;{screenReaderItems[activeSpeechIdx]?.spokenPhrase}&rdquo;</span>
                 {screenReaderItems[activeSpeechIdx]?.isProblematic && (
-                  <span className="text-[10px] font-mono text-red-300 bg-red-500/20 px-1.5 py-0.2 rounded shadow-sm">
+                  <span className="text-xs font-mono text-red-300 bg-red-500/20 px-1.5 py-0.2 rounded shadow-sm">
                     Barrier Flagged
                   </span>
                 )}
               </p>
-              <p className="text-[11px] text-lab-dim">
+              <p className="text-xs text-lab-dim">
                 Should say: &ldquo;{screenReaderItems[activeSpeechIdx]?.shouldSayPhrase}&rdquo;
               </p>
             </div>
@@ -611,7 +611,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             <button
               type="button"
               onClick={handleStepSpeech}
-              className="px-3 py-1.5 rounded text-xs font-medium bg-lab-card hover:bg-lab-subtle shadow-sm text-lab-text flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded text-sm font-medium bg-lab-card hover:bg-lab-subtle shadow-sm text-lab-text flex items-center gap-1.5"
             >
               <SkipForward className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Step Next</span>
@@ -619,7 +619,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             <button
               type="button"
               onClick={toggleSpeechPlayback}
-              className={`px-3.5 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
+              className={`px-3.5 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isSpeaking
                   ? 'bg-amber-500 text-lab-bg shadow-glow-amber'
                   : 'bg-sky-500 text-lab-bg hover:bg-sky-400 shadow-glow-cyan'
