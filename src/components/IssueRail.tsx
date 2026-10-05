@@ -115,11 +115,11 @@ export const IssueRail: React.FC<Props> = ({
       {/* Rail Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-bold text-lab-text flex items-center gap-2">
+          <h2 className="text-base font-bold text-lab-text flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-sky-400" aria-hidden="true" />
             <span>Audit Findings ({hasAudited ? findings.length : 0})</span>
           </h2>
-          <p className="text-xs text-lab-muted">WCAG 2.2 AA deterministic violations</p>
+          <p className="text-sm text-lab-muted">WCAG 2.2 AA deterministic violations</p>
         </div>
 
         {hasAudited && (
@@ -128,7 +128,7 @@ export const IssueRail: React.FC<Props> = ({
               type="button"
               onClick={onExportJson}
               title="Download JSON canonical findings"
-              className="p-1.5 rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text text-xs shadow-sm transition-all"
+              className="p-1.5 rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text text-sm shadow-sm transition-all"
               aria-label="Export findings as JSON"
             >
               <FileDown className="w-3.5 h-3.5" aria-hidden="true" />
@@ -136,7 +136,7 @@ export const IssueRail: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenReportModal}
-              className="px-2.5 py-1.5 rounded bg-sky-500 hover:bg-sky-400 text-lab-bg text-xs font-bold shadow-glow-cyan transition-all flex items-center gap-1"
+              className="px-2.5 py-1.5 rounded bg-sky-500 hover:bg-sky-400 text-lab-bg text-sm font-bold shadow-glow-cyan transition-all flex items-center gap-1"
             >
               <span>Full Report</span>
             </button>
@@ -150,8 +150,8 @@ export const IssueRail: React.FC<Props> = ({
           <div className="w-12 h-12 rounded bg-sky-500/10 text-sky-400 flex items-center justify-center mb-3 shadow-sm">
             <Sparkles className="w-6 h-6" aria-hidden="true" />
           </div>
-          <h3 className="text-sm font-bold text-lab-text mb-1">Ready for Audit</h3>
-          <p className="text-xs text-lab-muted max-w-xs mb-5 leading-relaxed">
+          <h3 className="text-base font-bold text-lab-text mb-1">Ready for Audit</h3>
+          <p className="text-sm text-lab-muted max-w-xs mb-5 leading-relaxed">
             Target input loaded. Press the "Run Accessibility Audit" button on the left panel to run deterministic WCAG 2.2 checks, pixel decile-core contrast sampling, and focus order inspection.
           </p>
         </div>
@@ -177,10 +177,10 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-red-500/30'
               }`}
             >
-              <span className="block text-xs font-extrabold font-mono text-red-600 dark:text-red-400">
+              <span className="block text-sm font-extrabold font-mono text-red-600 dark:text-red-400">
                 {severityCounts.critical}
               </span>
-              <span className="text-[12px] uppercase font-bold text-lab-dim">Critical</span>
+              <span className="text-xs uppercase font-bold text-lab-dim">Critical</span>
             </button>
 
             <button
@@ -192,10 +192,10 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-orange-500/30'
               }`}
             >
-              <span className="block text-xs font-extrabold font-mono text-orange-600 dark:text-orange-400">
+              <span className="block text-sm font-extrabold font-mono text-orange-600 dark:text-orange-400">
                 {severityCounts.serious}
               </span>
-              <span className="text-[12px] uppercase font-bold text-lab-dim">Serious</span>
+              <span className="text-xs uppercase font-bold text-lab-dim">Serious</span>
             </button>
 
             <button
@@ -207,10 +207,10 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-amber-500/30'
               }`}
             >
-              <span className="block text-xs font-extrabold font-mono text-amber-600 dark:text-amber-400">
+              <span className="block text-sm font-extrabold font-mono text-amber-600 dark:text-amber-400">
                 {severityCounts.moderate}
               </span>
-              <span className="text-[12px] uppercase font-bold text-lab-dim">Moderate</span>
+              <span className="text-xs uppercase font-bold text-lab-dim">Moderate</span>
             </button>
 
             <button
@@ -222,10 +222,10 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-sky-500/30'
               }`}
             >
-              <span className="block text-xs font-extrabold font-mono text-sky-600 dark:text-sky-400">
+              <span className="block text-sm font-extrabold font-mono text-sky-600 dark:text-sky-400">
                 {severityCounts.minor}
               </span>
-              <span className="text-[12px] uppercase font-bold text-lab-dim">Minor</span>
+              <span className="text-xs uppercase font-bold text-lab-dim">Minor</span>
             </button>
           </div>
 
@@ -238,19 +238,19 @@ export const IssueRail: React.FC<Props> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search issues, WCAG criteria, selectors..."
-                className="w-full bg-lab-card shadow-inner rounded_SM pl-8 pr-3 py-1.5 text-xs text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
+                className="w-full bg-lab-card shadow-inner rounded_SM pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
               />
             </div>
 
             {/* Quick Filter Bar */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-sm no-scrollbar">
               {(['all', 'contrast', 'keyboard', 'screenreader', 'structure'] as (ModuleType | 'all')[]).map(
                 (mod) => (
                   <button
                     key={mod}
                     type="button"
                     onClick={() => setSelectedModule(mod)}
-                    className={`px-2.5 py-1 rounded text-[13.2px] font-medium whitespace-nowrap transition-all shadow-sm ${
+                    className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap transition-all shadow-sm ${
                       selectedModule === mod
                         ? 'bg-sky-500 text-white dark:text-lab-bg shadow-glow-cyan'
                         : 'bg-lab-subtle text-lab-muted hover:text-lab-text hover:bg-lab-elevated'
@@ -278,8 +278,8 @@ export const IssueRail: React.FC<Props> = ({
             {filteredFindings.length === 0 ? (
               <div className="text-center py-10 px-4 bg-lab-subtle/50 rounded_SM shadow-inner">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500 dark:text-emerald-400 mx-auto mb-2 opacity-80" aria-hidden="true" />
-                <p className="text-xs font-bold text-lab-text mb-0.5">No matching issues</p>
-                <p className="text-[13.2px] text-lab-dim">
+                <p className="text-sm font-bold text-lab-text mb-0.5">No matching issues</p>
+                <p className="text-xs text-lab-dim">
                   No accessibility barriers match the current filters.
                 </p>
               </div>

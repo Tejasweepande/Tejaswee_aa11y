@@ -690,7 +690,7 @@ export const App: React.FC = () => {
   const auditNoticeBanner = auditNotice && (
     <div
       role="alert"
-      className={`p-3 rounded_SM border flex items-start gap-2.5 text-xs animate-fade-in ${
+      className={`p-3 rounded_SM border flex items-start gap-2.5 text-sm animate-fade-in ${
         auditNotice.type === 'error'
           ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-700/70 text-red-900 dark:text-red-200'
           : auditNotice.type === 'warning'
@@ -732,14 +732,14 @@ export const App: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-extrabold tracking-tight text-lab-text">
+                <h1 className="text-lg font-extrabold tracking-tight text-lab-text">
                   A11y Lab
                 </h1>
-                <span className="text-[12px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800/80">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800/80">
                   WCAG 2.2 • ARIA 1.2
                 </span>
               </div>
-              <p className="text-[13.2px] text-lab-muted">
+              <p className="text-xs text-lab-muted">
                 Accessibility auditor &amp; barrier perception simulator
               </p>
             </div>
@@ -749,7 +749,7 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 rounded_SM bg-lab-subtle border border-lab-border text-lab-muted hover:text-lab-text transition-colors flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 rounded_SM bg-lab-subtle border border-lab-border text-lab-muted hover:text-lab-text transition-colors flex items-center gap-1.5 text-sm font-semibold"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
             >
               {theme === 'light' ? (
@@ -769,7 +769,7 @@ export const App: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setReportModalOpen(true)}
-                className="px-3.5 py-1.5 rounded_SM text-xs font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/40 transition-colors"
+                className="px-3.5 py-1.5 rounded_SM text-sm font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/40 transition-colors"
               >
                 Export Report ({findings.length})
               </button>
@@ -815,7 +815,7 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={() => setViewStep('upload')}
-              className="self-start flex items-center gap-1.5 text-xs font-semibold text-lab-muted hover:text-lab-text transition-colors"
+              className="self-start flex items-center gap-1.5 text-sm font-semibold text-lab-muted hover:text-lab-text transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
               Back to Upload

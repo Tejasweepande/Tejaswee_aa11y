@@ -6,6 +6,15 @@ export default {
   ],
   darkMode: 'class',
   theme: {
+    // The whole tool uses exactly five text sizes. Replacing (not extending)
+    // Tailwind's defaults means no other size can be used by accident.
+    fontSize: {
+      xs: ['12px', { lineHeight: '16px' }],
+      sm: ['14px', { lineHeight: '20px' }],
+      base: ['16px', { lineHeight: '24px' }],
+      lg: ['20px', { lineHeight: '28px' }],
+      xl: ['24px', { lineHeight: '32px' }],
+    },
     extend: {
       colors: {
         lab: {
@@ -35,18 +44,6 @@ export default {
         sans: ['Urbanist', 'system-ui', 'sans-serif'],
         // The UI uses font-mono as a label style (numbers, chips, WCAG codes), so it follows Urbanist too.
         mono: ['Urbanist', 'system-ui', 'sans-serif'],
-      },
-      // Whole type scale is 1.2x Tailwind's default (smallest text 10px -> 12px).
-      // Line heights scale with it so text keeps the same breathing room.
-      fontSize: {
-        xs: ['0.9rem', { lineHeight: '1.2rem' }],
-        sm: ['1.05rem', { lineHeight: '1.5rem' }],
-        base: ['1.2rem', { lineHeight: '1.8rem' }],
-        lg: ['1.35rem', { lineHeight: '2.1rem' }],
-        xl: ['1.5rem', { lineHeight: '2.1rem' }],
-        '2xl': ['1.8rem', { lineHeight: '2.4rem' }],
-        '3xl': ['2.25rem', { lineHeight: '2.7rem' }],
-        '4xl': ['2.7rem', { lineHeight: '3rem' }],
       },
       boxShadow: {
         'glow-cyan': '0 0 24px -4px rgba(56, 189, 248, 0.25)',
