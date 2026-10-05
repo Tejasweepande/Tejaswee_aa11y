@@ -102,7 +102,7 @@ export const CapabilityMatrix: React.FC<Props> = ({ currentInput, exportScale })
             Live Capability Matrix
           </h3>
         </div>
-        <span className="text-[11px] font-mono text-sky-400/80 bg-sky-950/40 border border-sky-800/40 px-2 py-0.5 rounded-full">
+        <span className="text-[13.2px] font-mono text-sky-400/80 bg-sky-950/40 border border-sky-800/40 px-2 py-0.5 rounded-full">
           R2 Evidence State
         </span>
       </div>
@@ -115,7 +115,7 @@ export const CapabilityMatrix: React.FC<Props> = ({ currentInput, exportScale })
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-lab-border text-lab-dim font-mono text-[11px]">
+            <tr className="border-b border-lab-border text-lab-dim font-mono text-[13.2px]">
               <th scope="col" className="py-2 pr-2 font-medium">Input Source</th>
               {modules.map((m) => (
                 <th key={m.id} scope="col" className="py-2 px-1.5 font-medium text-center">
@@ -162,7 +162,7 @@ export const CapabilityMatrix: React.FC<Props> = ({ currentInput, exportScale })
                             })
                           }
                           aria-label={`View evidence details for ${inp.label} ${mod.label}: ${cell.status}`}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium transition-all focus-visible:ring-2 ${
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[13.2px] font-mono font-medium transition-all focus-visible:ring-2 ${
                             isMeasured
                               ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-900/80'
                               : 'bg-amber-950/60 text-amber-300 border border-amber-700/50 hover:bg-amber-900/80'
@@ -192,7 +192,7 @@ export const CapabilityMatrix: React.FC<Props> = ({ currentInput, exportScale })
           <div className="flex items-start justify-between gap-2 mb-1.5">
             <div className="flex items-center gap-2">
               <span
-                className={`text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 rounded ${
+                className={`text-[12px] font-mono uppercase font-bold px-1.5 py-0.5 rounded ${
                   activePopover.status === 'Measured'
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                     : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'

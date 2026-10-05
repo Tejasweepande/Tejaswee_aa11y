@@ -180,7 +180,7 @@ export const IssueRail: React.FC<Props> = ({
               <span className="block text-xs font-extrabold font-mono text-red-600 dark:text-red-400">
                 {severityCounts.critical}
               </span>
-              <span className="text-[10px] uppercase font-bold text-lab-dim">Critical</span>
+              <span className="text-[12px] uppercase font-bold text-lab-dim">Critical</span>
             </button>
 
             <button
@@ -195,7 +195,7 @@ export const IssueRail: React.FC<Props> = ({
               <span className="block text-xs font-extrabold font-mono text-orange-600 dark:text-orange-400">
                 {severityCounts.serious}
               </span>
-              <span className="text-[10px] uppercase font-bold text-lab-dim">Serious</span>
+              <span className="text-[12px] uppercase font-bold text-lab-dim">Serious</span>
             </button>
 
             <button
@@ -210,7 +210,7 @@ export const IssueRail: React.FC<Props> = ({
               <span className="block text-xs font-extrabold font-mono text-amber-600 dark:text-amber-400">
                 {severityCounts.moderate}
               </span>
-              <span className="text-[10px] uppercase font-bold text-lab-dim">Moderate</span>
+              <span className="text-[12px] uppercase font-bold text-lab-dim">Moderate</span>
             </button>
 
             <button
@@ -225,7 +225,7 @@ export const IssueRail: React.FC<Props> = ({
               <span className="block text-xs font-extrabold font-mono text-sky-600 dark:text-sky-400">
                 {severityCounts.minor}
               </span>
-              <span className="text-[10px] uppercase font-bold text-lab-dim">Minor</span>
+              <span className="text-[12px] uppercase font-bold text-lab-dim">Minor</span>
             </button>
           </div>
 
@@ -250,7 +250,7 @@ export const IssueRail: React.FC<Props> = ({
                     key={mod}
                     type="button"
                     onClick={() => setSelectedModule(mod)}
-                    className={`px-2.5 py-1 rounded text-[11px] font-medium whitespace-nowrap transition-all shadow-sm ${
+                    className={`px-2.5 py-1 rounded text-[13.2px] font-medium whitespace-nowrap transition-all shadow-sm ${
                       selectedModule === mod
                         ? 'bg-sky-500 text-white dark:text-lab-bg shadow-glow-cyan'
                         : 'bg-lab-subtle text-lab-muted hover:text-lab-text hover:bg-lab-elevated'
@@ -279,7 +279,7 @@ export const IssueRail: React.FC<Props> = ({
               <div className="text-center py-10 px-4 bg-lab-subtle/50 rounded_SM shadow-inner">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500 dark:text-emerald-400 mx-auto mb-2 opacity-80" aria-hidden="true" />
                 <p className="text-xs font-bold text-lab-text mb-0.5">No matching issues</p>
-                <p className="text-[11px] text-lab-dim">
+                <p className="text-[13.2px] text-lab-dim">
                   No accessibility barriers match the current filters.
                 </p>
               </div>

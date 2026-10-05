@@ -13,7 +13,7 @@ interface Props {
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <section>
-    <h4 className="text-[11px] uppercase tracking-wide font-bold text-lab-muted mb-1.5">{title}</h4>
+    <h4 className="text-[13.2px] uppercase tracking-wide font-bold text-lab-muted mb-1.5">{title}</h4>
     {children}
   </section>
 );
@@ -25,7 +25,7 @@ const ColorRow: React.FC<{ label: string; hex: string }> = ({ label, hex }) => (
       className="w-4 h-4 rounded-full ring-1 ring-inset ring-black/20 shrink-0"
       style={{ backgroundColor: hex }}
     />
-    <span className="text-lab-muted w-24">{label}</span>
+    <span className="text-lab-muted w-28">{label}</span>
     <span className="font-mono">{hex}</span>
   </div>
 );
@@ -57,17 +57,17 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
         <Section title="What was found">
           <p className="text-xs text-lab-text leading-relaxed">{finding.evidence}</p>
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-            <span className="text-[11px] px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
+            <span className="text-[13.2px] px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
               {finding.confidence === 'measured' ? 'Measured' : 'Predicted'}
             </span>
             {finding.nearMiss && (
-              <span className="text-[11px] px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
+              <span className="text-[13.2px] px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
                 Near miss
               </span>
             )}
           </div>
           {finding.confidenceReason && (
-            <p className="text-[11px] text-lab-muted italic mt-2 leading-relaxed">{finding.confidenceReason}</p>
+            <p className="text-[13.2px] text-lab-muted italic mt-2 leading-relaxed">{finding.confidenceReason}</p>
           )}
         </Section>
 
@@ -99,7 +99,7 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
             {finding.remediation?.suggestedFg && (
               <div className="mt-2 space-y-1.5">
                 <ColorRow label="Suggested text" hex={finding.remediation.suggestedFg} />
-                <p className="text-[11px] text-lab-muted pl-6">
+                <p className="text-[13.2px] text-lab-muted pl-6">
                   Reaches {finding.remediation.ratio.toFixed(2)}:1. {finding.remediation.explanation}
                 </p>
               </div>
@@ -112,7 +112,7 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
             WCAG {finding.wcag.sc} {finding.wcag.name} (Level {finding.wcag.level})
             {finding.wcag.principle ? ` · ${finding.wcag.principle}` : ''}
           </p>
-          {finding.note && <p className="text-[11px] text-lab-muted mt-1 leading-relaxed">{finding.note}</p>}
+          {finding.note && <p className="text-[13.2px] text-lab-muted mt-1 leading-relaxed">{finding.note}</p>}
           <div className="flex items-center gap-3 mt-2">
             {finding.wcag.url && (
               <a

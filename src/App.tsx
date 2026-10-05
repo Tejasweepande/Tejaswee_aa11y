@@ -735,11 +735,11 @@ export const App: React.FC = () => {
                 <h1 className="text-base font-extrabold tracking-tight text-lab-text">
                   A11y Lab
                 </h1>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800/80">
+                <span className="text-[12px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800/80">
                   WCAG 2.2 • ARIA 1.2
                 </span>
               </div>
-              <p className="text-[11px] text-lab-muted">
+              <p className="text-[13.2px] text-lab-muted">
                 Accessibility auditor &amp; barrier perception simulator
               </p>
             </div>

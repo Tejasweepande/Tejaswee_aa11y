@@ -248,7 +248,7 @@ export const PreviewCanvas: React.FC<Props> = ({
           >
             <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <span className="font-mono text-[11px] px-1.5 min-w-[42px] text-center">
+          <span className="font-mono text-[13.2px] px-1.5 min-w-[50px] text-center">
             {Math.round(zoom * 100)}%
           </span>
           <button
@@ -411,7 +411,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                         : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
                     }`}
                   >
-                    <span className="bg-black/90 text-white font-mono text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-md -translate-x-2 -translate-y-2">
+                    <span className="bg-black/90 text-white font-mono text-[12px] font-bold min-w-[24px] h-6 px-1 flex items-center justify-center rounded-full shadow-md -translate-x-2 -translate-y-2">
                       {idx + 1}
                     </span>
                   </div>
@@ -443,7 +443,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                     }`}
                   >
                     <span
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold font-mono shadow-lg ${
+                      className={`min-w-[28px] h-7 px-1 rounded-full flex items-center justify-center text-[13.2px] font-bold font-mono shadow-lg ${
                         isActive
                           ? 'bg-sky-400 text-lab-bg'
                           : 'bg-lab-card text-lab-text'
@@ -523,7 +523,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                 Tab Stop #{activeTabIdx + 1} of {interactiveRegions.length}: &ldquo;
                 {interactiveRegions[activeTabIdx]?.text || 'Interactive Target'}&rdquo;
               </p>
-              <p className="text-[11px] font-mono text-lab-dim">
+              <p className="text-[13.2px] font-mono text-lab-dim">
                 Role: {interactiveRegions[activeTabIdx]?.role || 'button'} • Press{' '}
                 <kbd className="px-1 py-0.5 bg-lab-bg rounded shadow-sm text-sky-400">
                   Tab
@@ -596,12 +596,12 @@ export const PreviewCanvas: React.FC<Props> = ({
               <p className="text-xs font-bold text-lab-text flex items-center gap-2">
                 <span>Announces: &ldquo;{screenReaderItems[activeSpeechIdx]?.spokenPhrase}&rdquo;</span>
                 {screenReaderItems[activeSpeechIdx]?.isProblematic && (
-                  <span className="text-[10px] font-mono text-red-300 bg-red-500/20 px-1.5 py-0.2 rounded shadow-sm">
+                  <span className="text-[12px] font-mono text-red-300 bg-red-500/20 px-1.5 py-0.2 rounded shadow-sm">
                     Barrier Flagged
                   </span>
                 )}
               </p>
-              <p className="text-[11px] text-lab-dim">
+              <p className="text-[13.2px] text-lab-dim">
                 Should say: &ldquo;{screenReaderItems[activeSpeechIdx]?.shouldSayPhrase}&rdquo;
               </p>
             </div>

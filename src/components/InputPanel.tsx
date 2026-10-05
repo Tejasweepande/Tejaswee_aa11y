@@ -132,7 +132,7 @@ export const InputPanel: React.FC<Props> = ({
               : 'Live Link'}
           </h2>
           {currentInput === 'history' && (
-            <p className="text-[11px] text-lab-muted mt-0.5">Past audits done on this product</p>
+            <p className="text-[13.2px] text-lab-muted mt-0.5">Past audits done on this product</p>
           )}
         </div>
 
@@ -162,7 +162,7 @@ export const InputPanel: React.FC<Props> = ({
             <p className="text-xs font-semibold text-lab-text mb-0.5">
               Upload any UI screenshot or <span className="text-sky-500 dark:text-sky-400 underline">browse</span>
             </p>
-            <p className="text-[11px] text-lab-dim">Instant Computer Vision &amp; Decile Contrast Audit</p>
+            <p className="text-[13.2px] text-lab-dim">Instant Computer Vision &amp; Decile Contrast Audit</p>
           </div>
         </div>
       )}
@@ -186,7 +186,7 @@ export const InputPanel: React.FC<Props> = ({
                     <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
                     <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {audit.timestamp}</span>
                   </div>
-                  <div className="flex items-center text-[11px] text-lab-muted w-full">
+                  <div className="flex items-center text-[13.2px] text-lab-muted w-full">
                     <span className="flex gap-3">
                       <span title="Regions Scanned" className="flex items-center gap-1">
                         <span className="font-semibold text-lab-text">{audit.regionsCount}</span> Regions
@@ -228,7 +228,7 @@ export const InputPanel: React.FC<Props> = ({
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-lab-dim mt-2 leading-tight">
+              <p className="text-[12px] text-lab-dim mt-2 leading-tight">
                 Declaring export ratio moves 2.5.8 target size from Predicted to Measured.
               </p>
             </div>
@@ -270,7 +270,7 @@ export const InputPanel: React.FC<Props> = ({
               />
             )}
           </div>
-          <p className="text-[11px] text-lab-dim leading-relaxed">
+          <p className="text-[13.2px] text-lab-dim leading-relaxed">
             Extracts prototype transition links to walk user focus flow deterministically.
           </p>
         </div>
@@ -316,12 +316,12 @@ export const InputPanel: React.FC<Props> = ({
                 />
               )}
             </div>
-            <p className="text-[11px] text-lab-dim leading-relaxed mt-1.5">
+            <p className="text-[13.2px] text-lab-dim leading-relaxed mt-1.5">
               On the target page, right-click and choose "View Page Source", then select all and copy the HTML into the box above.
             </p>
           </div>
           
-          <p className="text-[11px] text-lab-dim leading-relaxed">
+          <p className="text-[13.2px] text-lab-dim leading-relaxed">
             Automatically fetches a visual screenshot and evaluates the underlying DOM. Use the HTML fallback if the site blocks public proxies.
           </p>
         </div>

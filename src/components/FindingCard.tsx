@@ -118,15 +118,15 @@ export const FindingCard: React.FC<Props> = ({
 
       <div className={`relative flex-1 min-w-0 py-4 ${isList ? 'pointer-events-none' : ''}`}>
         {/* Header: number + severity, actions */}
-        <div className="flex items-center justify-between gap-2 h-[22px]">
+        <div className="flex items-center justify-between gap-2 h-[26px]">
           <div className="flex items-center gap-2 min-w-0">
             <span
-              className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-black text-white text-[12px] leading-none font-bold"
+              className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded-full bg-black text-white text-[14.4px] leading-none font-bold"
               aria-hidden="true"
             >
               {model.number}
             </span>
-            <span className="text-[14px] leading-5 font-medium text-black">
+            <span className="text-[16.8px] leading-6 font-medium text-black">
               <span className="sr-only">Issue {model.number}, severity </span>
               {model.severityLabel}
             </span>
@@ -162,7 +162,7 @@ export const FindingCard: React.FC<Props> = ({
                 {menuOpen && (
                   <ul
                     id={`finding-${finding.id}-menu`}
-                    className="absolute right-0 top-full mt-1 z-30 min-w-[168px] py-1 bg-white text-black text-[13px] rounded-[4px] border border-black/10 shadow-lg"
+                    className="absolute right-0 top-full mt-1 z-30 min-w-[200px] py-1 bg-white text-black text-[15.6px] rounded-[4px] border border-black/10 shadow-lg"
                   >
                     <li>
                       <button
@@ -200,13 +200,13 @@ export const FindingCard: React.FC<Props> = ({
         </div>
 
         {/* Title */}
-        <h3 id={titleId} className="mt-2 text-[20px] leading-6 font-bold text-black break-words">
+        <h3 id={titleId} className="mt-2 text-[24px] leading-[28.8px] font-bold text-black break-words">
           {model.title}
         </h3>
 
         {/* Identifier: what the element says */}
         {model.identifier && (
-          <p className={`mt-1 text-[12px] leading-[18px] ${GREY} break-words`} style={clamp2}>
+          <p className={`mt-1 text-[14.4px] leading-[21.6px] ${GREY} break-words`} style={clamp2}>
             {model.identifier}
           </p>
         )}
@@ -214,9 +214,9 @@ export const FindingCard: React.FC<Props> = ({
         {/* Rule label + value, swatch on the right for contrast findings */}
         <div className={`${model.identifier ? 'mt-3' : 'mt-4'} flex items-center justify-between gap-3`}>
           <div className="min-w-0">
-            <p className={`text-[13px] leading-[18px] ${GREY}`}>{model.ruleLabel}</p>
+            <p className={`text-[15.6px] leading-[21.6px] ${GREY}`}>{model.ruleLabel}</p>
             {model.value.kind === 'measured' ? (
-              <p className="text-[20px] leading-6 font-bold text-black">
+              <p className="text-[24px] leading-[28.8px] font-bold text-black">
                 <span className="sr-only">
                   {model.value.current} measured, {model.value.required} required
                 </span>
@@ -226,7 +226,7 @@ export const FindingCard: React.FC<Props> = ({
                 </span>
               </p>
             ) : (
-              <p className="text-[20px] leading-6 font-bold text-black break-words">{model.value.text}</p>
+              <p className="text-[24px] leading-[28.8px] font-bold text-black break-words">{model.value.text}</p>
             )}
           </div>
 

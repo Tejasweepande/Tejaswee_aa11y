@@ -294,28 +294,28 @@ export const ReportModal: React.FC<Props> = ({
               <span className="text-xl font-mono font-extrabold text-red-400 block mb-1">
                 {severityCounts.critical}
               </span>
-              <span className="text-[11px] uppercase font-semibold text-lab-muted">Critical Barriers</span>
+              <span className="text-[13.2px] uppercase font-semibold text-lab-muted">Critical Barriers</span>
             </div>
 
             <div className="bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
               <span className="text-xl font-mono font-extrabold text-orange-400 block mb-1">
                 {severityCounts.serious}
               </span>
-              <span className="text-[11px] uppercase font-semibold text-lab-muted">Serious Issues</span>
+              <span className="text-[13.2px] uppercase font-semibold text-lab-muted">Serious Issues</span>
             </div>
 
             <div className="bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
               <span className="text-xl font-mono font-extrabold text-amber-400 block mb-1">
                 {severityCounts.moderate}
               </span>
-              <span className="text-[11px] uppercase font-semibold text-lab-muted">Moderate Notices</span>
+              <span className="text-[13.2px] uppercase font-semibold text-lab-muted">Moderate Notices</span>
             </div>
 
             <div className="bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
               <span className="text-xl font-mono font-extrabold text-sky-400 block mb-1">
                 {severityCounts.minor}
               </span>
-              <span className="text-[11px] uppercase font-semibold text-lab-muted">Minor Polish</span>
+              <span className="text-[13.2px] uppercase font-semibold text-lab-muted">Minor Polish</span>
             </div>
           </div>
 
@@ -348,7 +348,7 @@ export const ReportModal: React.FC<Props> = ({
                           style={{ left: `${bbox.x}%`, top: `${bbox.y}%`, width: `${bbox.w}%`, height: `${bbox.h}%` }} 
                           className={`absolute ring-2 ${boxColor} rounded flex items-start justify-start pointer-events-auto`}
                         >
-                          <span className={`w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold shadow-md -translate-x-2 -translate-y-2 ring-1 ring-white/30 shrink-0`}>
+                          <span className={`min-w-[24px] h-6 px-1 rounded-full bg-black text-white flex items-center justify-center text-[12px] font-bold shadow-md -translate-x-2 -translate-y-2 ring-1 ring-white/30 shrink-0`}>
                             {idx + 1}
                           </span>
                         </div>
@@ -364,7 +364,7 @@ export const ReportModal: React.FC<Props> = ({
           <div className="bg-lab-card border border-lab-border rounded overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-lab-border text-[11px] font-bold text-lab-muted uppercase tracking-wider">
+                <tr className="border-b border-lab-border text-[13.2px] font-bold text-lab-muted uppercase tracking-wider">
                   <th className="py-3 px-4 w-24">Criterion</th>
                   <th className="py-3 px-4">Title</th>
                   <th className="py-3 px-4 w-20 text-center">Level</th>
@@ -378,7 +378,7 @@ export const ReportModal: React.FC<Props> = ({
                     <td className="py-3 px-4 font-mono text-lab-dim">{row.sc}</td>
                     <td className="py-3 px-4 text-lab-text font-medium">{row.name}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className="inline-block px-1.5 py-0.5 rounded border border-lab-border text-[10px] font-bold text-lab-muted bg-lab-bg">
+                      <span className="inline-block px-1.5 py-0.5 rounded border border-lab-border text-[12px] font-bold text-lab-muted bg-lab-bg">
                         {row.level}
                       </span>
                     </td>
@@ -428,10 +428,10 @@ export const ReportModal: React.FC<Props> = ({
                     <div key={f.id} className="bg-lab-card border border-lab-border rounded p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-sm bg-black text-white border border-white/20`}>
+                          <div className={`min-w-[28px] h-7 px-1 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-sm bg-black text-white border border-white/20`}>
                             {index + 1}
                           </div>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          <span className={`px-2 py-0.5 rounded text-[12px] font-bold uppercase tracking-wider ${
                             f.severity === 'critical' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
                             f.severity === 'serious' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
                             f.severity === 'moderate' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
@@ -550,12 +550,12 @@ export const ReportModal: React.FC<Props> = ({
                 <span>{pushingToFigma ? 'Pushing...' : pushSuccess ? 'Pushed Successfully!' : 'Push to Figma'}</span>
               </button>
               {pushError && (
-                <span className="text-[10px] text-red-400 max-w-xs leading-tight">
+                <span className="text-[12px] text-red-400 max-w-xs leading-tight">
                   {pushError}
                 </span>
               )}
               {pushSuccess && (
-                <span className="text-[10px] text-emerald-400">
+                <span className="text-[12px] text-emerald-400">
                   Press <strong>C</strong> in Figma to view comments.
                 </span>
               )}
