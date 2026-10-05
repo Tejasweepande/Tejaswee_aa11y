@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { InputMode, ExportScale, ModuleType, AuditHistoryItem } from '../types/finding';
+import { ClearButton } from './ClearButton';
 import {
   UploadCloud,
   Layers,
@@ -55,6 +56,10 @@ export const InputPanel: React.FC<Props> = ({
   onLoadHistoryItem,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const figmaUrlRef = useRef<HTMLInputElement>(null);
+  const figmaPatRef = useRef<HTMLInputElement>(null);
+  const webUrlRef = useRef<HTMLInputElement>(null);
+  const pastedHtmlRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -233,20 +238,38 @@ export const InputPanel: React.FC<Props> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-lab-text">Figma Prototype Link</span>
           </div>
-          <input
-            type="text"
-            value={figmaUrl}
-            onChange={(e) => onChangeFigmaUrl(e.target.value)}
-            placeholder="https://www.figma.com/proto/... or /design/..."
-            className="w-full bg-lab-card shadow-inner rounded_SM px-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
-          />
-          <input
-            type="password"
-            value={figmaPat}
-            onChange={(e) => onChangeFigmaPat(e.target.value.trim())}
-            placeholder="Figma Personal Access Token (figd_...)"
-            className="w-full bg-lab-card shadow-inner rounded_SM px-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
-          />
+          <div className="relative">
+            <input
+              ref={figmaUrlRef}
+              type="text"
+              value={figmaUrl}
+              onChange={(e) => onChangeFigmaUrl(e.target.value)}
+              placeholder="https://www.figma.com/proto/... or /design/..."
+              className="w-full bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+            />
+            {figmaUrl.length > 0 && (
+              <ClearButton
+                label="Clear Figma link"
+                onClick={() => { onChangeFigmaUrl(''); figmaUrlRef.current?.focus(); }}
+              />
+            )}
+          </div>
+          <div className="relative">
+            <input
+              ref={figmaPatRef}
+              type="password"
+              value={figmaPat}
+              onChange={(e) => onChangeFigmaPat(e.target.value.trim())}
+              placeholder="Figma Personal Access Token (figd_...)"
+              className="w-full bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+            />
+            {figmaPat.length > 0 && (
+              <ClearButton
+                label="Clear Figma access token"
+                onClick={() => { onChangeFigmaPat(''); figmaPatRef.current?.focus(); }}
+              />
+            )}
+          </div>
           <p className="text-[11px] text-lab-dim leading-relaxed">
             Extracts prototype transition links to walk user focus flow deterministically.
           </p>
@@ -258,22 +281,41 @@ export const InputPanel: React.FC<Props> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-lab-text">Website URL</span>
           </div>
-          <input
-            type="text"
-            value={webUrl}
-            onChange={(e) => onChangeWebUrl(e.target.value)}
-            placeholder="https://example.com"
-            className="w-full bg-lab-card shadow-inner rounded_SM px-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
-          />
+          <div className="relative">
+            <input
+              ref={webUrlRef}
+              type="text"
+              value={webUrl}
+              onChange={(e) => onChangeWebUrl(e.target.value)}
+              placeholder="https://example.com"
+              className="w-full bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+            />
+            {webUrl.length > 0 && (
+              <ClearButton
+                label="Clear website URL"
+                onClick={() => { onChangeWebUrl(''); webUrlRef.current?.focus(); }}
+              />
+            )}
+          </div>
           
           <div className="pt-2 border-t border-lab-border">
             <span className="text-xs font-semibold text-lab-text block mb-2">HTML Fallback</span>
-            <textarea
-              value={pastedHtml}
-              onChange={(e) => onChangePastedHtml(e.target.value)}
-              placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-              className="w-full h-24 bg-lab-card shadow-inner rounded_SM px-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
-            />
+            <div className="relative">
+              <textarea
+                ref={pastedHtmlRef}
+                value={pastedHtml}
+                onChange={(e) => onChangePastedHtml(e.target.value)}
+                placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
+                className="w-full h-24 bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-xs font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+              />
+              {pastedHtml.length > 0 && (
+                <ClearButton
+                  label="Clear pasted HTML"
+                  align="top"
+                  onClick={() => { onChangePastedHtml(''); pastedHtmlRef.current?.focus(); }}
+                />
+              )}
+            </div>
             <p className="text-[11px] text-lab-dim leading-relaxed mt-1.5">
               On the target page, right-click and choose "View Page Source", then select all and copy the HTML into the box above.
             </p>
