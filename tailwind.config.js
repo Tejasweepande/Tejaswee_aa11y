@@ -8,6 +8,7 @@ export default {
   theme: {
     // The whole tool uses exactly five text sizes. Replacing (not extending)
     // Tailwind's defaults means no other size can be used by accident.
+    // One exception: src/components/FindingCard.tsx keeps its Figma sizes (custom px classes).
     fontSize: {
       xs: ['12px', { lineHeight: '16px' }],
       sm: ['14px', { lineHeight: '20px' }],
