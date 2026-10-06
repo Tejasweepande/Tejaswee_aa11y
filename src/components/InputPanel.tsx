@@ -283,6 +283,17 @@ export const InputPanel: React.FC<Props> = ({
             )}
           </div>
           <p className="text-xs text-lab-dim leading-relaxed">
+            The token is needed to read the file.{' '}
+            <a
+              href="https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens"
+              target="_blank"
+              rel="noreferrer"
+              className="text-lab-accent underline font-semibold"
+            >
+              How to get a token<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </p>
+          <p className="text-xs text-lab-dim leading-relaxed">
             Extracts prototype transition links to walk user focus flow deterministically.
           </p>
         </div>
@@ -385,7 +396,7 @@ export const InputPanel: React.FC<Props> = ({
         (() => {
           let isReadyToAudit = false;
           if (currentInput === 'image') isReadyToAudit = hasImage;
-          else if (currentInput === 'figma') isReadyToAudit = !!figmaUrl.trim();
+          else if (currentInput === 'figma') isReadyToAudit = !!figmaUrl.trim() && !!figmaPat.trim();
           else if (currentInput === 'url') isReadyToAudit = !!webUrl.trim() || !!pastedHtml.trim();
 
           const isDisabled = isAuditing || !isReadyToAudit;
