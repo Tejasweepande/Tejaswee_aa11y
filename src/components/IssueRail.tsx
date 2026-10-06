@@ -114,25 +114,8 @@ export const IssueRail: React.FC<Props> = ({
       className="bg-lab-card rounded p-5 shadow-panel flex flex-col gap-4 h-full overflow-hidden min-h-0"
     >
       {/* Rail Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-lg font-bold text-lab-text">Findings</h2>
-          {hasAudited && (
-            // Quiet summary (not clickable): one dot per severity that has issues.
-            <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-sm text-lab-muted">
-              {findings.length === 0
-                ? 'No issues found'
-                : (['critical', 'serious', 'moderate', 'minor'] as Severity[])
-                    .filter((sev) => severityCounts[sev] > 0)
-                    .map((sev) => (
-                      <span key={sev} className="inline-flex items-center gap-1.5">
-                        <SeverityDot severity={sev} />
-                        {severityCounts[sev]} {sev}
-                      </span>
-                    ))}
-            </p>
-          )}
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-lab-text">Findings</h2>
 
         {hasAudited && (
           <div className="flex items-center gap-1.5 shrink-0">
