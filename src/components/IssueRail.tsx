@@ -1,6 +1,6 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Finding, ModuleType, Severity } from '../types/finding';
-import { CheckCircle2, Search, FileDown, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { CheckCircle2, Search, FileDown, Sparkles } from 'lucide-react';
 import { FindingCard } from './FindingCard';
 import { SuggestionPanel } from './SuggestionPanel';
 
@@ -116,7 +116,6 @@ export const IssueRail: React.FC<Props> = ({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-bold text-lab-text flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-lab-accent" aria-hidden="true" />
             <span>Audit Findings ({hasAudited ? findings.length : 0})</span>
           </h2>
           <p className="text-sm text-lab-muted">WCAG 2.2 AA deterministic violations</p>
@@ -128,15 +127,15 @@ export const IssueRail: React.FC<Props> = ({
               type="button"
               onClick={onExportJson}
               title="Download JSON canonical findings"
-              className="p-1.5 rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text text-sm shadow-sm transition-all"
+              className="w-8 h-8 inline-flex items-center justify-center rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text shadow-sm transition-all"
               aria-label="Export findings as JSON"
             >
-              <FileDown className="w-3.5 h-3.5" aria-hidden="true" />
+              <FileDown className="w-4 h-4" aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={onOpenReportModal}
-              className="px-2.5 py-1.5 rounded bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent text-sm font-bold transition-all flex items-center gap-1"
+              className="h-8 px-2.5 rounded bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent text-sm font-bold transition-all flex items-center gap-1"
             >
               <span>Full Report</span>
             </button>
@@ -230,7 +229,7 @@ export const IssueRail: React.FC<Props> = ({
           </div>
 
           {/* Search and Filters */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-lab-dim absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <input
