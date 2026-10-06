@@ -69,6 +69,8 @@ export const App: React.FC = () => {
   const [liveAnnouncement, setLiveAnnouncement] = useState('');
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  // The header's Export Report button appears only after the report has been opened once for this audit.
+  const [hasViewedReport, setHasViewedReport] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [webUrl, setWebUrl] = useState<string>('');
   const [pastedHtml, setPastedHtml] = useState<string>('');
@@ -277,6 +279,7 @@ export const App: React.FC = () => {
     setModuleToggles(item.moduleToggles);
     setExportScale(item.exportScale);
     setHasAudited(true);
+    setHasViewedReport(false);
     setInputMode(item.inputMode);
     setViewStep('results');
 
@@ -329,6 +332,7 @@ export const App: React.FC = () => {
     setFindings([]);
     setScreenReaderItems([]);
     setHasAudited(false);
+    setHasViewedReport(false);
     setSelectedSampleId(null);
     
     if (inputMode === 'figma') {
@@ -765,7 +769,7 @@ export const App: React.FC = () => {
               )}
             </button>
 
-            {hasAudited && (
+            {hasAudited && hasViewedReport && (
               <button
                 type="button"
                 onClick={() => setReportModalOpen(true)}
@@ -849,7 +853,7 @@ export const App: React.FC = () => {
               onSelectFinding={handleSelectFinding}
               hoveredFindingId={hoveredFindingId}
               onHoverFinding={setHoveredFindingId}
-              onOpenReportModal={() => setReportModalOpen(true)}
+              onOpenReportModal={() => { setReportModalOpen(true); setHasViewedReport(true); }}
               onExportJson={handleExportJson}
               hasAudited={hasAudited}
             />
