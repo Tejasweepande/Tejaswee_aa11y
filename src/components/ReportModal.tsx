@@ -304,13 +304,13 @@ export const ReportModal: React.FC<Props> = ({
         {/* Scrollable Report Content */}
         <div className="report-print-scroll flex-1 overflow-y-auto space-y-6 pr-2">
           {/* Statutory Disclaimer (§7 in GEMINI.md) */}
-          <div className="break-inside-avoid bg-amber-400 border border-amber-500 rounded p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="break-inside-avoid bg-lab-subtle border-l-4 border-amber-500 rounded p-3 flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <h3 className="text-sm font-bold text-black mb-1">
+              <h3 className="text-sm font-semibold text-lab-text mb-0.5">
                 Automated Testing Coverage Boundary Notice
               </h3>
-              <p className="text-sm text-black leading-relaxed">
+              <p className="text-xs text-lab-muted leading-relaxed">
                 Automated accessibility testing tools detect approximately <strong>30% to 40%</strong> of all WCAG success criteria. <strong>This report never claims full legal or technical conformance.</strong> Overclaiming conformance is itself an accessibility harm. The findings below must be paired with the manual review checklist.
               </p>
             </div>
