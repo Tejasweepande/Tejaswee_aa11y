@@ -7,7 +7,6 @@ import {
   Download,
   Copy,
   CheckCircle2,
-  ShieldCheck,
   AlertTriangle,
   Printer,
   Send,
@@ -259,7 +258,7 @@ export const ReportModal: React.FC<Props> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="report-modal-title"
-      className={`report-print-root fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto ${isFullPage ? 'p-0' : 'p-4'}`}
+      className={`report-print-root fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in overflow-y-auto ${isFullPage ? 'p-0' : 'p-4'}`}
     >
       <div
         className={`report-print-panel bg-lab-card border border-lab-border w-full p-6 shadow-2xl relative flex flex-col ${
@@ -317,40 +316,40 @@ export const ReportModal: React.FC<Props> = ({
           </div>
 
           {/* Metric Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-red-700 dark:text-red-400 block mb-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
+              <span className="text-xl font-mono font-extrabold tabular-nums text-red-700 dark:text-red-400 block mb-1">
                 {severityCounts.critical}
               </span>
-              <span className="text-xs uppercase font-semibold text-lab-muted">Critical Barriers</span>
+              <span className="text-xs font-semibold text-lab-muted">Critical Barriers</span>
             </div>
 
-            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-orange-700 dark:text-orange-400 block mb-1">
+            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
+              <span className="text-xl font-mono font-extrabold tabular-nums text-orange-700 dark:text-orange-400 block mb-1">
                 {severityCounts.serious}
               </span>
-              <span className="text-xs uppercase font-semibold text-lab-muted">Serious Issues</span>
+              <span className="text-xs font-semibold text-lab-muted">Serious Issues</span>
             </div>
 
-            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-amber-700 dark:text-amber-400 block mb-1">
+            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
+              <span className="text-xl font-mono font-extrabold tabular-nums text-amber-700 dark:text-amber-400 block mb-1">
                 {severityCounts.moderate}
               </span>
-              <span className="text-xs uppercase font-semibold text-lab-muted">Moderate Notices</span>
+              <span className="text-xs font-semibold text-lab-muted">Moderate Notices</span>
             </div>
 
-            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-sky-700 dark:text-sky-400 block mb-1">
+            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
+              <span className="text-xl font-mono font-extrabold tabular-nums text-sky-700 dark:text-sky-400 block mb-1">
                 {severityCounts.minor}
               </span>
-              <span className="text-xs uppercase font-semibold text-lab-muted">Minor Polish</span>
+              <span className="text-xs font-semibold text-lab-muted">Minor Polish</span>
             </div>
           </div>
 
           {/* Visual Barrier Map */}
           {(imageSrc || iframeHtml) && (
-            <div className="bg-lab-card border border-lab-border rounded p-4 mb-6">
-              <h3 className="break-after-avoid text-base font-bold text-lab-text uppercase tracking-wider mb-4 border-b border-lab-border pb-2">
+            <div>
+              <h3 className="break-after-avoid text-xs font-bold uppercase tracking-wider text-lab-muted mb-3">
                 Visual Barrier Map
               </h3>
               <BarrierMap imageSrc={imageSrc} iframeHtml={iframeHtml} findings={findings} />
@@ -369,7 +368,7 @@ export const ReportModal: React.FC<Props> = ({
                   <th className="py-3 px-4 w-20 text-center">Issues</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-lab-border text-base">
+              <tbody className="divide-y divide-lab-border text-sm">
                 {criteriaRows.map(row => (
                   <tr key={row.sc} className="break-inside-avoid hover:bg-lab-bg/50 transition-colors">
                     <td className="py-3 px-4 font-mono text-lab-dim">{row.sc}</td>
@@ -382,17 +381,20 @@ export const ReportModal: React.FC<Props> = ({
                     <td className="py-3 px-4 text-center">
                       {row.status === 'failure' && (
                         <div className="mx-auto w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
-                          <X className="w-3.5 h-3.5 text-red-500" strokeWidth={3} />
+                          <X className="w-3.5 h-3.5 text-red-700 dark:text-red-400" strokeWidth={3} aria-hidden="true" />
+                          <span className="sr-only">Fails</span>
                         </div>
                       )}
                       {row.status === 'warning' && (
-                        <div className="mx-auto w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold text-sm">
-                          !
+                        <div className="mx-auto w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-sm">
+                          <span aria-hidden="true">!</span>
+                          <span className="sr-only">Warning</span>
                         </div>
                       )}
                       {row.status === 'passed' && (
                         <div className="mx-auto w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                          <div className="w-3.5 h-3.5 rounded-full bg-emerald-500" />
+                          <div className="w-3.5 h-3.5 rounded-full bg-emerald-600" aria-hidden="true" />
+                          <span className="sr-only">Passes</span>
                         </div>
                       )}
                     </td>
@@ -413,7 +415,7 @@ export const ReportModal: React.FC<Props> = ({
 
           {/* Detailed Findings List */}
           <div className="space-y-4">
-            <h3 className="break-after-avoid text-base font-bold text-lab-text uppercase tracking-wider border-b border-lab-border pb-2">
+            <h3 className="break-after-avoid text-xs font-bold uppercase tracking-wider text-lab-muted">
               Detailed Findings
             </h3>
             <div className="space-y-4">
@@ -445,19 +447,19 @@ export const ReportModal: React.FC<Props> = ({
                         </div>
                       </div>
                       
-                      <div className="bg-lab-bg rounded p-3 mb-3 border border-lab-border">
-                        <p className="text-base text-lab-text font-mono">Evidence: {f.evidence}</p>
+                      <div className="bg-lab-subtle rounded p-3 mb-3">
+                        <p className="text-sm text-lab-text font-mono">Evidence: {f.evidence}</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         {f.impact && (
-                          <div className="bg-lab-bg rounded p-3 border border-lab-border text-base">
+                          <div className="bg-lab-subtle rounded p-3 text-sm">
                             <strong className="text-lab-muted block mb-1">Impact:</strong>
                             <span className="text-lab-text">{f.impact}</span>
                           </div>
                         )}
                         {f.fix && (
-                          <div className="bg-lab-bg rounded p-3 border border-lab-border text-base">
+                          <div className="bg-lab-subtle rounded p-3 text-sm">
                             <strong className="text-lab-muted block mb-1">Fix:</strong>
                             <span className="text-lab-text">{f.fix}</span>
                           </div>
@@ -477,26 +479,25 @@ export const ReportModal: React.FC<Props> = ({
           </div>
 
           {/* Manual Review Checklist (§7 in GEMINI.md) */}
-          <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-4 space-y-3">
-            <h3 className="text-sm font-bold text-lab-text uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-lab-accent" aria-hidden="true" />
+          <div className="break-inside-avoid bg-lab-subtle rounded_SM p-4 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">
               Essential Manual Review Checklist
             </h3>
             <ul className="space-y-2 text-sm text-lab-muted">
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-lab-accent mt-1.5 flex-shrink-0" />
                 <span>
                   <strong>Modal Focus Trapping:</strong> Test that opening dialogs confines keyboard Tab focus within the modal until dismissed.
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-lab-accent mt-1.5 flex-shrink-0" />
                 <span>
                   <strong>Screen Reader Meaningful Sequence:</strong> Verify that interactive screen readers (NVDA, VoiceOver) announce dynamic alerts with appropriate live region priority.
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-lab-accent mt-1.5 flex-shrink-0" />
                 <span>
                   <strong>200% Text Zoom:</strong> Verify that browser zoom up to 200% causes no text truncation or overlapping elements.
                 </span>
