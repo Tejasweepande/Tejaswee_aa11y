@@ -96,7 +96,7 @@ export const FindingCard: React.FC<Props> = ({
       aria-labelledby={titleId}
       onMouseEnter={isList ? () => onHover?.(true) : undefined}
       onMouseLeave={isList ? () => onHover?.(false) : undefined}
-      className={`relative flex items-stretch gap-3 pr-4 bg-white text-black rounded border border-black/10 shadow-sm transition-shadow ${
+      className={`group relative flex items-stretch gap-3 pr-4 bg-white text-black rounded border border-black/10 shadow-sm transition-shadow ${
         highlighted ? 'ring-2 ring-sky-500' : ''
       }`}
     >
@@ -135,7 +135,15 @@ export const FindingCard: React.FC<Props> = ({
           </div>
 
           {isList && (
-            <div className="flex items-center gap-0.5 pointer-events-auto">
+            // Actions show on hover or keyboard focus (and stay visible on touch screens,
+            // while the menu is open, or when the card is selected) to keep the list calm.
+            <div
+              className={`flex items-center gap-0.5 pointer-events-auto transition-opacity ${
+                menuOpen || isSelected
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100'
+              }`}
+            >
               <button
                 type="button"
                 id={`finding-${finding.id}-suggestions`}

@@ -116,10 +116,22 @@ export const IssueRail: React.FC<Props> = ({
       {/* Rail Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-bold text-lab-text flex items-center gap-2">
-            <span>Audit Findings ({hasAudited ? findings.length : 0})</span>
-          </h2>
-          <p className="text-sm text-lab-muted">WCAG 2.2 AA deterministic violations</p>
+          <h2 className="text-lg font-bold text-lab-text">Findings</h2>
+          {hasAudited && (
+            // Quiet summary (not clickable): one dot per severity that has issues.
+            <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-sm text-lab-muted">
+              {findings.length === 0
+                ? 'No issues found'
+                : (['critical', 'serious', 'moderate', 'minor'] as Severity[])
+                    .filter((sev) => severityCounts[sev] > 0)
+                    .map((sev) => (
+                      <span key={sev} className="inline-flex items-center gap-1.5">
+                        <SeverityDot severity={sev} />
+                        {severityCounts[sev]} {sev}
+                      </span>
+                    ))}
+            </p>
+          )}
         </div>
 
         {hasAudited && (
@@ -166,63 +178,58 @@ export const IssueRail: React.FC<Props> = ({
       ) : (
         /* Post-Audit Findings View */
         <>
-          {/* Severity filter chips: same dot colors as the cards; selected chips are neutral, not blue */}
-          <div className="flex flex-wrap gap-1.5">
-            {(['critical', 'serious', 'moderate', 'minor'] as Severity[]).map((sev) => (
+          {/* Severity filter as text tabs: no fills, the selected one is bold and underlined */}
+          <div role="group" aria-label="Filter by severity" className="flex flex-wrap gap-x-4 border-b border-lab-border">
+            {(['all', ...(['critical', 'serious', 'moderate', 'minor'] as Severity[]).filter((sev) => severityCounts[sev] > 0)] as (
+              | 'all'
+              | Severity
+            )[]).map((sev) => (
               <button
                 key={sev}
                 type="button"
                 aria-pressed={selectedSeverity === sev}
-                onClick={() => setSelectedSeverity(selectedSeverity === sev ? 'all' : sev)}
-                className={`px-2.5 py-1.5 rounded flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                onClick={() => setSelectedSeverity(sev)}
+                className={`-mb-px pb-2 inline-flex items-center gap-1.5 text-sm border-b-2 transition-colors ${
                   selectedSeverity === sev
-                    ? 'bg-lab-text text-lab-card'
-                    : 'bg-lab-subtle text-lab-text hover:bg-lab-elevated'
+                    ? 'border-lab-text text-lab-text font-bold'
+                    : 'border-transparent text-lab-muted hover:text-lab-text'
                 }`}
               >
-                <SeverityDot severity={sev} />
-                <span className="tabular-nums">{severityCounts[sev]}</span>
-                <span>{sev.charAt(0).toUpperCase() + sev.slice(1)}</span>
+                {sev !== 'all' && <SeverityDot severity={sev} />}
+                {sev === 'all'
+                  ? `All ${findings.length}`
+                  : `${sev.charAt(0).toUpperCase() + sev.slice(1)} ${severityCounts[sev]}`}
               </button>
             ))}
           </div>
 
-          {/* Search and Filters */}
-          <div className="space-y-3">
-            <div className="relative">
+          {/* Search, with the check-type filter as a small dropdown beside it */}
+          <div className="flex gap-2">
+            <div className="relative flex-1 min-w-0">
               <Search className="w-3.5 h-3.5 text-lab-dim absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search issues, WCAG criteria, selectors..."
+                placeholder="Search issues"
+                aria-label="Search issues"
                 className="w-full bg-lab-card shadow-inner rounded pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
               />
             </div>
-
-            {/* Quick Filter Bar */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-sm no-scrollbar">
-              {(['all', 'contrast', 'keyboard', 'screenreader', 'structure'] as (ModuleType | 'all')[]).map(
-                (mod) => (
-                  <button
-                    key={mod}
-                    type="button"
-                    onClick={() => setSelectedModule(mod)}
-                    className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap transition-all shadow-sm ${
-                      selectedModule === mod
-                        ? 'bg-lab-text text-lab-card'
-                        : 'bg-lab-subtle text-lab-muted hover:text-lab-text hover:bg-lab-elevated'
-                    }`}
-                  >
-                    {mod === 'all'
-                      ? 'All Modules'
-                      : mod === 'screenreader'
-                      ? 'Screen Reader'
-                      : mod.charAt(0).toUpperCase() + mod.slice(1)}
-                  </button>
-                )
-              )}
-            </div>
+            <label className="shrink-0 flex items-center gap-1.5 rounded border border-lab-border bg-lab-card pl-2.5 text-sm text-lab-muted focus-within:ring-2 focus-within:ring-sky-500/50">
+              Check
+              <select
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value as ModuleType | 'all')}
+                className="bg-transparent py-1.5 pr-2 text-sm font-semibold text-lab-text focus:outline-none cursor-pointer"
+              >
+                <option value="all">All</option>
+                <option value="contrast">Contrast</option>
+                <option value="keyboard">Keyboard</option>
+                <option value="screenreader">Screen reader</option>
+                <option value="structure">Structure</option>
+              </select>
+            </label>
           </div>
 
           {/* Findings List (Scrollable) */}

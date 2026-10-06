@@ -825,7 +825,8 @@ export const App: React.FC = () => {
               Back to Upload
             </button>
 
-            {auditNoticeBanner}
+            {/* The results speak for themselves: only warnings and errors get a banner here. */}
+            {auditNotice?.type !== 'success' && auditNoticeBanner}
 
             <PreviewCanvas
               imageSrc={imageSrc}
