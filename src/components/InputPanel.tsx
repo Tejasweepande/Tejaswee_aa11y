@@ -94,28 +94,39 @@ export const InputPanel: React.FC<Props> = ({
       className="bg-lab-card/95 backdrop-blur-md border border-lab-border rounded shadow-panel flex flex-row h-full overflow-hidden"
     >
       {/* Left Navigation */}
-      <div className="w-16 shrink-0 border-r border-lab-border flex flex-col items-center py-5 gap-6 bg-lab-card/50">
-        <div className="flex flex-col gap-4 w-full px-2">
-           <button onClick={() => onSelectInput('image')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'image' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Image Upload">
-             <UploadCloud className="w-5 h-5" />
-           </button>
-           <button onClick={() => onSelectInput('figma')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'figma' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Figma Link">
-             <Layers className="w-5 h-5" />
-           </button>
-           <button onClick={() => onSelectInput('url')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'url' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Live URL">
-             <Globe className="w-5 h-5" />
-           </button>
-
-           <hr className="border-lab-border w-full my-1" />
-
-           <button onClick={() => onSelectInput('history')} className={`p-2 rounded flex justify-center transition-colors relative ${currentInput === 'history' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Audit History">
-             <History className="w-5 h-5" />
-             {pastAudits.length > 0 && (
-               <span className="absolute top-1 right-1 w-2 h-2 bg-lab-accent rounded-full"></span>
-             )}
-           </button>
+      {/* Each item shows its name under the icon, so it does not rely on a hover tooltip. */}
+      <nav aria-label="Audit source" className="w-20 shrink-0 border-r border-lab-border flex flex-col items-center py-5 bg-lab-card/50">
+        <div className="flex flex-col gap-2 w-full px-2">
+          {(
+            [
+              { mode: 'image', label: 'Image', Icon: UploadCloud },
+              { mode: 'figma', label: 'Figma', Icon: Layers },
+              { mode: 'url', label: 'Website', Icon: Globe },
+              { mode: 'history', label: 'History', Icon: History },
+            ] as { mode: InputMode; label: string; Icon: typeof History }[]
+          ).map(({ mode, label, Icon }) => (
+            <React.Fragment key={mode}>
+              {mode === 'history' && <hr className="border-lab-border w-full my-1" />}
+              <button
+                type="button"
+                onClick={() => onSelectInput(mode)}
+                aria-current={currentInput === mode ? 'page' : undefined}
+                className={`relative py-2 rounded flex flex-col items-center gap-1 transition-colors ${
+                  currentInput === mode
+                    ? 'bg-lab-accent/10 text-lab-accent'
+                    : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'
+                }`}
+              >
+                <Icon className="w-5 h-5" aria-hidden="true" />
+                <span className="text-xs font-semibold">{label}</span>
+                {mode === 'history' && pastAudits.length > 0 && (
+                  <span className="absolute top-1.5 right-3 w-2 h-2 bg-lab-accent rounded-full" aria-hidden="true"></span>
+                )}
+              </button>
+            </React.Fragment>
+          ))}
         </div>
-      </div>
+      </nav>
 
       {/* Right Content Area */}
       <div className="flex-1 flex flex-col py-8 px-4 sm:px-8 overflow-y-auto">
