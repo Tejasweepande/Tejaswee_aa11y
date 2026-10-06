@@ -810,8 +810,8 @@ export const App: React.FC = () => {
       ) : (
         /* Step 2: Preview & Issues List */
         <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-76px)] overflow-hidden">
-          {/* Centre Column: Preview Canvas + Interactive Multi-modal Barrier Simulator (Takes 75% = 9 cols) */}
-          <div className="lg:col-span-9 flex flex-col gap-4 h-full overflow-hidden min-h-0">
+          {/* Centre Column: Preview Canvas + Interactive Multi-modal Barrier Simulator (Takes 2/3 = 8 cols) */}
+          <div className="lg:col-span-8 flex flex-col gap-4 h-full overflow-hidden min-h-0">
             <button
               type="button"
               onClick={() => setViewStep('upload')}
@@ -841,8 +841,8 @@ export const App: React.FC = () => {
             />
           </div>
 
-          {/* Right Column: Issue Rail (Takes 25% = 3 cols) */}
-          <div className="lg:col-span-3 flex flex-col h-full overflow-hidden min-h-0 bg-lab-card/80 border border-lab-border rounded shadow-panel">
+          {/* Right Column: Issue Rail (Takes 1/3 = 4 cols) */}
+          <div className="lg:col-span-4 flex flex-col h-full overflow-hidden min-h-0 bg-lab-card/80 border border-lab-border rounded shadow-panel">
             <IssueRail
               findings={findings}
               selectedFindingId={selectedFindingId}

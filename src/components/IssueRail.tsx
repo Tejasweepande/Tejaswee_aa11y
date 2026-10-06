@@ -113,8 +113,8 @@ export const IssueRail: React.FC<Props> = ({
       className="bg-lab-card rounded p-5 shadow-panel flex flex-col gap-4 h-full overflow-hidden min-h-0"
     >
       {/* Rail Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-lg font-bold text-lab-text flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-lab-accent" aria-hidden="true" />
             <span>Audit Findings ({hasAudited ? findings.length : 0})</span>
@@ -123,7 +123,7 @@ export const IssueRail: React.FC<Props> = ({
         </div>
 
         {hasAudited && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={onExportJson}
@@ -167,65 +167,65 @@ export const IssueRail: React.FC<Props> = ({
         /* Post-Audit Findings View */
         <>
           {/* Severity Metric Pills */}
-          <div className="grid grid-cols-4 gap-1.5 text-center">
+          <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={() => setSelectedSeverity(selectedSeverity === 'critical' ? 'all' : 'critical')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
+              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
                 selectedSeverity === 'critical'
                   ? 'bg-red-500/20 text-red-700 dark:text-red-300 ring-2 ring-red-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-red-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-red-700 dark:text-red-400">
+              <span className="text-sm font-extrabold font-mono tabular-nums text-red-700 dark:text-red-400">
                 {severityCounts.critical}
               </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Critical</span>
+              <span className="text-xs font-semibold text-lab-muted">Critical</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedSeverity(selectedSeverity === 'serious' ? 'all' : 'serious')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
+              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
                 selectedSeverity === 'serious'
                   ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 ring-2 ring-orange-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-orange-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-orange-700 dark:text-orange-400">
+              <span className="text-sm font-extrabold font-mono tabular-nums text-orange-700 dark:text-orange-400">
                 {severityCounts.serious}
               </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Serious</span>
+              <span className="text-xs font-semibold text-lab-muted">Serious</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedSeverity(selectedSeverity === 'moderate' ? 'all' : 'moderate')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
+              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
                 selectedSeverity === 'moderate'
                   ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-amber-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-amber-700 dark:text-amber-400">
+              <span className="text-sm font-extrabold font-mono tabular-nums text-amber-700 dark:text-amber-400">
                 {severityCounts.moderate}
               </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Moderate</span>
+              <span className="text-xs font-semibold text-lab-muted">Moderate</span>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedSeverity(selectedSeverity === 'minor' ? 'all' : 'minor')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
+              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
                 selectedSeverity === 'minor'
                   ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 ring-2 ring-sky-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-sky-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-sky-700 dark:text-sky-400">
+              <span className="text-sm font-extrabold font-mono tabular-nums text-sky-700 dark:text-sky-400">
                 {severityCounts.minor}
               </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Minor</span>
+              <span className="text-xs font-semibold text-lab-muted">Minor</span>
             </button>
           </div>
 
