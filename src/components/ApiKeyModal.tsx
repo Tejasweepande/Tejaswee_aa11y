@@ -113,7 +113,7 @@ export const ApiKeyModal: React.FC<Props> = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded_SM text-sm font-bold bg-sky-500 text-white dark:text-lab-bg hover:bg-sky-600 dark:hover:bg-sky-400 focus-visible:ring-2 flex items-center gap-1.5 shadow-sm transition-all"
+                className="px-4 py-2 rounded_SM text-sm font-bold bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover focus-visible:ring-2 flex items-center gap-1.5 shadow-sm transition-all"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                 Save for Session

@@ -136,7 +136,7 @@ export const IssueRail: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenReportModal}
-              className="px-2.5 py-1.5 rounded bg-sky-500 hover:bg-sky-400 text-lab-bg text-sm font-bold shadow-glow-cyan transition-all flex items-center gap-1"
+              className="px-2.5 py-1.5 rounded bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent text-sm font-bold shadow-glow-cyan transition-all flex items-center gap-1"
             >
               <span>Full Report</span>
             </button>
@@ -252,7 +252,7 @@ export const IssueRail: React.FC<Props> = ({
                     onClick={() => setSelectedModule(mod)}
                     className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap transition-all shadow-sm ${
                       selectedModule === mod
-                        ? 'bg-sky-500 text-white dark:text-lab-bg shadow-glow-cyan'
+                        ? 'bg-lab-accent text-lab-onAccent shadow-glow-cyan'
                         : 'bg-lab-subtle text-lab-muted hover:text-lab-text hover:bg-lab-elevated'
                     }`}
                   >

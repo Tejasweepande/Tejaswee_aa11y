@@ -554,7 +554,7 @@ export const ReportModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={handleDownloadJson}
-              className="px-4 py-2 rounded_SM text-sm font-bold bg-sky-500 hover:bg-sky-400 text-lab-bg shadow-glow-cyan flex items-center gap-1.5 transition-all"
+              className="px-4 py-2 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent shadow-glow-cyan flex items-center gap-1.5 transition-all"
             >
               <Download className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
               <span>Export Canonical JSON</span>

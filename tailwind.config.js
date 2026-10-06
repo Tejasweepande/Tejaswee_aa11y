@@ -28,6 +28,9 @@ export default {
           text: 'rgb(var(--lab-text) / <alpha-value>)',
           muted: 'rgb(var(--lab-muted) / <alpha-value>)',
           dim: 'rgb(var(--lab-dim) / <alpha-value>)',
+          accent: 'rgb(var(--lab-accent) / <alpha-value>)',
+          accentHover: 'rgb(var(--lab-accent-hover) / <alpha-value>)',
+          onAccent: 'rgb(var(--lab-on-accent) / <alpha-value>)',
         },
         barrier: {
           critical: '#DC2626',

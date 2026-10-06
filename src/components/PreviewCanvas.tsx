@@ -201,7 +201,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('overlay')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'overlay'
-                ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
+                ? 'bg-lab-accent text-lab-onAccent shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
@@ -215,7 +215,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('keyboard')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'keyboard'
-                ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
+                ? 'bg-lab-accent text-lab-onAccent shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
@@ -229,7 +229,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('screenreader')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'screenreader'
-                ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
+                ? 'bg-lab-accent text-lab-onAccent shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
@@ -445,7 +445,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                     <span
                       className={`min-w-[24px] h-6 px-1 rounded-full flex items-center justify-center text-xs font-bold font-mono shadow-lg ${
                         isActive
-                          ? 'bg-sky-400 text-lab-bg'
+                          ? 'bg-lab-accent text-lab-onAccent'
                           : 'bg-lab-card text-lab-text'
                       }`}
                     >
@@ -505,7 +505,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             type="button"
             onClick={onRunAudit}
             disabled={isAuditing}
-            className="px-4 py-1.5 rounded_SM text-sm font-bold uppercase tracking-wider bg-sky-500 hover:bg-sky-400 text-lab-bg flex items-center gap-1.5 shadow-glow-cyan transition-all"
+            className="px-4 py-1.5 rounded_SM text-sm font-bold uppercase tracking-wider bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 shadow-glow-cyan transition-all"
           >
             <Play className={`w-3.5 h-3.5 fill-current ${isAuditing ? 'animate-spin' : ''}`} />
             <span>{isAuditing ? 'Auditing...' : 'Run Accessibility Audit'}</span>
@@ -560,8 +560,8 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={() => setIsAutoplaying(!isAutoplaying)}
               className={`px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isAutoplaying
-                  ? 'bg-amber-500 text-lab-bg shadow-glow-amber'
-                  : 'bg-sky-500 text-lab-bg hover:bg-sky-400 shadow-glow-cyan'
+                  ? 'bg-amber-500 text-black shadow-glow-amber'
+                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover shadow-glow-cyan'
               }`}
             >
               {isAutoplaying ? (
@@ -621,8 +621,8 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={toggleSpeechPlayback}
               className={`px-3.5 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isSpeaking
-                  ? 'bg-amber-500 text-lab-bg shadow-glow-amber'
-                  : 'bg-sky-500 text-lab-bg hover:bg-sky-400 shadow-glow-cyan'
+                  ? 'bg-amber-500 text-black shadow-glow-amber'
+                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover shadow-glow-cyan'
               }`}
             >
               {isSpeaking ? (

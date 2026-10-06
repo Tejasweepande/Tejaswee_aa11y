@@ -220,7 +220,7 @@ export const InputPanel: React.FC<Props> = ({
                     onClick={() => onChangeScale(sc)}
                     className={`py-1.5 text-sm font-mono rounded transition-all shadow-sm ${
                       exportScale === sc
-                        ? 'bg-sky-500 text-white dark:text-lab-bg font-bold shadow-glow-cyan'
+                        ? 'bg-lab-accent text-lab-onAccent font-bold shadow-glow-cyan'
                         : 'bg-lab-card text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
                     }`}
                   >
@@ -378,8 +378,8 @@ export const InputPanel: React.FC<Props> = ({
 
           const isDisabled = isAuditing || !isReadyToAudit;
           
-          let buttonClass = 'bg-sky-500 hover:bg-sky-400 text-lab-bg focus-visible:ring-2 shadow-glow-cyan';
-          if (isAuditing) buttonClass = 'bg-sky-500/50 text-lab-bg cursor-wait shadow-glow-cyan';
+          let buttonClass = 'bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent focus-visible:ring-2 shadow-glow-cyan';
+          if (isAuditing) buttonClass = 'bg-lab-accent/60 text-lab-onAccent cursor-wait shadow-glow-cyan';
           else if (!isReadyToAudit) buttonClass = 'bg-lab-border text-lab-muted cursor-not-allowed opacity-60';
 
           return (
