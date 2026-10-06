@@ -410,7 +410,7 @@ export const InputPanel: React.FC<Props> = ({
               type="button"
               onClick={onRunAudit}
               disabled={isDisabled}
-              className={`w-full mt-auto py-3 px-4 rounded_SM text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
+              className={`w-full mt-1 py-3 px-4 rounded_SM text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
             >
               <Play className={`w-4 h-4 fill-current ${isAuditing ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{isAuditing ? 'Auditing Interface...' : 'Run Accessibility Audit'}</span>
