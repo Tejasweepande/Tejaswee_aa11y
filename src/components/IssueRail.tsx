@@ -197,7 +197,7 @@ export const IssueRail: React.FC<Props> = ({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search issues"
                 aria-label="Search issues"
-                className="w-full bg-lab-card shadow-inner rounded pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
+                className="w-full bg-lab-card border border-lab-border rounded pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
               />
             </div>
             <CheckFilter selected={selectedModules} onChange={setSelectedModules} />
