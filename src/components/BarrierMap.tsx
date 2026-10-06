@@ -30,11 +30,15 @@ const RING_BY_SEVERITY: Record<string, string> = {
   minor: 'ring-sky-500',
 };
 
-const Pins: React.FC<{ findings: Finding[] }> = ({ findings }) => (
+const Pins: React.FC<{ findings: Finding[]; onPinClick?: (finding: Finding, number: number) => void }> = ({
+  findings,
+  onPinClick,
+}) => (
   <div className="absolute inset-0 z-10 pointer-events-none">
     {findings.map((f, idx) => {
       const bbox = f.target.boundingBox;
       if (!bbox) return null;
+      const pinClass = `absolute left-0 ${bbox.y < 3 ? 'top-0' : 'bottom-full mb-0.5'} min-w-[24px] h-6 px-1 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shadow-md ring-1 ring-white shrink-0`;
       return (
         <div
           key={f.id}
@@ -42,9 +46,18 @@ const Pins: React.FC<{ findings: Finding[] }> = ({ findings }) => (
           style={{ left: `${bbox.x}%`, top: `${bbox.y}%`, width: `${bbox.w}%`, height: `${bbox.h}%` }}
           className={`absolute ring-2 ${RING_BY_SEVERITY[f.severity] || 'ring-sky-500'} rounded flex items-start justify-start`}
         >
-          <span className={`absolute left-0 ${bbox.y < 3 ? 'top-0' : 'bottom-full mb-0.5'} min-w-[24px] h-6 px-1 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shadow-md ring-1 ring-white shrink-0`}>
-            {idx + 1}
-          </span>
+          {onPinClick ? (
+            <button
+              type="button"
+              onClick={() => onPinClick(f, idx + 1)}
+              aria-label={`Go to issue ${idx + 1}`}
+              className={`${pinClass} pointer-events-auto cursor-pointer hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600`}
+            >
+              {idx + 1}
+            </button>
+          ) : (
+            <span className={pinClass}>{idx + 1}</span>
+          )}
         </div>
       );
     })}
@@ -55,9 +68,11 @@ interface Props {
   imageSrc?: string | null;
   iframeHtml?: string | null;
   findings: Finding[];
+  /** When given, each pin on screen becomes a button (used to jump to the issue's card). */
+  onPinClick?: (finding: Finding, number: number) => void;
 }
 
-export const BarrierMap: React.FC<Props> = ({ imageSrc, iframeHtml, findings }) => {
+export const BarrierMap: React.FC<Props> = ({ imageSrc, iframeHtml, findings, onPinClick }) => {
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
   const [frameHeight, setFrameHeight] = useState(768);
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -94,7 +109,7 @@ export const BarrierMap: React.FC<Props> = ({ imageSrc, iframeHtml, findings }) 
                 if (img.naturalWidth > 0) setDims({ w: img.naturalWidth, h: img.naturalHeight });
               }}
             />
-            <Pins findings={findings} />
+            <Pins findings={findings} onPinClick={onPinClick} />
           </div>
         </div>
 
@@ -160,7 +175,7 @@ export const BarrierMap: React.FC<Props> = ({ imageSrc, iframeHtml, findings }) 
               }
             }}
           />
-          <Pins findings={findings} />
+          <Pins findings={findings} onPinClick={onPinClick} />
         </div>
       </div>
     );
