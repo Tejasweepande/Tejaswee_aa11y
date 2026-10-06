@@ -256,7 +256,7 @@ export const ReportModal: React.FC<Props> = ({
         {/* Header */}
         <div className="flex items-start justify-between border-b border-lab-border pb-4 mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded_SM bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded_SM bg-lab-accent/10 border border-lab-accent/30 text-lab-accent flex items-center justify-center">
               <FileText className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
@@ -461,7 +461,7 @@ export const ReportModal: React.FC<Props> = ({
           {/* Manual Review Checklist (§7 in GEMINI.md) */}
           <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-4 space-y-3">
             <h3 className="text-sm font-bold text-lab-text uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-sky-400" aria-hidden="true" />
+              <ShieldCheck className="w-4 h-4 text-lab-accent" aria-hidden="true" />
               Essential Manual Review Checklist
             </h3>
             <ul className="space-y-2 text-sm text-lab-muted">
@@ -501,7 +501,7 @@ export const ReportModal: React.FC<Props> = ({
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
+                <Copy className="w-3.5 h-3.5 text-lab-accent" aria-hidden="true" />
                 <span>Copy as Figma Review Comments</span>
               </>
             )}
@@ -516,7 +516,7 @@ export const ReportModal: React.FC<Props> = ({
                 className={`px-3 py-2 rounded_SM text-sm font-bold shadow-glow-cyan flex items-center gap-1.5 transition-all ${
                   pushSuccess
                     ? 'bg-emerald-500 hover:bg-emerald-400 text-black'
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50'
+                    : 'bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent disabled:opacity-50'
                 }`}
               >
                 {pushingToFigma ? (

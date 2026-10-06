@@ -116,7 +116,7 @@ export const IssueRail: React.FC<Props> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-lab-text flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-sky-400" aria-hidden="true" />
+            <SlidersHorizontal className="w-4 h-4 text-lab-accent" aria-hidden="true" />
             <span>Audit Findings ({hasAudited ? findings.length : 0})</span>
           </h2>
           <p className="text-sm text-lab-muted">WCAG 2.2 AA deterministic violations</p>
@@ -147,7 +147,7 @@ export const IssueRail: React.FC<Props> = ({
       {!hasAudited ? (
         /* Pre-Audit Clean State */
         <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-lab-subtle/40 rounded_SM min-h-[380px] shadow-inner">
-          <div className="w-12 h-12 rounded bg-sky-500/10 text-sky-400 flex items-center justify-center mb-3 shadow-sm">
+          <div className="w-12 h-12 rounded bg-lab-accent/10 text-lab-accent flex items-center justify-center mb-3 shadow-sm">
             <Sparkles className="w-6 h-6" aria-hidden="true" />
           </div>
           <h3 className="text-base font-bold text-lab-text mb-1">Ready for Audit</h3>

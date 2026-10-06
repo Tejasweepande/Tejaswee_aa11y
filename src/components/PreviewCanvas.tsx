@@ -277,7 +277,7 @@ export const PreviewCanvas: React.FC<Props> = ({
       >
         {!imageSrc && !iframeHtml ? (
           <div className="flex flex-col items-center justify-center h-[560px] text-center px-12">
-            <div className="w-12 h-12 rounded bg-sky-500/10 text-sky-500 dark:text-sky-400 mx-auto flex items-center justify-center mb-3 shadow-sm">
+            <div className="w-12 h-12 rounded bg-sky-500/10 text-lab-accent mx-auto flex items-center justify-center mb-3 shadow-sm">
               <Sparkles className="w-6 h-6" aria-hidden="true" />
             </div>
             <h3 className="text-base font-bold text-lab-text mb-1">Canvas Ready</h3>

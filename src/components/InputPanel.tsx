@@ -96,22 +96,22 @@ export const InputPanel: React.FC<Props> = ({
       {/* Left Navigation */}
       <div className="w-16 shrink-0 border-r border-lab-border flex flex-col items-center py-5 gap-6 bg-lab-card/50">
         <div className="flex flex-col gap-4 w-full px-2">
-           <button onClick={() => onSelectInput('image')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'image' ? 'bg-sky-500/20 text-sky-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Image Upload">
+           <button onClick={() => onSelectInput('image')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'image' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Image Upload">
              <UploadCloud className="w-5 h-5" />
            </button>
-           <button onClick={() => onSelectInput('figma')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'figma' ? 'bg-fuchsia-500/20 text-fuchsia-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Figma Link">
+           <button onClick={() => onSelectInput('figma')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'figma' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Figma Link">
              <Layers className="w-5 h-5" />
            </button>
-           <button onClick={() => onSelectInput('url')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'url' ? 'bg-indigo-500/20 text-indigo-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Live URL">
+           <button onClick={() => onSelectInput('url')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'url' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Live URL">
              <Globe className="w-5 h-5" />
            </button>
 
            <hr className="border-lab-border w-full my-1" />
 
-           <button onClick={() => onSelectInput('history')} className={`p-2 rounded flex justify-center transition-colors relative ${currentInput === 'history' ? 'bg-amber-500/20 text-amber-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Audit History">
+           <button onClick={() => onSelectInput('history')} className={`p-2 rounded flex justify-center transition-colors relative ${currentInput === 'history' ? 'bg-lab-accent/10 text-lab-accent' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Audit History">
              <History className="w-5 h-5" />
              {pastAudits.length > 0 && (
-               <span className="absolute top-1 right-1 w-2 h-2 bg-sky-500 rounded-full"></span>
+               <span className="absolute top-1 right-1 w-2 h-2 bg-lab-accent rounded-full"></span>
              )}
            </button>
         </div>
@@ -156,11 +156,11 @@ export const InputPanel: React.FC<Props> = ({
               className="hidden"
               aria-label="Upload interface screenshot or mockup"
             />
-            <div className="w-10 h-10 rounded-full bg-sky-500/10 text-sky-500 dark:text-sky-400 mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-sky-500/10 text-lab-accent mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <UploadCloud className="w-5 h-5" aria-hidden="true" />
             </div>
             <p className="text-sm font-semibold text-lab-text mb-0.5">
-              Upload any UI screenshot or <span className="text-sky-500 dark:text-sky-400 underline">browse</span>
+              Upload any UI screenshot or <span className="text-lab-accent underline">browse</span>
             </p>
             <p className="text-xs text-lab-dim">Instant Computer Vision &amp; Decile Contrast Audit</p>
           </div>

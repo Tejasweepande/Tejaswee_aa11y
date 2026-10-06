@@ -52,7 +52,7 @@ export const ApiKeyModal: React.FC<Props> = ({
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded_SM bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-500 dark:text-sky-400">
+          <div className="w-10 h-10 rounded_SM bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-lab-accent">
             <Key className="w-5 h-5" aria-hidden="true" />
           </div>
           <div>
@@ -90,7 +90,7 @@ export const ApiKeyModal: React.FC<Props> = ({
               className="w-full bg-lab-bg border border-lab-border rounded_SM px-3.5 py-2.5 text-sm font-mono text-lab-text focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
             />
             <p className="text-xs text-lab-dim mt-1.5 leading-relaxed">
-              Get an API key from <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" className="text-sky-500 dark:text-sky-400 underline font-medium">aistudio.google.com</a>. Leave blank to run offline with zero API calls.
+              Get an API key from <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" className="text-lab-accent underline font-medium">aistudio.google.com</a>. Leave blank to run offline with zero API calls.
             </p>
           </div>
 
