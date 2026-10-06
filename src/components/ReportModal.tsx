@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { BarrierMap } from './BarrierMap';
 import { Finding, InputMode, ExportScale } from '../types/finding';
 import {
-  FileText,
   X,
   Download,
   Copy,
@@ -28,6 +27,12 @@ interface Props {
   imageSrc?: string | null;
   iframeHtml?: string | null;
 }
+
+const INPUT_LABEL: Partial<Record<InputMode, string>> = {
+  image: 'Image',
+  figma: 'Figma',
+  url: 'Website',
+};
 
 const ALL_CRITERIA = [
   { sc: '1.1.1', name: 'Non-text Content', level: 'A' },
@@ -255,21 +260,14 @@ export const ReportModal: React.FC<Props> = ({
       <div className="report-print-panel bg-lab-card border border-lab-border rounded max-w-3xl w-full p-6 shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-lab-border pb-4 mb-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded_SM bg-lab-accent/10 border border-lab-accent/30 text-lab-accent flex items-center justify-center">
-              <FileText className="w-5 h-5" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 id="report-modal-title" className="text-lg font-bold text-lab-text">
-                Accessibility Audit Summary &amp; Conformance Report
-              </h2>
-              <p className="text-sm text-lab-muted">
-                Evaluated against WCAG 2.2 (Levels A/AA) • Input: {inputMode.toUpperCase()} • Scale: {exportScale}
-              </p>
-              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mt-1">
-                {findings.length} findings • {exemptedCount} exempt
-              </p>
-            </div>
+          <div>
+            <h2 id="report-modal-title" className="text-xl font-bold text-lab-text">
+              Accessibility report
+            </h2>
+            <p className="text-sm text-lab-muted mt-1">
+              WCAG 2.2 A/AA · {INPUT_LABEL[inputMode] ?? inputMode} · Scale {exportScale} · {findings.length} {findings.length === 1 ? 'issue' : 'issues'}
+              {exemptedCount > 0 && ` · ${exemptedCount} exempt`}
+            </p>
           </div>
 
           <button
