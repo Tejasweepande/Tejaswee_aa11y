@@ -12,6 +12,7 @@ import {
   Pause,
   SkipForward,
 } from 'lucide-react';
+import { SEVERITY_BAR } from './FindingCard';
 import { speechEngine } from '../engine/screenReaderEngine';
 
 export type CanvasMode = 'overlay' | 'keyboard' | 'screenreader';
@@ -201,7 +202,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('overlay')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'overlay'
-                ? 'bg-lab-accent text-lab-onAccent shadow-sm'
+                ? 'bg-lab-text text-lab-card shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
@@ -215,7 +216,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('keyboard')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'keyboard'
-                ? 'bg-lab-accent text-lab-onAccent shadow-sm'
+                ? 'bg-lab-text text-lab-card shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
@@ -229,7 +230,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('screenreader')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'screenreader'
-                ? 'bg-lab-accent text-lab-onAccent shadow-sm'
+                ? 'bg-lab-text text-lab-card shadow-sm'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
@@ -388,7 +389,6 @@ export const PreviewCanvas: React.FC<Props> = ({
               findings.map((finding, idx) => {
                 const isSelected = selectedFindingId === finding.id;
                 const isHovered = hoveredFindingId === finding.id;
-                const isProblematic = finding.severity === 'critical' || finding.severity === 'serious';
                 const bbox = finding.target.boundingBox;
                 if (!bbox) return null;
 
@@ -401,14 +401,14 @@ export const PreviewCanvas: React.FC<Props> = ({
                       top: `${bbox.y}%`,
                       width: `${bbox.w}%`,
                       height: `${bbox.h}%`,
+                      // Outline in the same severity color as the issue card's edge.
+                      ...(isSelected || isHovered ? {} : { ['--tw-ring-color' as string]: SEVERITY_BAR[finding.severity] }),
                     }}
                     onClick={() => onSelectFinding(isSelected ? null : finding.id)}
                     className={`absolute z-20 rounded transition-all cursor-pointer flex items-start justify-start ${
                       isSelected || isHovered
                         ? 'ring-4 ring-sky-400 z-30'
-                        : isProblematic
-                        ? 'ring-2 ring-red-500 hover:ring-4 hover:ring-red-400'
-                        : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
+                        : 'ring-2 hover:ring-4'
                     }`}
                   >
                     {/* Sits just above the box, so it does not cover the start of the text (inside the box only at the very top of the page). */}

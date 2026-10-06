@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Finding } from '../types/finding';
+import { SEVERITY_BAR } from './FindingCard';
 
 /**
  * "Visual Barrier Map" for the audit report: the audited page with every barrier
@@ -23,12 +24,6 @@ const SINGLE_SLICE_MAX = 700;
 // Safety cap so an enormous screenshot cannot create hundreds of DOM nodes.
 const MAX_SLICES = 40;
 
-const RING_BY_SEVERITY: Record<string, string> = {
-  critical: 'ring-red-500',
-  serious: 'ring-orange-500',
-  moderate: 'ring-amber-500',
-  minor: 'ring-sky-500',
-};
 
 const Pins: React.FC<{ findings: Finding[]; onPinClick?: (finding: Finding, number: number) => void }> = ({
   findings,
@@ -43,8 +38,9 @@ const Pins: React.FC<{ findings: Finding[]; onPinClick?: (finding: Finding, numb
         <div
           key={f.id}
           data-barrier-pin={idx + 1}
-          style={{ left: `${bbox.x}%`, top: `${bbox.y}%`, width: `${bbox.w}%`, height: `${bbox.h}%` }}
-          className={`absolute ring-2 ${RING_BY_SEVERITY[f.severity] || 'ring-sky-500'} rounded flex items-start justify-start`}
+          // Outline in the same severity color as the issue card's edge.
+          style={{ left: `${bbox.x}%`, top: `${bbox.y}%`, width: `${bbox.w}%`, height: `${bbox.h}%`, ['--tw-ring-color' as string]: SEVERITY_BAR[f.severity] }}
+          className="absolute ring-2 rounded flex items-start justify-start"
         >
           {onPinClick ? (
             <button

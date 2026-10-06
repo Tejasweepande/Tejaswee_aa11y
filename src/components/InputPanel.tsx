@@ -231,7 +231,7 @@ export const InputPanel: React.FC<Props> = ({
                     onClick={() => onChangeScale(sc)}
                     className={`py-1.5 text-sm font-mono rounded transition-all shadow-sm ${
                       exportScale === sc
-                        ? 'bg-lab-accent text-lab-onAccent font-bold'
+                        ? 'bg-lab-text text-lab-card font-bold'
                         : 'bg-lab-card text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
                     }`}
                   >

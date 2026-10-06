@@ -3,6 +3,7 @@ import { Finding, ModuleType, Severity } from '../types/finding';
 import { CheckCircle2, Search, FileDown, Sparkles } from 'lucide-react';
 import { FindingCard } from './FindingCard';
 import { SuggestionPanel } from './SuggestionPanel';
+import { SeverityDot } from './SeverityTag';
 
 interface Props {
   findings: Finding[];
@@ -165,67 +166,25 @@ export const IssueRail: React.FC<Props> = ({
       ) : (
         /* Post-Audit Findings View */
         <>
-          {/* Severity Metric Pills */}
+          {/* Severity filter chips: same dot colors as the cards; selected chips are neutral, not blue */}
           <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'critical' ? 'all' : 'critical')}
-              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
-                selectedSeverity === 'critical'
-                  ? 'bg-red-500/20 text-red-700 dark:text-red-300 ring-2 ring-red-500/50'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-red-500/30'
-              }`}
-            >
-              <span className="text-sm font-extrabold font-mono tabular-nums text-red-700 dark:text-red-400">
-                {severityCounts.critical}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Critical</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'serious' ? 'all' : 'serious')}
-              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
-                selectedSeverity === 'serious'
-                  ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 ring-2 ring-orange-500/50'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-orange-500/30'
-              }`}
-            >
-              <span className="text-sm font-extrabold font-mono tabular-nums text-orange-700 dark:text-orange-400">
-                {severityCounts.serious}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Serious</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'moderate' ? 'all' : 'moderate')}
-              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
-                selectedSeverity === 'moderate'
-                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/50'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-amber-500/30'
-              }`}
-            >
-              <span className="text-sm font-extrabold font-mono tabular-nums text-amber-700 dark:text-amber-400">
-                {severityCounts.moderate}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Moderate</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'minor' ? 'all' : 'minor')}
-              className={`px-2.5 py-1.5 rounded_SM flex items-baseline gap-1.5 transition-all shadow-sm ${
-                selectedSeverity === 'minor'
-                  ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 ring-2 ring-sky-500/50'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-sky-500/30'
-              }`}
-            >
-              <span className="text-sm font-extrabold font-mono tabular-nums text-sky-700 dark:text-sky-400">
-                {severityCounts.minor}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Minor</span>
-            </button>
+            {(['critical', 'serious', 'moderate', 'minor'] as Severity[]).map((sev) => (
+              <button
+                key={sev}
+                type="button"
+                aria-pressed={selectedSeverity === sev}
+                onClick={() => setSelectedSeverity(selectedSeverity === sev ? 'all' : sev)}
+                className={`px-2.5 py-1.5 rounded_SM flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                  selectedSeverity === sev
+                    ? 'bg-lab-text text-lab-card'
+                    : 'bg-lab-subtle text-lab-text hover:bg-lab-elevated'
+                }`}
+              >
+                <SeverityDot severity={sev} />
+                <span className="tabular-nums">{severityCounts[sev]}</span>
+                <span>{sev.charAt(0).toUpperCase() + sev.slice(1)}</span>
+              </button>
+            ))}
           </div>
 
           {/* Search and Filters */}
@@ -251,7 +210,7 @@ export const IssueRail: React.FC<Props> = ({
                     onClick={() => setSelectedModule(mod)}
                     className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap transition-all shadow-sm ${
                       selectedModule === mod
-                        ? 'bg-lab-accent text-lab-onAccent'
+                        ? 'bg-lab-text text-lab-card'
                         : 'bg-lab-subtle text-lab-muted hover:text-lab-text hover:bg-lab-elevated'
                     }`}
                   >
