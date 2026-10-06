@@ -154,7 +154,7 @@ export const InputPanel: React.FC<Props> = ({
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded_SM p-4 text-center bg-lab-subtle/50 cursor-pointer group"
+            className="ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded p-4 text-center bg-lab-subtle/50 cursor-pointer group"
             onClick={() => fileInputRef.current?.click()}
             role="region"
             aria-label="Image dropzone"
@@ -181,7 +181,7 @@ export const InputPanel: React.FC<Props> = ({
       {currentInput === 'history' && (
         <div className="space-y-4">
           {pastAudits.length === 0 ? (
-            <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded_SM border border-lab-border border-dashed">
+            <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
               No previous audits in this session.
             </div>
           ) : (
@@ -191,7 +191,7 @@ export const InputPanel: React.FC<Props> = ({
                   key={audit.id} 
                   type="button"
                   onClick={() => onLoadHistoryItem(audit)}
-                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded_SM border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated"
+                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated"
                 >
                   <div className="flex justify-between items-center w-full">
                     <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
@@ -218,7 +218,7 @@ export const InputPanel: React.FC<Props> = ({
         <>
           {/* Export Scale Selector (image mode only — Figma/URL provide real pixel dimensions) */}
           {currentInput === 'image' && (
-            <div className="bg-lab-subtle rounded_SM p-3 shadow-sm">
+            <div className="bg-lab-subtle rounded p-3 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">Export Scale</h3>
               </div>
@@ -245,7 +245,7 @@ export const InputPanel: React.FC<Props> = ({
             </div>
           )}
       {currentInput === 'figma' && (
-        <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
+        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
           <label htmlFor="figma-url" className="block text-sm font-semibold text-lab-text">Figma prototype link</label>
           <div className="relative">
             <input
@@ -255,7 +255,7 @@ export const InputPanel: React.FC<Props> = ({
               value={figmaUrl}
               onChange={(e) => onChangeFigmaUrl(e.target.value)}
               placeholder="https://www.figma.com/proto/... or /design/..."
-              className="w-full bg-lab-card shadow-inner rounded_SM pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+              className="w-full bg-lab-card shadow-inner rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
             />
             {figmaUrl.length > 0 && (
               <ClearButton
@@ -273,7 +273,7 @@ export const InputPanel: React.FC<Props> = ({
               value={figmaPat}
               onChange={(e) => onChangeFigmaPat(e.target.value.trim())}
               placeholder="figd_..."
-              className="w-full bg-lab-card shadow-inner rounded_SM pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+              className="w-full bg-lab-card shadow-inner rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
             />
             {figmaPat.length > 0 && (
               <ClearButton
@@ -300,7 +300,7 @@ export const InputPanel: React.FC<Props> = ({
       )}
 
       {currentInput === 'url' && (
-        <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
+        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
           <label htmlFor="website-url" className="block text-sm font-semibold text-lab-text">Website URL</label>
           <div className="relative">
             <input
@@ -310,7 +310,7 @@ export const InputPanel: React.FC<Props> = ({
               value={webUrl}
               onChange={(e) => onChangeWebUrl(e.target.value)}
               placeholder="https://example.com"
-              className="w-full bg-lab-card shadow-inner rounded_SM pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+              className="w-full bg-lab-card shadow-inner rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
             />
             {webUrl.length > 0 && (
               <ClearButton
@@ -329,7 +329,7 @@ export const InputPanel: React.FC<Props> = ({
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="w-full h-24 bg-lab-card shadow-inner rounded_SM pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="w-full h-24 bg-lab-card shadow-inner rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
@@ -370,7 +370,7 @@ export const InputPanel: React.FC<Props> = ({
                 key={mod.id}
                 type="button"
                 onClick={() => onToggleModule(mod.id)}
-                className={`py-2 px-3 rounded_SM text-sm font-medium shadow-sm text-left flex items-center justify-between transition-all ${
+                className={`py-2 px-3 rounded text-sm font-medium shadow-sm text-left flex items-center justify-between transition-all ${
                   enabled
                     ? 'bg-lab-card text-lab-text ring-1 ring-lab-accent'
                     : 'bg-lab-subtle/50 text-lab-dim hover:bg-lab-subtle'
@@ -410,7 +410,7 @@ export const InputPanel: React.FC<Props> = ({
               type="button"
               onClick={onRunAudit}
               disabled={isDisabled}
-              className={`w-full mt-1 py-3 px-4 rounded_SM text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
+              className={`w-full mt-1 py-3 px-4 rounded text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
             >
               <Play className={`w-4 h-4 fill-current ${isAuditing ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{isAuditing ? 'Auditing Interface...' : 'Run Accessibility Audit'}</span>

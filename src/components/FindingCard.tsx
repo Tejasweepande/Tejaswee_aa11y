@@ -96,7 +96,7 @@ export const FindingCard: React.FC<Props> = ({
       aria-labelledby={titleId}
       onMouseEnter={isList ? () => onHover?.(true) : undefined}
       onMouseLeave={isList ? () => onHover?.(false) : undefined}
-      className={`relative flex items-stretch gap-3 pr-4 bg-white text-black rounded-[4px] border border-black/10 shadow-sm transition-shadow ${
+      className={`relative flex items-stretch gap-3 pr-4 bg-white text-black rounded border border-black/10 shadow-sm transition-shadow ${
         highlighted ? 'ring-2 ring-sky-500' : ''
       }`}
     >
@@ -107,14 +107,14 @@ export const FindingCard: React.FC<Props> = ({
           onClick={onSelect}
           aria-pressed={isSelected}
           aria-label={`Highlight issue ${number} on the preview: ${model.title}, ${model.severityLabel}`}
-          className="absolute inset-0 w-full h-full rounded-[4px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+          className="absolute inset-0 w-full h-full rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
         />
       )}
 
       {/* Severity bar */}
       <span
         aria-hidden="true"
-        className="w-1 shrink-0 self-stretch rounded-l-[4px]"
+        className="w-1 shrink-0 self-stretch rounded-l"
         style={{ backgroundColor: SEVERITY_BAR[model.severity] }}
       />
 
@@ -164,7 +164,7 @@ export const FindingCard: React.FC<Props> = ({
                 {menuOpen && (
                   <ul
                     id={`finding-${finding.id}-menu`}
-                    className="absolute right-0 top-full mt-1 z-30 min-w-[168px] py-1 bg-white text-black text-[13px] rounded-[4px] border border-black/10 shadow-lg"
+                    className="absolute right-0 top-full mt-1 z-30 min-w-[168px] py-1 bg-white text-black text-[13px] rounded border border-black/10 shadow-lg"
                   >
                     <li>
                       <button

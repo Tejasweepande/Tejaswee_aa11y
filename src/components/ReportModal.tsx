@@ -345,7 +345,7 @@ export const ReportModal: React.FC<Props> = ({
               onClick={() => setPrintBoxOpen((o) => !o)}
               aria-expanded={printBoxOpen}
               aria-controls="report-print-box"
-              className="px-3 py-2 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5"
+              className="px-3 py-2 rounded text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5"
             >
               <Printer className="w-3.5 h-3.5 text-lab-muted" aria-hidden="true" />
               <span>Print</span>
@@ -407,14 +407,14 @@ export const ReportModal: React.FC<Props> = ({
                       setPrintBoxOpen(false);
                       printButtonRef.current?.focus();
                     }}
-                    className="px-3 py-1.5 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text"
+                    className="px-3 py-1.5 rounded text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handlePrint}
-                    className="px-3 py-1.5 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent"
+                    className="px-3 py-1.5 rounded text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent"
                   >
                     Print
                   </button>
@@ -689,7 +689,7 @@ export const ReportModal: React.FC<Props> = ({
 
           {/* Manual Review Checklist (§7 in GEMINI.md): end of Details on screen; in print when ticked */}
           <div
-            className={`break-inside-avoid bg-lab-subtle rounded_SM p-4 space-y-3 ${tab === 'details' ? '' : 'hidden'} ${
+            className={`break-inside-avoid bg-lab-subtle rounded p-4 space-y-3 ${tab === 'details' ? '' : 'hidden'} ${
               printMode !== null && printChecklist ? 'print:block' : 'print:hidden'
             }`}
           >
@@ -724,7 +724,7 @@ export const ReportModal: React.FC<Props> = ({
           <button
             type="button"
             onClick={handleCopyFigmaComments}
-            className="px-3 py-2 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5 transition-colors"
           >
             {copiedFigma ? (
               <>
@@ -745,7 +745,7 @@ export const ReportModal: React.FC<Props> = ({
                 type="button"
                 onClick={handlePushToFigmaAPI}
                 disabled={pushingToFigma}
-                className={`px-3 py-2 rounded_SM text-sm font-bold flex items-center gap-1.5 transition-all ${
+                className={`px-3 py-2 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                   pushSuccess
                     ? 'bg-emerald-500 hover:bg-emerald-400 text-black'
                     : 'bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent disabled:opacity-50'
@@ -776,7 +776,7 @@ export const ReportModal: React.FC<Props> = ({
           <button
             type="button"
             onClick={handleDownloadJson}
-            className="px-3 py-2 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
+            className="px-3 py-2 rounded text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
           >
             <Download className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
             <span>Export Canonical JSON</span>

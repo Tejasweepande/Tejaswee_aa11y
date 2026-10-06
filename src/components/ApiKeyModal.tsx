@@ -52,7 +52,7 @@ export const ApiKeyModal: React.FC<Props> = ({
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded_SM bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-lab-accent">
+          <div className="w-10 h-10 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-lab-accent">
             <Key className="w-5 h-5" aria-hidden="true" />
           </div>
           <div>
@@ -63,7 +63,7 @@ export const ApiKeyModal: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded_SM p-3 mb-4 flex items-start gap-2.5">
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
           <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <p className="text-sm text-amber-900 dark:text-amber-200/90 leading-relaxed">
             <strong className="font-semibold">Privacy:</strong> API keys reside strictly in React memory for this active session. They are never saved to localStorage, disk, or telemetry.
@@ -87,7 +87,7 @@ export const ApiKeyModal: React.FC<Props> = ({
               value={val}
               onChange={(e) => setVal(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full bg-lab-bg border border-lab-border rounded_SM px-3.5 py-2.5 text-sm font-mono text-lab-text focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="w-full bg-lab-bg border border-lab-border rounded px-3.5 py-2.5 text-sm font-mono text-lab-text focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
             />
             <p className="text-xs text-lab-dim mt-1.5 leading-relaxed">
               Get an API key from <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" className="text-lab-accent underline font-medium">aistudio.google.com</a>. Leave blank to run offline with zero API calls.
@@ -107,13 +107,13 @@ export const ApiKeyModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-2 rounded_SM text-sm font-medium text-lab-muted hover:text-lab-text hover:bg-lab-subtle transition-colors"
+                className="px-3.5 py-2 rounded text-sm font-medium text-lab-muted hover:text-lab-text hover:bg-lab-subtle transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded_SM text-sm font-bold bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover focus-visible:ring-2 flex items-center gap-1.5 shadow-sm transition-all"
+                className="px-4 py-2 rounded text-sm font-bold bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover focus-visible:ring-2 flex items-center gap-1.5 shadow-sm transition-all"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                 Save for Session

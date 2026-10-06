@@ -37,7 +37,7 @@ export const ReportIssueCard: React.FC<Props> = ({ finding, number, showCrop, im
       id={`report-issue-${finding.id}`}
       aria-labelledby={titleId}
       tabIndex={-1}
-      className="break-inside-avoid relative bg-white text-black rounded-[4px] border border-black/10 shadow-sm overflow-hidden scroll-mt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600"
+      className="break-inside-avoid relative bg-white text-black rounded border border-black/10 shadow-sm overflow-hidden scroll-mt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600"
     >
       <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: SEVERITY_BAR[model.severity] }} />
 

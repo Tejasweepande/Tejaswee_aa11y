@@ -146,7 +146,7 @@ export const IssueRail: React.FC<Props> = ({
 
       {!hasAudited ? (
         /* Pre-Audit Clean State */
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-lab-subtle/40 rounded_SM min-h-[380px] shadow-inner">
+        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-lab-subtle/40 rounded min-h-[380px] shadow-inner">
           <div className="w-12 h-12 rounded bg-lab-accent/10 text-lab-accent flex items-center justify-center mb-3 shadow-sm">
             <Sparkles className="w-6 h-6" aria-hidden="true" />
           </div>
@@ -174,7 +174,7 @@ export const IssueRail: React.FC<Props> = ({
                 type="button"
                 aria-pressed={selectedSeverity === sev}
                 onClick={() => setSelectedSeverity(selectedSeverity === sev ? 'all' : sev)}
-                className={`px-2.5 py-1.5 rounded_SM flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                className={`px-2.5 py-1.5 rounded flex items-center gap-1.5 text-xs font-semibold transition-colors ${
                   selectedSeverity === sev
                     ? 'bg-lab-text text-lab-card'
                     : 'bg-lab-subtle text-lab-text hover:bg-lab-elevated'
@@ -196,7 +196,7 @@ export const IssueRail: React.FC<Props> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search issues, WCAG criteria, selectors..."
-                className="w-full bg-lab-card shadow-inner rounded_SM pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
+                className="w-full bg-lab-card shadow-inner rounded pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
               />
             </div>
 
@@ -234,7 +234,7 @@ export const IssueRail: React.FC<Props> = ({
             className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 pb-1"
           >
             {filteredFindings.length === 0 ? (
-              <div className="text-center py-10 px-4 bg-lab-subtle/50 rounded_SM shadow-inner">
+              <div className="text-center py-10 px-4 bg-lab-subtle/50 rounded shadow-inner">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500 dark:text-emerald-400 mx-auto mb-2 opacity-80" aria-hidden="true" />
                 <p className="text-sm font-bold text-lab-text mb-0.5">No matching issues</p>
                 <p className="text-xs text-lab-dim">

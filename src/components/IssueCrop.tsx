@@ -88,7 +88,7 @@ export const IssueCrop: React.FC<Props> = ({ imageSrc, iframeHtml, bbox, number,
 
       {p && (
         <span
-          className="absolute rounded-sm border-2"
+          className="absolute rounded border-2"
           style={{ ...p.outline, borderColor: color }}
         >
           <span className="absolute left-0 bottom-full mb-0.5 min-w-[20px] h-5 px-1 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center">

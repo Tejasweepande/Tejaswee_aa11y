@@ -49,6 +49,11 @@ export default {
         // The UI uses font-mono as a label style (numbers, chips, WCAG codes), so it follows Urbanist too.
         mono: ['Urbanist', 'system-ui', 'sans-serif'],
       },
+      // One corner radius for every rectangular element (buttons, fields, chips, cards,
+      // panels, dialogs). Change it here to change it everywhere. Pins and dots stay round (rounded-full).
+      borderRadius: {
+        DEFAULT: '4px',
+      },
       boxShadow: {
         'panel': 'var(--lab-shadow-panel)',
       },

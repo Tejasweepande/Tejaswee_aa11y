@@ -694,7 +694,7 @@ export const App: React.FC = () => {
   const auditNoticeBanner = auditNotice && (
     <div
       role="alert"
-      className={`p-3 rounded_SM border flex items-start gap-2.5 text-sm animate-fade-in ${
+      className={`p-3 rounded border flex items-start gap-2.5 text-sm animate-fade-in ${
         auditNotice.type === 'error'
           ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-700/70 text-red-900 dark:text-red-200'
           : auditNotice.type === 'warning'
@@ -731,7 +731,7 @@ export const App: React.FC = () => {
       <header className="border-b border-lab-border bg-lab-card/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-3.5">
         <div className="w-full mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded_SM bg-lab-accent flex items-center justify-center text-lab-onAccent font-extrabold">
+            <div className="w-9 h-9 rounded bg-lab-accent flex items-center justify-center text-lab-onAccent font-extrabold">
               <Sparkles className="w-5 h-5 fill-current" aria-hidden="true" />
             </div>
             <div>
@@ -753,7 +753,7 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 rounded_SM bg-lab-subtle border border-lab-border text-lab-muted hover:text-lab-text transition-colors flex items-center gap-1.5 text-sm font-semibold"
+              className="p-2 rounded bg-lab-subtle border border-lab-border text-lab-muted hover:text-lab-text transition-colors flex items-center gap-1.5 text-sm font-semibold"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
             >
               {theme === 'light' ? (
@@ -773,7 +773,7 @@ export const App: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setReportModalOpen(true)}
-                className="px-3.5 py-1.5 rounded_SM text-sm font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/40 transition-colors"
+                className="px-3.5 py-1.5 rounded text-sm font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/40 transition-colors"
               >
                 Export Report ({findings.length})
               </button>

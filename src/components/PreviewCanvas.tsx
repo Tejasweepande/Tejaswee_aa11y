@@ -194,7 +194,7 @@ export const PreviewCanvas: React.FC<Props> = ({
         <div
           role="tablist"
           aria-label="Simulator View Modes"
-          className="flex items-center gap-1 bg-lab-bg p-1 rounded_SM shadow-inner flex-wrap"
+          className="flex items-center gap-1 bg-lab-bg p-1 rounded shadow-inner flex-wrap"
         >
           <button
             role="tab"
@@ -289,7 +289,7 @@ export const PreviewCanvas: React.FC<Props> = ({
         ) : (
           <div
             id="zoom-wrapper"
-            className={`relative rounded_SM shadow-2xl transition-transform duration-150 bg-lab-card mx-auto ${!iframeHtml ? 'w-full' : ''}`}
+            className={`relative rounded shadow-2xl transition-transform duration-150 bg-lab-card mx-auto ${!iframeHtml ? 'w-full' : ''}`}
             style={{ 
               width: iframeHtml ? '1024px' : undefined,
               transform: `scale(${zoom})`,
@@ -506,7 +506,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             type="button"
             onClick={onRunAudit}
             disabled={isAuditing}
-            className="px-4 py-1.5 rounded_SM text-sm font-bold uppercase tracking-wider bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
+            className="px-4 py-1.5 rounded text-sm font-bold uppercase tracking-wider bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
           >
             <Play className={`w-3.5 h-3.5 fill-current ${isAuditing ? 'animate-spin' : ''}`} />
             <span>{isAuditing ? 'Auditing...' : 'Run Accessibility Audit'}</span>
