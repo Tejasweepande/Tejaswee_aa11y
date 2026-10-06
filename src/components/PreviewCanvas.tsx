@@ -411,7 +411,8 @@ export const PreviewCanvas: React.FC<Props> = ({
                         : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
                     }`}
                   >
-                    <span className="bg-black/90 text-white font-mono text-xs font-bold min-w-[24px] h-6 px-1 flex items-center justify-center rounded-full shadow-md -translate-x-2 -translate-y-2">
+                    {/* Sits just above the box, so it does not cover the start of the text (inside the box only at the very top of the page). */}
+                    <span className={`absolute left-0 ${bbox.y < 3 ? 'top-0' : 'bottom-full mb-0.5'} bg-black/90 text-white font-mono text-xs font-bold min-w-[24px] h-6 px-1 flex items-center justify-center rounded-full shadow-md ring-1 ring-white`}>
                       {idx + 1}
                     </span>
                   </div>

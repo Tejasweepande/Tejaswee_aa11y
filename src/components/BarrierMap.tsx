@@ -42,7 +42,7 @@ const Pins: React.FC<{ findings: Finding[] }> = ({ findings }) => (
           style={{ left: `${bbox.x}%`, top: `${bbox.y}%`, width: `${bbox.w}%`, height: `${bbox.h}%` }}
           className={`absolute ring-2 ${RING_BY_SEVERITY[f.severity] || 'ring-sky-500'} rounded flex items-start justify-start`}
         >
-          <span className="min-w-[24px] h-6 px-1 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shadow-md -translate-x-2 -translate-y-2 ring-1 ring-white/30 shrink-0">
+          <span className={`absolute left-0 ${bbox.y < 3 ? 'top-0' : 'bottom-full mb-0.5'} min-w-[24px] h-6 px-1 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shadow-md ring-1 ring-white shrink-0`}>
             {idx + 1}
           </span>
         </div>
