@@ -12,6 +12,8 @@ import {
   Printer,
   Send,
   Loader2,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 
 interface Props {
@@ -64,6 +66,8 @@ export const ReportModal: React.FC<Props> = ({
   const [pushingToFigma, setPushingToFigma] = useState(false);
   const [pushSuccess, setPushSuccess] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
+  // Full page fills the whole window instead of a centred dialog.
+  const [isFullPage, setIsFullPage] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -255,9 +259,13 @@ export const ReportModal: React.FC<Props> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="report-modal-title"
-      className="report-print-root fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto"
+      className={`report-print-root fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto ${isFullPage ? 'p-0' : 'p-4'}`}
     >
-      <div className="report-print-panel bg-lab-card border border-lab-border rounded max-w-3xl w-full p-6 shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
+      <div
+        className={`report-print-panel bg-lab-card border border-lab-border w-full p-6 shadow-2xl relative flex flex-col ${
+          isFullPage ? 'h-full max-w-none rounded-none' : 'max-w-3xl rounded my-8 max-h-[90vh]'
+        }`}
+      >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-lab-border pb-4 mb-5">
           <div>
@@ -270,6 +278,17 @@ export const ReportModal: React.FC<Props> = ({
             </p>
           </div>
 
+          <div className="print:hidden flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setIsFullPage((v) => !v)}
+            aria-pressed={isFullPage}
+            title={isFullPage ? 'Exit full page' : 'Full page'}
+            className="text-lab-muted hover:text-lab-text p-1.5 rounded focus-visible:ring-2 focus-visible:ring-sky-400"
+          >
+            {isFullPage ? <Minimize2 className="w-5 h-5" aria-hidden="true" /> : <Maximize2 className="w-5 h-5" aria-hidden="true" />}
+            <span className="sr-only">Full page</span>
+          </button>
           <button
             ref={closeButtonRef}
             type="button"
@@ -279,6 +298,7 @@ export const ReportModal: React.FC<Props> = ({
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
+          </div>
         </div>
 
         {/* Scrollable Report Content */}
