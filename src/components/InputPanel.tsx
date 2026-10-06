@@ -246,11 +246,10 @@ export const InputPanel: React.FC<Props> = ({
           )}
       {currentInput === 'figma' && (
         <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-lab-text">Figma Prototype Link</span>
-          </div>
+          <label htmlFor="figma-url" className="block text-sm font-semibold text-lab-text">Figma prototype link</label>
           <div className="relative">
             <input
+              id="figma-url"
               ref={figmaUrlRef}
               type="text"
               value={figmaUrl}
@@ -265,13 +264,15 @@ export const InputPanel: React.FC<Props> = ({
               />
             )}
           </div>
+          <label htmlFor="figma-token" className="block text-sm font-semibold text-lab-text pt-1">Figma access token</label>
           <div className="relative">
             <input
+              id="figma-token"
               ref={figmaPatRef}
               type="password"
               value={figmaPat}
               onChange={(e) => onChangeFigmaPat(e.target.value.trim())}
-              placeholder="Figma Personal Access Token (figd_...)"
+              placeholder="figd_..."
               className="w-full bg-lab-card shadow-inner rounded_SM pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
             />
             {figmaPat.length > 0 && (
@@ -289,11 +290,10 @@ export const InputPanel: React.FC<Props> = ({
 
       {currentInput === 'url' && (
         <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-lab-text">Website URL</span>
-          </div>
+          <label htmlFor="website-url" className="block text-sm font-semibold text-lab-text">Website URL</label>
           <div className="relative">
             <input
+              id="website-url"
               ref={webUrlRef}
               type="text"
               value={webUrl}
@@ -310,9 +310,10 @@ export const InputPanel: React.FC<Props> = ({
           </div>
           
           <div className="pt-2 border-t border-lab-border">
-            <span className="text-sm font-semibold text-lab-text block mb-2">HTML Fallback</span>
+            <label htmlFor="pasted-html" className="text-sm font-semibold text-lab-text block mb-2">HTML fallback</label>
             <div className="relative">
               <textarea
+                id="pasted-html"
                 ref={pastedHtmlRef}
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
