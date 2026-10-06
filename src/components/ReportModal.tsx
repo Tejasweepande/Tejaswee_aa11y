@@ -4,7 +4,7 @@ import { BarrierMap } from './BarrierMap';
 import { InfoTip } from './InfoTip';
 import { ReportIssueCard } from './ReportIssueCard';
 import { Finding, InputMode, ExportScale, ModuleType, Severity } from '../types/finding';
-import { buildAffectedGroups, buildRuleRows, computeScore, RuleStatus, ScoreLabel } from '../utils/reportScore';
+import { buildAffectedGroups, buildRuleRows, computeScore, RuleStatus, ScoreLabel, SCORE_MEANING } from '../utils/reportScore';
 import { capitalize } from '../utils/findingCard';
 import {
   X,
@@ -321,15 +321,110 @@ export const ReportModal: React.FC<Props> = ({
             </p>
           </div>
 
+          <div className="print:hidden flex items-center gap-2">
+          <div
+            className="relative"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && printBoxOpen) {
+                e.preventDefault();
+                setPrintBoxOpen(false);
+                printButtonRef.current?.focus();
+              }
+            }}
+          >
+            <button
+              ref={printButtonRef}
+              type="button"
+              onClick={() => setPrintBoxOpen((o) => !o)}
+              aria-expanded={printBoxOpen}
+              aria-controls="report-print-box"
+              className="px-3 py-2 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5"
+            >
+              <Printer className="w-3.5 h-3.5 text-lab-muted" aria-hidden="true" />
+              <span>Print / PDF</span>
+            </button>
+
+            {printBoxOpen && (
+              <div
+                id="report-print-box"
+                role="group"
+                aria-labelledby="report-print-box-title"
+                className="absolute right-0 top-full mt-2 z-40 w-80 bg-lab-card border border-lab-border rounded shadow-xl p-4"
+              >
+                <p id="report-print-box-title" className="text-base font-bold text-lab-text">Print / PDF</p>
+                <p className="text-xs text-lab-muted mt-0.5 mb-3">Every issue is printed, whatever filter is on screen.</p>
+                <fieldset className="space-y-2">
+                  <legend className="sr-only">What to print</legend>
+                  {(
+                    [
+                      { v: 'overview', t: 'Overview', d: 'Score, KPIs, who is affected and WCAG rules.' },
+                      { v: 'details', t: 'Details', d: 'Every issue with a cropped picture, impact and fix.' },
+                      { v: 'both', t: 'Both', d: 'Overview first, then Details.' },
+                    ] as { v: PrintMode; t: string; d: string }[]
+                  ).map((o) => (
+                    <label
+                      key={o.v}
+                      className={`flex gap-2.5 items-start p-2.5 rounded border cursor-pointer ${
+                        printChoice === o.v ? 'border-lab-accent bg-lab-accent/5' : 'border-lab-border'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="report-print-choice"
+                        value={o.v}
+                        checked={printChoice === o.v}
+                        onChange={() => setPrintChoice(o.v)}
+                        autoFocus={printChoice === o.v}
+                        className="mt-0.5 accent-[rgb(var(--lab-accent))]"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold text-lab-text">{o.t}</span>
+                        <span className="block text-xs text-lab-muted">{o.d}</span>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+                <label className="flex items-center gap-2 mt-3 text-sm text-lab-text cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={printChecklist}
+                    onChange={(e) => setPrintChecklist(e.target.checked)}
+                    className="accent-[rgb(var(--lab-accent))]"
+                  />
+                  Include manual review checklist
+                </label>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrintBoxOpen(false);
+                      printButtonRef.current?.focus();
+                    }}
+                    className="px-3 py-1.5 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePrint}
+                    className="px-3 py-1.5 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent"
+                  >
+                    Print
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="print:hidden text-lab-muted hover:text-lab-text p-1.5 rounded focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="text-lab-muted hover:text-lab-text p-1.5 rounded focus-visible:ring-2 focus-visible:ring-sky-400"
             aria-label="Close audit report"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
+          </div>
         </div>
 
         {/* Tabs (screen only; printing uses the choice in the print box) */}
@@ -384,18 +479,38 @@ export const ReportModal: React.FC<Props> = ({
           >
             <h3 className="hidden print:block text-lg font-bold text-lab-text">Overview</h3>
 
-            {/* KPI cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-3">
+            {/* Summary cards: answer "does it pass?", "how good is it?" and "how much to fix?" */}
+            <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-3">
               <div className="break-inside-avoid bg-lab-subtle rounded p-4">
                 <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
-                  Automated checks score
-                  <InfoTip label="Automated checks score">
-                    <p>The share of tested WCAG rules that pass.</p>
+                  Does it pass?
+                  <InfoTip label="Does it pass?">
+                    <p>Yes when no WCAG rule has a critical or serious issue.</p>
+                    <p className="mt-1.5">Automated checks cover only about a third of WCAG, so a Yes still needs the manual review before you can call it accessible.</p>
+                  </InfoTip>
+                </div>
+                <p className={`mt-1 text-xl font-extrabold ${score.passing ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                  {score.passing ? 'Yes' : 'No'}
+                </p>
+                <p className="mt-1.5 text-sm text-lab-muted">
+                  {score.passing
+                    ? 'No rule fails the automated checks.'
+                    : `${score.failing} of ${score.tested} rules fail${
+                        severityCounts.critical > 0
+                          ? `, with ${severityCounts.critical} critical ${severityCounts.critical === 1 ? 'issue' : 'issues'} that can stop people using it`
+                          : ''
+                      }.`}
+                </p>
+              </div>
+
+              <div className="break-inside-avoid bg-lab-subtle rounded p-4">
+                <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
+                  Score
+                  <InfoTip label="Score">
+                    <p>How many of the tested WCAG rules pass, out of 10. A rule with only minor problems counts as half a pass.</p>
                     <ul className="list-disc pl-4 mt-1.5 space-y-1">
-                      <li>Pass = 1 point, warning = ½, fail = 0.</li>
-                      <li>90 and above Good · 70–89 Fair · 50–69 Needs work · below 50 Poor.</li>
-                      <li>While a critical issue remains, the label can't be better than Needs work.</li>
-                      <li>Rules that weren't checked are left out.</li>
+                      <li>9–10 Good · 7–8 Fair · 5–6 Needs work · 0–4 Poor</li>
+                      <li>While a critical issue remains, it can't be better than Needs work.</li>
                     </ul>
                   </InfoTip>
                 </div>
@@ -403,64 +518,33 @@ export const ReportModal: React.FC<Props> = ({
                   <p className="mt-1 text-sm text-lab-muted">No rules were checked.</p>
                 ) : (
                   <>
-                    <p className="mt-1 text-xl font-extrabold tabular-nums text-lab-text">
-                      {score.score}
-                      <span className="text-base font-semibold text-lab-dim"> / 100</span>
+                    <p className="mt-1 flex items-center gap-2">
+                      <span className="text-xl font-extrabold tabular-nums text-lab-text">
+                        {score.score}
+                        <span className="text-base font-semibold text-lab-dim"> / 10</span>
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${SCORE_BADGE[score.label!]}`}>{score.label}</span>
                     </p>
-                    <span className={`inline-block mt-1.5 px-2 py-0.5 rounded text-xs font-bold ${SCORE_BADGE[score.label!]}`}>
-                      {score.label}
-                    </span>
-                    {score.capped && (
-                      <p className="mt-1.5 text-xs text-lab-muted">Held at Needs work while critical issues remain.</p>
-                    )}
+                    <p className="mt-1.5 text-sm text-lab-muted">
+                      {score.capped ? 'Critical issues hold this at Needs work. Fix them before release.' : SCORE_MEANING[score.label!]}
+                    </p>
                   </>
                 )}
               </div>
 
               <div className="break-inside-avoid bg-lab-subtle rounded p-4">
                 <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
-                  Rules passed
-                  <InfoTip label="Rules passed">
+                  Issues to fix
+                  <InfoTip label="Issues to fix">
                     <ul className="list-disc pl-4 space-y-1">
-                      <li><strong className="text-lab-text">Pass:</strong> no issues found for the rule.</li>
-                      <li><strong className="text-lab-text">Warning:</strong> only moderate or minor issues.</li>
-                      <li><strong className="text-lab-text">Failing:</strong> at least one critical or serious issue.</li>
-                      <li><strong className="text-lab-text">Not checked:</strong> its audit module was off, or it can't be checked automatically.</li>
+                      <li><strong className="text-lab-text">Critical:</strong> stops some people using it. Fix first.</li>
+                      <li><strong className="text-lab-text">Serious:</strong> makes it very hard for some people.</li>
+                      <li><strong className="text-lab-text">Moderate and minor:</strong> annoying or slower, but usable.</li>
                     </ul>
                   </InfoTip>
                 </div>
-                <p className="mt-1 text-xl font-extrabold tabular-nums text-lab-text">
-                  {score.passed}
-                  <span className="text-base font-semibold text-lab-dim"> / {score.tested}</span>
-                </p>
-                <p className="mt-1.5 text-xs text-lab-muted">
-                  {score.warnings} with warnings · {score.failing} failing
-                  {ruleRows.length - score.tested > 0 && ` · ${ruleRows.length - score.tested} not checked`}
-                </p>
-              </div>
-
-              <div className="break-inside-avoid bg-lab-subtle rounded p-4">
-                <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
-                  Blockers
-                  <InfoTip label="Blockers">
-                    <p>Critical issues. They can stop some people from using the page at all, so fix them before release.</p>
-                  </InfoTip>
-                </div>
-                <p className={`mt-1 text-xl font-extrabold tabular-nums ${severityCounts.critical > 0 ? 'text-red-700 dark:text-red-400' : 'text-lab-text'}`}>
-                  {severityCounts.critical}
-                </p>
-                <p className="mt-1.5 text-xs text-lab-muted">Critical issues</p>
-              </div>
-
-              <div className="break-inside-avoid bg-lab-subtle rounded p-4">
-                <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
-                  Total issues
-                  <InfoTip label="Total issues">
-                    <p>Every issue found, by severity: critical, serious, moderate and minor. One rule can have several issues.</p>
-                  </InfoTip>
-                </div>
                 <p className="mt-1 text-xl font-extrabold tabular-nums text-lab-text">{findings.length}</p>
-                <p className="mt-1.5 text-xs text-lab-muted">
+                <p className="mt-1.5 text-sm text-lab-muted">
                   {SEVERITIES.filter((s) => severityCounts[s] > 0)
                     .map((s) => `${severityCounts[s]} ${s}`)
                     .join(' · ') || 'None found'}
@@ -578,7 +662,7 @@ export const ReportModal: React.FC<Props> = ({
               {findings.length === 0 ? (
                 <p className="text-sm text-lab-muted p-4 bg-lab-subtle rounded">No issues found.</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 print:space-y-2">
                   {findings.map((f, index) => (
                     // On screen the filter hides cards; print always includes every issue.
                     <div key={f.id} className={severityFilter === 'all' || severityFilter === f.severity ? '' : 'hidden print:block'}>
@@ -629,7 +713,7 @@ export const ReportModal: React.FC<Props> = ({
         </div>
 
         {/* Modal Actions Footer */}
-        <div className="print:hidden border-t border-lab-border pt-4 mt-5 flex items-center justify-between flex-wrap gap-2">
+        <div className="print:hidden border-t border-lab-border pt-4 mt-5 flex items-start justify-end flex-wrap gap-2">
           <button
             type="button"
             onClick={handleCopyFigmaComments}
@@ -649,7 +733,7 @@ export const ReportModal: React.FC<Props> = ({
           </button>
 
           {inputMode === 'figma' && figmaUrl && figmaToken && (
-            <div className="flex flex-col items-start gap-1">
+            <div className="flex flex-col items-end gap-1">
               <button
                 type="button"
                 onClick={handlePushToFigmaAPI}
@@ -682,110 +766,14 @@ export const ReportModal: React.FC<Props> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <div
-              className="relative"
-              onKeyDown={(e) => {
-                if (e.key === 'Escape' && printBoxOpen) {
-                  e.preventDefault();
-                  setPrintBoxOpen(false);
-                  printButtonRef.current?.focus();
-                }
-              }}
-            >
-              <button
-                ref={printButtonRef}
-                type="button"
-                onClick={() => setPrintBoxOpen((o) => !o)}
-                aria-expanded={printBoxOpen}
-                aria-controls="report-print-box"
-                className="px-3 py-2 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5"
-              >
-                <Printer className="w-3.5 h-3.5 text-lab-muted" aria-hidden="true" />
-                <span>Print / PDF</span>
-              </button>
-
-              {printBoxOpen && (
-                <div
-                  id="report-print-box"
-                  role="group"
-                  aria-labelledby="report-print-box-title"
-                  className="absolute right-0 bottom-full mb-2 z-40 w-80 bg-lab-card border border-lab-border rounded shadow-xl p-4"
-                >
-                  <p id="report-print-box-title" className="text-base font-bold text-lab-text">Print / PDF</p>
-                  <p className="text-xs text-lab-muted mt-0.5 mb-3">Every issue is printed, whatever filter is on screen.</p>
-                  <fieldset className="space-y-2">
-                    <legend className="sr-only">What to print</legend>
-                    {(
-                      [
-                        { v: 'overview', t: 'Overview', d: 'Score, KPIs, who is affected and WCAG rules.' },
-                        { v: 'details', t: 'Details', d: 'Every issue with a cropped picture, impact and fix.' },
-                        { v: 'both', t: 'Both', d: 'Overview first, then Details.' },
-                      ] as { v: PrintMode; t: string; d: string }[]
-                    ).map((o) => (
-                      <label
-                        key={o.v}
-                        className={`flex gap-2.5 items-start p-2.5 rounded border cursor-pointer ${
-                          printChoice === o.v ? 'border-lab-accent bg-lab-accent/5' : 'border-lab-border'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="report-print-choice"
-                          value={o.v}
-                          checked={printChoice === o.v}
-                          onChange={() => setPrintChoice(o.v)}
-                          autoFocus={printChoice === o.v}
-                          className="mt-0.5 accent-[rgb(var(--lab-accent))]"
-                        />
-                        <span>
-                          <span className="block text-sm font-semibold text-lab-text">{o.t}</span>
-                          <span className="block text-xs text-lab-muted">{o.d}</span>
-                        </span>
-                      </label>
-                    ))}
-                  </fieldset>
-                  <label className="flex items-center gap-2 mt-3 text-sm text-lab-text cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={printChecklist}
-                      onChange={(e) => setPrintChecklist(e.target.checked)}
-                      className="accent-[rgb(var(--lab-accent))]"
-                    />
-                    Include manual review checklist
-                  </label>
-                  <div className="flex justify-end gap-2 mt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPrintBoxOpen(false);
-                        printButtonRef.current?.focus();
-                      }}
-                      className="px-3 py-1.5 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handlePrint}
-                      className="px-3 py-1.5 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent"
-                    >
-                      Print
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleDownloadJson}
-              className="px-4 py-2 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
-            >
-              <Download className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
-              <span>Export Canonical JSON</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleDownloadJson}
+            className="px-3 py-2 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
+          >
+            <Download className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
+            <span>Export Canonical JSON</span>
+          </button>
         </div>
       </div>
     </div>,
