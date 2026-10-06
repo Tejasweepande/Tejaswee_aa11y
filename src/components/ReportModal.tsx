@@ -6,6 +6,8 @@ import { ReportIssueCard } from './ReportIssueCard';
 import { Finding, InputMode, ExportScale, ModuleType, Severity } from '../types/finding';
 import { buildAffectedGroups, buildRuleRows, computeScore, RuleStatus, ScoreLabel, SCORE_MEANING } from '../utils/reportScore';
 import { capitalize } from '../utils/findingCard';
+import { SEVERITY_BAR } from './FindingCard';
+import { SeverityDot, SeverityTag } from './SeverityTag';
 import {
   X,
   Download,
@@ -44,18 +46,15 @@ type PrintMode = 'overview' | 'details' | 'both';
 
 const SEVERITIES: Severity[] = ['critical', 'serious', 'moderate', 'minor'];
 
-const SEVERITY_BADGE: Record<Severity, string> = {
-  critical: 'bg-red-500/10 text-red-700 dark:text-red-400',
-  serious: 'bg-orange-500/10 text-orange-700 dark:text-orange-400',
-  moderate: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  minor: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
-};
+// Status colors reuse the severity palette, so a red means the same thing everywhere.
+const PASS_COLOR = '#15803D';
+const NOT_CHECKED_COLOR = '#9CA3AF';
 
-const SCORE_BADGE: Record<ScoreLabel, string> = {
-  Good: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  Fair: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
-  'Needs work': 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  Poor: 'bg-red-500/10 text-red-700 dark:text-red-400',
+const SCORE_COLOR: Record<ScoreLabel, string> = {
+  Good: PASS_COLOR,
+  Fair: SEVERITY_BAR.minor,
+  Weak: SEVERITY_BAR.moderate,
+  Poor: SEVERITY_BAR.critical,
 };
 
 const STATUS_LABEL: Record<RuleStatus, string> = {
@@ -65,12 +64,20 @@ const STATUS_LABEL: Record<RuleStatus, string> = {
   'not-checked': 'Not checked',
 };
 
-const STATUS_BADGE: Record<RuleStatus, string> = {
-  failure: 'bg-red-500/10 text-red-700 dark:text-red-400',
-  warning: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  passed: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  'not-checked': 'bg-lab-subtle text-lab-muted',
+const STATUS_COLOR: Record<RuleStatus, string> = {
+  failure: SEVERITY_BAR.critical,
+  warning: SEVERITY_BAR.moderate,
+  passed: PASS_COLOR,
+  'not-checked': NOT_CHECKED_COLOR,
 };
+
+/** Dot + plain text, the same pattern as severity tags. */
+const DotLabel: React.FC<{ color: string; children: React.ReactNode }> = ({ color, children }) => (
+  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-lab-text">
+    <span aria-hidden="true" className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+    {children}
+  </span>
+);
 
 // Failing rules first, so the table reads like a to-do list.
 const STATUS_ORDER: RuleStatus[] = ['failure', 'warning', 'passed', 'not-checked'];
@@ -341,7 +348,7 @@ export const ReportModal: React.FC<Props> = ({
               className="px-3 py-2 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5"
             >
               <Printer className="w-3.5 h-3.5 text-lab-muted" aria-hidden="true" />
-              <span>Print / PDF</span>
+              <span>Print</span>
             </button>
 
             {printBoxOpen && (
@@ -351,7 +358,7 @@ export const ReportModal: React.FC<Props> = ({
                 aria-labelledby="report-print-box-title"
                 className="absolute right-0 top-full mt-2 z-40 w-80 bg-lab-card border border-lab-border rounded shadow-xl p-4"
               >
-                <p id="report-print-box-title" className="text-base font-bold text-lab-text">Print / PDF</p>
+                <p id="report-print-box-title" className="text-base font-bold text-lab-text">Print</p>
                 <p className="text-xs text-lab-muted mt-0.5 mb-3">Every issue is printed, whatever filter is on screen.</p>
                 <fieldset className="space-y-2">
                   <legend className="sr-only">What to print</legend>
@@ -449,7 +456,7 @@ export const ReportModal: React.FC<Props> = ({
                 }
               }}
               className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors ${
-                tab === t ? 'border-lab-accent text-lab-accent' : 'border-transparent text-lab-muted hover:text-lab-text'
+                tab === t ? 'border-lab-text text-lab-text' : 'border-transparent text-lab-muted hover:text-lab-text'
               }`}
             >
               {t === 'overview' ? 'Overview' : 'Details'}
@@ -483,13 +490,14 @@ export const ReportModal: React.FC<Props> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-3">
               <div className="break-inside-avoid bg-lab-subtle rounded p-4">
                 <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
-                  Does it pass?
-                  <InfoTip label="Does it pass?">
-                    <p>Yes when no WCAG rule has a critical or serious issue.</p>
+                  Passes automated accessibility checks?
+                  <InfoTip label="Passes automated accessibility checks?">
+                    <p>Yes when none of the tested WCAG 2.2 rules has a critical or serious issue.</p>
                     <p className="mt-1.5">Automated checks cover only about a third of WCAG, so a Yes still needs the manual review before you can call it accessible.</p>
                   </InfoTip>
                 </div>
-                <p className={`mt-1 text-xl font-extrabold ${score.passing ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+                <p className="mt-1 flex items-center gap-2 text-xl font-extrabold text-lab-text">
+                  <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: score.passing ? PASS_COLOR : SEVERITY_BAR.critical }} />
                   {score.passing ? 'Yes' : 'No'}
                 </p>
                 <p className="mt-1.5 text-sm text-lab-muted">
@@ -509,8 +517,8 @@ export const ReportModal: React.FC<Props> = ({
                   <InfoTip label="Score">
                     <p>How many of the tested WCAG rules pass, out of 10. A rule with only minor problems counts as half a pass.</p>
                     <ul className="list-disc pl-4 mt-1.5 space-y-1">
-                      <li>9–10 Good · 7–8 Fair · 5–6 Needs work · 0–4 Poor</li>
-                      <li>While a critical issue remains, it can't be better than Needs work.</li>
+                      <li>9–10 Good · 7–8 Fair · 5–6 Weak · 0–4 Poor</li>
+                      <li>While a critical issue remains, it can't be better than Weak.</li>
                     </ul>
                   </InfoTip>
                 </div>
@@ -523,10 +531,10 @@ export const ReportModal: React.FC<Props> = ({
                         {score.score}
                         <span className="text-base font-semibold text-lab-dim"> / 10</span>
                       </span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${SCORE_BADGE[score.label!]}`}>{score.label}</span>
+                      <DotLabel color={SCORE_COLOR[score.label!]}>{score.label}</DotLabel>
                     </p>
                     <p className="mt-1.5 text-sm text-lab-muted">
-                      {score.capped ? 'Critical issues hold this at Needs work. Fix them before release.' : SCORE_MEANING[score.label!]}
+                      {score.capped ? 'Critical issues hold this at Weak. Fix them before release.' : SCORE_MEANING[score.label!]}
                     </p>
                   </>
                 )}
@@ -572,11 +580,11 @@ export const ReportModal: React.FC<Props> = ({
                       <td className="py-2.5 px-3 text-right font-bold tabular-nums text-lab-text">{g.tested || g.issueCount > 0 ? g.issueCount : '–'}</td>
                       <td className="py-2.5 px-3">
                         {g.worst ? (
-                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${SEVERITY_BADGE[g.worst]}`}>{capitalize(g.worst)}</span>
+                          <SeverityTag severity={g.worst} />
                         ) : g.tested ? (
-                          <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">No issues</span>
+                          <DotLabel color={PASS_COLOR}>No issues</DotLabel>
                         ) : (
-                          <span className="text-xs text-lab-muted">Not checked</span>
+                          <DotLabel color={NOT_CHECKED_COLOR}>Not checked</DotLabel>
                         )}
                       </td>
                     </tr>
@@ -605,9 +613,7 @@ export const ReportModal: React.FC<Props> = ({
                       <td className="py-2.5 px-3 text-lab-text">{row.name}</td>
                       <td className="py-2.5 px-3 text-lab-muted">{row.level}</td>
                       <td className="py-2.5 px-3">
-                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${STATUS_BADGE[row.status]}`}>
-                          {STATUS_LABEL[row.status]}
-                        </span>
+                        <DotLabel color={STATUS_COLOR[row.status]}>{STATUS_LABEL[row.status]}</DotLabel>
                       </td>
                       <td className="py-2.5 px-3 text-right font-bold tabular-nums text-lab-text">{row.issueCount > 0 ? row.issueCount : '–'}</td>
                     </tr>
@@ -648,10 +654,11 @@ export const ReportModal: React.FC<Props> = ({
                         type="button"
                         aria-pressed={severityFilter === s}
                         onClick={() => setSeverityFilter(s)}
-                        className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
-                          severityFilter === s ? 'bg-lab-accent text-lab-onAccent' : 'bg-lab-subtle text-lab-muted hover:text-lab-text'
+                        className={`px-2.5 py-1 rounded flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                          severityFilter === s ? 'bg-lab-text text-lab-card' : 'bg-lab-subtle text-lab-text hover:bg-lab-elevated'
                         }`}
                       >
+                        {s !== 'all' && <SeverityDot severity={s} />}
                         {s === 'all' ? `All ${findings.length}` : `${capitalize(s)} ${severityCounts[s]}`}
                       </button>
                     ))}
