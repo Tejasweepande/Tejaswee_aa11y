@@ -133,7 +133,7 @@ export const InputPanel: React.FC<Props> = ({
        <div className="w-full max-w-xl mx-auto flex flex-col gap-5 flex-1">
         {/* Header */}
         <div>
-          <h2 className="text-base font-bold text-lab-text flex items-center gap-2">
+          <h2 className="text-xl font-bold text-lab-text flex items-center gap-2">
             {currentInput === 'history'
               ? 'Audit History'
               : currentInput === 'image'
@@ -143,7 +143,7 @@ export const InputPanel: React.FC<Props> = ({
               : 'Live Link'}
           </h2>
           {currentInput === 'history' && (
-            <p className="text-xs text-lab-muted mt-0.5">Past audits done on this product</p>
+            <p className="text-sm text-lab-muted mt-1">Past audits done on this product</p>
           )}
         </div>
 
@@ -220,7 +220,7 @@ export const InputPanel: React.FC<Props> = ({
           {currentInput === 'image' && (
             <div className="bg-lab-subtle rounded_SM p-3 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-lab-muted">Export Scale</label>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">Export Scale</h3>
               </div>
 
               <div className="grid grid-cols-4 gap-1">
@@ -352,9 +352,9 @@ export const InputPanel: React.FC<Props> = ({
 
       {/* Module Toggles */}
       <div>
-        <label className="text-sm font-semibold text-lab-muted block mb-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted mb-2">
           Audit Modules
-        </label>
+        </h3>
         <div className="grid grid-cols-2 gap-2">
           {(
             [

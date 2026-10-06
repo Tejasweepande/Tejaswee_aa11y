@@ -115,7 +115,7 @@ export const IssueRail: React.FC<Props> = ({
       {/* Rail Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-lab-text flex items-center gap-2">
+          <h2 className="text-lg font-bold text-lab-text flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-lab-accent" aria-hidden="true" />
             <span>Audit Findings ({hasAudited ? findings.length : 0})</span>
           </h2>
