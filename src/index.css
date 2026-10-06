@@ -106,3 +106,76 @@
   animation: shimmer 2s infinite;
   content: '';
 }
+
+/* ------------------------------------------------------------------ */
+/* Printing the audit report (Print / PDF button)                      */
+/* The report is rendered outside #root, as a direct child of <body>.  */
+/* While it is open, print only the report, in full, not just the     */
+/* part that is scrolled into view, and always in the light palette.   */
+/* ------------------------------------------------------------------ */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  /* Hide the whole app behind the report */
+  body.report-open #root {
+    display: none !important;
+  }
+
+  body.report-open {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    background-image: none !important;
+  }
+
+  /* The modal is fixed and scrolls; on paper it must flow like a normal page */
+  .report-print-root {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+
+    /* Light palette whatever theme is on screen (dark text on white paper) */
+    --lab-bg: 252 252 253;
+    --lab-card: 255 255 255;
+    --lab-subtle: 244 245 247;
+    --lab-elevated: 235 237 240;
+    --lab-border: 209 213 219;
+    --lab-text: 15 20 25;
+    --lab-muted: 80 85 95;
+    --lab-dim: 120 125 135;
+    color-scheme: light;
+  }
+
+  .report-print-panel {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+
+  .report-print-scroll {
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  /* Keep colors (severity chips, pin badges, rings) instead of dropping backgrounds */
+  .report-print-root,
+  .report-print-root * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

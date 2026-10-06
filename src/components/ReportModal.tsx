@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { BarrierMap } from './BarrierMap';
 import { Finding, InputMode, ExportScale } from '../types/finding';
 import {
   FileText,
@@ -101,6 +103,14 @@ export const ReportModal: React.FC<Props> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  // While the report is open, tell the page so the print stylesheet can hide the app
+  // and print only the report (the report itself is rendered outside the app root).
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.classList.add('report-open');
+    return () => document.body.classList.remove('report-open');
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -234,15 +244,15 @@ export const ReportModal: React.FC<Props> = ({
     window.print();
   };
 
-  return (
+  return createPortal(
     <div
       ref={modalRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="report-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto"
+      className="report-print-root fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto"
     >
-      <div className="bg-lab-card border border-lab-border rounded max-w-3xl w-full p-6 shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
+      <div className="report-print-panel bg-lab-card border border-lab-border rounded max-w-3xl w-full p-6 shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-lab-border pb-4 mb-5">
           <div className="flex items-center gap-3">
@@ -266,7 +276,7 @@ export const ReportModal: React.FC<Props> = ({
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="text-lab-muted hover:text-lab-text p-1.5 rounded focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="print:hidden text-lab-muted hover:text-lab-text p-1.5 rounded focus-visible:ring-2 focus-visible:ring-sky-400"
             aria-label="Close audit report"
           >
             <X className="w-5 h-5" aria-hidden="true" />
@@ -274,9 +284,9 @@ export const ReportModal: React.FC<Props> = ({
         </div>
 
         {/* Scrollable Report Content */}
-        <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+        <div className="report-print-scroll flex-1 overflow-y-auto space-y-6 pr-2">
           {/* Statutory Disclaimer (§7 in GEMINI.md) */}
-          <div className="bg-amber-400 border border-amber-500 rounded p-4 flex items-start gap-3">
+          <div className="break-inside-avoid bg-amber-400 border border-amber-500 rounded p-4 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div>
               <h3 className="text-sm font-bold text-black mb-1">
@@ -290,28 +300,28 @@ export const ReportModal: React.FC<Props> = ({
 
           {/* Metric Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div className="bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
+            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
               <span className="text-xl font-mono font-extrabold text-red-400 block mb-1">
                 {severityCounts.critical}
               </span>
               <span className="text-xs uppercase font-semibold text-lab-muted">Critical Barriers</span>
             </div>
 
-            <div className="bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
+            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
               <span className="text-xl font-mono font-extrabold text-orange-400 block mb-1">
                 {severityCounts.serious}
               </span>
               <span className="text-xs uppercase font-semibold text-lab-muted">Serious Issues</span>
             </div>
 
-            <div className="bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
+            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
               <span className="text-xl font-mono font-extrabold text-amber-400 block mb-1">
                 {severityCounts.moderate}
               </span>
               <span className="text-xs uppercase font-semibold text-lab-muted">Moderate Notices</span>
             </div>
 
-            <div className="bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
+            <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
               <span className="text-xl font-mono font-extrabold text-sky-400 block mb-1">
                 {severityCounts.minor}
               </span>
@@ -322,41 +332,10 @@ export const ReportModal: React.FC<Props> = ({
           {/* Visual Barrier Map */}
           {(imageSrc || iframeHtml) && (
             <div className="bg-lab-card border border-lab-border rounded p-4 mb-6">
-              <h3 className="text-base font-bold text-lab-text uppercase tracking-wider mb-4 border-b border-lab-border pb-2">
+              <h3 className="break-after-avoid text-base font-bold text-lab-text uppercase tracking-wider mb-4 border-b border-lab-border pb-2">
                 Visual Barrier Map
               </h3>
-              <div className="w-full max-h-[450px] overflow-auto border border-lab-border rounded bg-lab-bg flex items-start justify-center p-2">
-                <div className="relative inline-block max-w-full">
-                  {iframeHtml ? (
-                    <iframe srcDoc={iframeHtml} sandbox="allow-same-origin" className="w-[1024px] max-w-full h-[768px] border-none bg-white block pointer-events-none" title="Audit Preview" />
-                  ) : imageSrc ? (
-                    <img src={imageSrc} className="max-w-full h-auto block" alt="Audit Preview" />
-                  ) : null}
-                  <div className="absolute inset-0 z-10 pointer-events-none">
-                    {findings.map((f, idx) => {
-                      const bbox = f.target.boundingBox;
-                      if (!bbox) return null;
-                      
-                      const boxColor = 
-                        f.severity === 'critical' ? 'ring-red-500' :
-                        f.severity === 'serious' ? 'ring-orange-500' :
-                        f.severity === 'moderate' ? 'ring-amber-500' : 'ring-sky-500';
-
-                      return (
-                        <div 
-                          key={f.id} 
-                          style={{ left: `${bbox.x}%`, top: `${bbox.y}%`, width: `${bbox.w}%`, height: `${bbox.h}%` }} 
-                          className={`absolute ring-2 ${boxColor} rounded flex items-start justify-start pointer-events-auto`}
-                        >
-                          <span className={`min-w-[24px] h-6 px-1 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold shadow-md -translate-x-2 -translate-y-2 ring-1 ring-white/30 shrink-0`}>
-                            {idx + 1}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              <BarrierMap imageSrc={imageSrc} iframeHtml={iframeHtml} findings={findings} />
             </div>
           )}
 
@@ -374,7 +353,7 @@ export const ReportModal: React.FC<Props> = ({
               </thead>
               <tbody className="divide-y divide-lab-border text-base">
                 {criteriaRows.map(row => (
-                  <tr key={row.sc} className="hover:bg-lab-bg/50 transition-colors">
+                  <tr key={row.sc} className="break-inside-avoid hover:bg-lab-bg/50 transition-colors">
                     <td className="py-3 px-4 font-mono text-lab-dim">{row.sc}</td>
                     <td className="py-3 px-4 text-lab-text font-medium">{row.name}</td>
                     <td className="py-3 px-4 text-center">
@@ -416,7 +395,7 @@ export const ReportModal: React.FC<Props> = ({
 
           {/* Detailed Findings List */}
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-lab-text uppercase tracking-wider border-b border-lab-border pb-2">
+            <h3 className="break-after-avoid text-base font-bold text-lab-text uppercase tracking-wider border-b border-lab-border pb-2">
               Detailed Findings
             </h3>
             <div className="space-y-4">
@@ -425,7 +404,7 @@ export const ReportModal: React.FC<Props> = ({
               ) : (
                 findings.map((f, index) => {
                   return (
-                    <div key={f.id} className="bg-lab-card border border-lab-border rounded p-4">
+                    <div key={f.id} className="break-inside-avoid bg-lab-card border border-lab-border rounded p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <div className={`min-w-[28px] h-7 px-1 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm bg-black text-white border border-white/20`}>
@@ -468,7 +447,7 @@ export const ReportModal: React.FC<Props> = ({
                       </div>
                       
                       {f.target.snippet && (
-                        <div className="bg-[#1e1e1e] rounded p-3 overflow-x-auto text-sm font-mono text-gray-300">
+                        <div className="bg-[#1e1e1e] rounded p-3 overflow-x-auto text-sm font-mono text-gray-300 print:bg-gray-100 print:text-gray-900 print:overflow-visible print:whitespace-pre-wrap print:break-words">
                           {f.target.snippet}
                         </div>
                       )}
@@ -480,7 +459,7 @@ export const ReportModal: React.FC<Props> = ({
           </div>
 
           {/* Manual Review Checklist (§7 in GEMINI.md) */}
-          <div className="bg-lab-bg border border-lab-border rounded_SM p-4 space-y-3">
+          <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-4 space-y-3">
             <h3 className="text-sm font-bold text-lab-text uppercase tracking-wider flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-sky-400" aria-hidden="true" />
               Essential Manual Review Checklist
@@ -509,7 +488,7 @@ export const ReportModal: React.FC<Props> = ({
         </div>
 
         {/* Modal Actions Footer */}
-        <div className="border-t border-lab-border pt-4 mt-5 flex items-center justify-between flex-wrap gap-2">
+        <div className="print:hidden border-t border-lab-border pt-4 mt-5 flex items-center justify-between flex-wrap gap-2">
           <button
             type="button"
             onClick={handleCopyFigmaComments}
@@ -583,6 +562,7 @@ export const ReportModal: React.FC<Props> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
