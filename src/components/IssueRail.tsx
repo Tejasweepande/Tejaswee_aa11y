@@ -204,7 +204,8 @@ export const IssueRail: React.FC<Props> = ({
               <select
                 value={selectedModule}
                 onChange={(e) => setSelectedModule(e.target.value as ModuleType | 'all')}
-                className="bg-transparent py-1.5 pr-2 text-sm font-semibold text-lab-text focus:outline-none cursor-pointer"
+                // The surrounding label shows the focus ring (like the search field), so the select draws none of its own.
+                className="bg-transparent py-1.5 pr-2 text-sm font-semibold text-lab-text cursor-pointer focus:outline-none focus-visible:outline-none focus-visible:shadow-none"
               >
                 <option value="all">All</option>
                 <option value="contrast">Contrast</option>
