@@ -136,7 +136,7 @@ export const IssueRail: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenReportModal}
-              className="px-2.5 py-1.5 rounded bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent text-sm font-bold shadow-glow-cyan transition-all flex items-center gap-1"
+              className="px-2.5 py-1.5 rounded bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent text-sm font-bold transition-all flex items-center gap-1"
             >
               <span>Full Report</span>
             </button>
@@ -173,7 +173,7 @@ export const IssueRail: React.FC<Props> = ({
               onClick={() => setSelectedSeverity(selectedSeverity === 'critical' ? 'all' : 'critical')}
               className={`p-2 rounded_SM transition-all shadow-sm ${
                 selectedSeverity === 'critical'
-                  ? 'bg-red-500/20 text-red-700 dark:text-red-300 ring-2 ring-red-500/50 shadow-glow-red'
+                  ? 'bg-red-500/20 text-red-700 dark:text-red-300 ring-2 ring-red-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-red-500/30'
               }`}
             >
@@ -188,7 +188,7 @@ export const IssueRail: React.FC<Props> = ({
               onClick={() => setSelectedSeverity(selectedSeverity === 'serious' ? 'all' : 'serious')}
               className={`p-2 rounded_SM transition-all shadow-sm ${
                 selectedSeverity === 'serious'
-                  ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 ring-2 ring-orange-500/50 shadow-glow-amber'
+                  ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 ring-2 ring-orange-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-orange-500/30'
               }`}
             >
@@ -203,7 +203,7 @@ export const IssueRail: React.FC<Props> = ({
               onClick={() => setSelectedSeverity(selectedSeverity === 'moderate' ? 'all' : 'moderate')}
               className={`p-2 rounded_SM transition-all shadow-sm ${
                 selectedSeverity === 'moderate'
-                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/50 shadow-glow-amber'
+                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-amber-500/30'
               }`}
             >
@@ -218,7 +218,7 @@ export const IssueRail: React.FC<Props> = ({
               onClick={() => setSelectedSeverity(selectedSeverity === 'minor' ? 'all' : 'minor')}
               className={`p-2 rounded_SM transition-all shadow-sm ${
                 selectedSeverity === 'minor'
-                  ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 ring-2 ring-sky-500/50 shadow-glow-cyan'
+                  ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 ring-2 ring-sky-500/50'
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-sky-500/30'
               }`}
             >
@@ -252,7 +252,7 @@ export const IssueRail: React.FC<Props> = ({
                     onClick={() => setSelectedModule(mod)}
                     className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap transition-all shadow-sm ${
                       selectedModule === mod
-                        ? 'bg-lab-accent text-lab-onAccent shadow-glow-cyan'
+                        ? 'bg-lab-accent text-lab-onAccent'
                         : 'bg-lab-subtle text-lab-muted hover:text-lab-text hover:bg-lab-elevated'
                     }`}
                   >

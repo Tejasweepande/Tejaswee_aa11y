@@ -50,9 +50,6 @@ export default {
         mono: ['Urbanist', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'glow-cyan': '0 0 24px -4px rgba(56, 189, 248, 0.25)',
-        'glow-amber': '0 0 24px -4px rgba(245, 158, 11, 0.25)',
-        'glow-ruby': '0 0 24px -4px rgba(239, 68, 68, 0.25)',
         'panel': 'var(--lab-shadow-panel)',
       },
       animation: {

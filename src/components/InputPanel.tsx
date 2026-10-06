@@ -180,7 +180,7 @@ export const InputPanel: React.FC<Props> = ({
                   key={audit.id} 
                   type="button"
                   onClick={() => onLoadHistoryItem(audit)}
-                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded_SM border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated hover:shadow-glow-cyan"
+                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded_SM border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated"
                 >
                   <div className="flex justify-between items-center w-full">
                     <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
@@ -220,7 +220,7 @@ export const InputPanel: React.FC<Props> = ({
                     onClick={() => onChangeScale(sc)}
                     className={`py-1.5 text-sm font-mono rounded transition-all shadow-sm ${
                       exportScale === sc
-                        ? 'bg-lab-accent text-lab-onAccent font-bold shadow-glow-cyan'
+                        ? 'bg-lab-accent text-lab-onAccent font-bold'
                         : 'bg-lab-card text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
                     }`}
                   >
@@ -349,14 +349,14 @@ export const InputPanel: React.FC<Props> = ({
                 onClick={() => onToggleModule(mod.id)}
                 className={`py-2 px-3 rounded_SM text-sm font-medium shadow-sm text-left flex items-center justify-between transition-all ${
                   enabled
-                    ? 'bg-lab-card text-lab-text shadow-glow-cyan ring-1 ring-sky-500/30'
+                    ? 'bg-lab-card text-lab-text ring-1 ring-lab-accent'
                     : 'bg-lab-subtle/50 text-lab-dim hover:bg-lab-subtle'
                 }`}
               >
                 <span>{mod.label}</span>
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    enabled ? 'bg-sky-400 shadow-glow-cyan' : 'bg-lab-dim/30'
+                    enabled ? 'bg-lab-accent' : 'bg-lab-dim/30'
                   }`}
                 />
               </button>
@@ -378,8 +378,8 @@ export const InputPanel: React.FC<Props> = ({
 
           const isDisabled = isAuditing || !isReadyToAudit;
           
-          let buttonClass = 'bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent focus-visible:ring-2 shadow-glow-cyan';
-          if (isAuditing) buttonClass = 'bg-lab-accent/60 text-lab-onAccent cursor-wait shadow-glow-cyan';
+          let buttonClass = 'bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent focus-visible:ring-2';
+          if (isAuditing) buttonClass = 'bg-lab-accent/60 text-lab-onAccent cursor-wait';
           else if (!isReadyToAudit) buttonClass = 'bg-lab-border text-lab-muted cursor-not-allowed opacity-60';
 
           return (

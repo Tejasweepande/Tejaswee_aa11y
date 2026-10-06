@@ -405,7 +405,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                     onClick={() => onSelectFinding(isSelected ? null : finding.id)}
                     className={`absolute z-20 rounded transition-all cursor-pointer flex items-start justify-start ${
                       isSelected || isHovered
-                        ? 'ring-4 ring-sky-400 shadow-glow-cyan z-30'
+                        ? 'ring-4 ring-sky-400 z-30'
                         : isProblematic
                         ? 'ring-2 ring-red-500 hover:ring-4 hover:ring-red-400'
                         : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
@@ -438,7 +438,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                     onClick={() => setActiveTabIdx(idx)}
                     className={`absolute z-20 rounded transition-all cursor-pointer flex items-center justify-center ${
                       isActive
-                        ? 'ring-4 ring-sky-400 shadow-glow-cyan z-30'
+                        ? 'ring-4 ring-sky-400 z-30'
                         : 'ring-2 ring-slate-400 hover:ring-4 hover:ring-sky-400'
                     }`}
                   >
@@ -479,7 +479,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                     }}
                     className={`absolute z-20 rounded transition-all cursor-pointer ${
                       isActive
-                        ? 'ring-4 ring-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)] z-30'
+                        ? 'ring-4 ring-amber-400 z-30'
                         : item.isProblematic
                         ? 'ring-2 ring-red-500 hover:ring-4 hover:ring-red-400'
                         : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
@@ -505,7 +505,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             type="button"
             onClick={onRunAudit}
             disabled={isAuditing}
-            className="px-4 py-1.5 rounded_SM text-sm font-bold uppercase tracking-wider bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 shadow-glow-cyan transition-all"
+            className="px-4 py-1.5 rounded_SM text-sm font-bold uppercase tracking-wider bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
           >
             <Play className={`w-3.5 h-3.5 fill-current ${isAuditing ? 'animate-spin' : ''}`} />
             <span>{isAuditing ? 'Auditing...' : 'Run Accessibility Audit'}</span>
@@ -560,8 +560,8 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={() => setIsAutoplaying(!isAutoplaying)}
               className={`px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isAutoplaying
-                  ? 'bg-amber-500 text-black shadow-glow-amber'
-                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover shadow-glow-cyan'
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover'
               }`}
             >
               {isAutoplaying ? (
@@ -621,8 +621,8 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={toggleSpeechPlayback}
               className={`px-3.5 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isSpeaking
-                  ? 'bg-amber-500 text-black shadow-glow-amber'
-                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover shadow-glow-cyan'
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover'
               }`}
             >
               {isSpeaking ? (

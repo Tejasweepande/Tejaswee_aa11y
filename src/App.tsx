@@ -727,7 +727,7 @@ export const App: React.FC = () => {
       <header className="border-b border-lab-border bg-lab-card/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-3.5">
         <div className="w-full mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded_SM bg-lab-accent flex items-center justify-center text-lab-onAccent font-extrabold shadow-glow-cyan">
+            <div className="w-9 h-9 rounded_SM bg-lab-accent flex items-center justify-center text-lab-onAccent font-extrabold">
               <Sparkles className="w-5 h-5 fill-current" aria-hidden="true" />
             </div>
             <div>
