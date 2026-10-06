@@ -818,7 +818,7 @@ export const App: React.FC = () => {
               className="self-start flex items-center gap-1.5 text-sm font-semibold text-lab-muted hover:text-lab-text transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
-              Back to Upload
+              New audit
             </button>
 
             {auditNoticeBanner}
