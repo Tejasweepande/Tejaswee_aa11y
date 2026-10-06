@@ -13,19 +13,19 @@ interface Props {
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <section>
-    <h4 className="text-[11px] uppercase tracking-wide font-bold text-lab-muted mb-1.5">{title}</h4>
+    <h4 className="text-xs uppercase tracking-wide font-bold text-lab-muted mb-1.5">{title}</h4>
     {children}
   </section>
 );
 
 const ColorRow: React.FC<{ label: string; hex: string }> = ({ label, hex }) => (
-  <div className="flex items-center gap-2 text-xs text-lab-text">
+  <div className="flex items-center gap-2 text-sm text-lab-text">
     <span
       aria-hidden="true"
       className="w-4 h-4 rounded-full ring-1 ring-inset ring-black/20 shrink-0"
       style={{ backgroundColor: hex }}
     />
-    <span className="text-lab-muted w-24">{label}</span>
+    <span className="text-lab-muted w-28">{label}</span>
     <span className="font-mono">{hex}</span>
   </div>
 );
@@ -44,7 +44,7 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
         ref={backRef}
         type="button"
         onClick={onBack}
-        className="self-start inline-flex items-center gap-1.5 px-2 py-1 -ml-2 rounded text-xs font-semibold text-sky-700 dark:text-sky-300 hover:bg-lab-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+        className="self-start inline-flex items-center gap-1.5 px-2 py-1 -ml-2 rounded text-sm font-semibold text-sky-700 dark:text-sky-300 hover:bg-lab-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
       >
         <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
         <span>Back to findings</span>
@@ -55,19 +55,19 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
         <FindingCard finding={finding} number={number} variant="detail" />
 
         <Section title="What was found">
-          <p className="text-xs text-lab-text leading-relaxed">{finding.evidence}</p>
+          <p className="text-sm text-lab-text leading-relaxed">{finding.evidence}</p>
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-            <span className="text-[11px] px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
+            <span className="text-xs px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
               {finding.confidence === 'measured' ? 'Measured' : 'Predicted'}
             </span>
             {finding.nearMiss && (
-              <span className="text-[11px] px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
+              <span className="text-xs px-2 py-0.5 rounded bg-lab-subtle text-lab-text font-medium">
                 Near miss
               </span>
             )}
           </div>
           {finding.confidenceReason && (
-            <p className="text-[11px] text-lab-muted italic mt-2 leading-relaxed">{finding.confidenceReason}</p>
+            <p className="text-xs text-lab-muted italic mt-2 leading-relaxed">{finding.confidenceReason}</p>
           )}
         </Section>
 
@@ -82,7 +82,7 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
 
         {finding.impact && (
           <Section title="Why it matters">
-            <p className="text-xs text-lab-text leading-relaxed">{finding.impact}</p>
+            <p className="text-sm text-lab-text leading-relaxed">{finding.impact}</p>
           </Section>
         )}
 
@@ -90,7 +90,7 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
           <Section title="How to fix">
             {finding.fix && (
               <div className="rounded bg-sky-500/10 p-3">
-                <p className="text-xs text-lab-text leading-relaxed flex gap-2">
+                <p className="text-sm text-lab-text leading-relaxed flex gap-2">
                   <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-sky-600 dark:text-sky-300" aria-hidden="true" />
                   <span>{finding.fix}</span>
                 </p>
@@ -99,7 +99,7 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
             {finding.remediation?.suggestedFg && (
               <div className="mt-2 space-y-1.5">
                 <ColorRow label="Suggested text" hex={finding.remediation.suggestedFg} />
-                <p className="text-[11px] text-lab-muted pl-6">
+                <p className="text-xs text-lab-muted pl-6">
                   Reaches {finding.remediation.ratio.toFixed(2)}:1. {finding.remediation.explanation}
                 </p>
               </div>
@@ -108,18 +108,18 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
         )}
 
         <Section title="Criterion">
-          <p className="text-xs text-lab-text leading-relaxed">
+          <p className="text-sm text-lab-text leading-relaxed">
             WCAG {finding.wcag.sc} {finding.wcag.name} (Level {finding.wcag.level})
             {finding.wcag.principle ? ` · ${finding.wcag.principle}` : ''}
           </p>
-          {finding.note && <p className="text-[11px] text-lab-muted mt-1 leading-relaxed">{finding.note}</p>}
+          {finding.note && <p className="text-xs text-lab-muted mt-1 leading-relaxed">{finding.note}</p>}
           <div className="flex items-center gap-3 mt-2">
             {finding.wcag.url && (
               <a
                 href={finding.wcag.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-sky-700 dark:text-sky-300 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+                className="inline-flex items-center gap-1 text-sm text-sky-700 dark:text-sky-300 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
               >
                 <span>WCAG spec</span>
                 <ExternalLink className="w-3 h-3" aria-hidden="true" />
@@ -129,7 +129,7 @@ export const SuggestionPanel: React.FC<Props> = ({ finding, number, onBack, onCo
             <button
               type="button"
               onClick={onCopyComment}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-semibold bg-lab-subtle hover:bg-lab-elevated text-lab-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated text-lab-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
             >
               {copied ? <Check className="w-3 h-3" aria-hidden="true" /> : <Copy className="w-3 h-3" aria-hidden="true" />}
               <span>{copied ? 'Copied!' : 'Copy comment'}</span>

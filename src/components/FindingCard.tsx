@@ -46,6 +46,8 @@ const iconButton =
   'w-7 h-7 inline-flex items-center justify-center rounded text-black hover:bg-black/5 ' +
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-sky-600';
 
+// Deliberate exception to the five-size text scale (12/14/16/20/24px): the finding
+// card keeps the exact sizes from the Figma design (12, 13, 14 and 20px).
 export const FindingCard: React.FC<Props> = ({
   finding,
   number,
