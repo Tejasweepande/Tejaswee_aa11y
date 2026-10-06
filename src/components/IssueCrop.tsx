@@ -11,8 +11,8 @@ interface Props {
 }
 
 // Size of the cropped picture, in CSS px.
-const BOX_W = 160;
-const BOX_H = 96;
+const BOX_W = 120;
+const BOX_H = 72;
 // Never magnify more than this, so small elements are not blown up into blur.
 const MAX_SCALE = 2;
 // Wide elements (a full-width paragraph) show only their first part, at a readable size.
