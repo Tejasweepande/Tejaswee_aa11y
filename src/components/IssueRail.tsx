@@ -119,7 +119,7 @@ export const IssueRail: React.FC<Props> = ({
         <h2 className="text-lg font-bold text-lab-text">Findings</h2>
 
         {hasAudited && (
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={onExportJson}

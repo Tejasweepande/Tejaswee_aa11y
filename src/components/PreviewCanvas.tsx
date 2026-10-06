@@ -240,7 +240,7 @@ export const PreviewCanvas: React.FC<Props> = ({
         </div>
 
         {/* Zoom & Canvas Actions */}
-        <div className="flex items-center gap-1.5 text-sm text-lab-muted">
+        <div className="flex items-center gap-2 text-sm text-lab-muted">
           <button
             type="button"
             onClick={() => setZoom((z) => Math.max(0.6, z - 0.1))}

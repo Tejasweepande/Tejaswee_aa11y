@@ -138,7 +138,7 @@ export const FindingCard: React.FC<Props> = ({
             // Actions show on hover or keyboard focus (and stay visible on touch screens,
             // while the menu is open, or when the card is selected) to keep the list calm.
             <div
-              className={`flex items-center gap-0.5 pointer-events-auto transition-opacity ${
+              className={`flex items-center gap-2 pointer-events-auto transition-opacity ${
                 menuOpen || isSelected
                   ? 'opacity-100'
                   : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100'
