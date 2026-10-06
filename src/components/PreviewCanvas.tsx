@@ -12,6 +12,7 @@ import {
   Pause,
   SkipForward,
 } from 'lucide-react';
+import { SEVERITY_BAR } from './FindingCard';
 import { speechEngine } from '../engine/screenReaderEngine';
 
 export type CanvasMode = 'overlay' | 'keyboard' | 'screenreader';
@@ -192,8 +193,8 @@ export const PreviewCanvas: React.FC<Props> = ({
         {/* Mode Tabs */}
         <div
           role="tablist"
-          aria-label="Simulator View Modes"
-          className="flex items-center gap-1 bg-lab-bg p-1 rounded_SM shadow-inner flex-wrap"
+          aria-label="Preview view"
+          className="flex items-center gap-1 bg-lab-subtle p-1 rounded flex-wrap"
         >
           <button
             role="tab"
@@ -201,12 +202,12 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('overlay')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'overlay'
-                ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
+                ? 'bg-lab-card text-lab-text shadow-sm ring-1 ring-lab-border'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Barrier Pins ({findings.length})</span>
+            <span>Issues</span>
           </button>
 
           <button
@@ -215,12 +216,12 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('keyboard')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'keyboard'
-                ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
+                ? 'bg-lab-card text-lab-text shadow-sm ring-1 ring-lab-border'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
             <Keyboard className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Focus Trajectory ({interactiveRegions.length} Stops)</span>
+            <span>Tab order</span>
           </button>
 
           <button
@@ -229,17 +230,17 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('screenreader')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'screenreader'
-                ? 'bg-sky-500 text-white dark:text-lab-bg shadow-sm'
+                ? 'bg-lab-card text-lab-text shadow-sm ring-1 ring-lab-border'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
             <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Speech HUD</span>
+            <span>Screen reader</span>
           </button>
         </div>
 
         {/* Zoom & Canvas Actions */}
-        <div className="flex items-center gap-1.5 text-sm text-lab-muted">
+        <div className="flex items-center gap-2 text-sm text-lab-muted">
           <button
             type="button"
             onClick={() => setZoom((z) => Math.max(0.6, z - 0.1))}
@@ -277,7 +278,7 @@ export const PreviewCanvas: React.FC<Props> = ({
       >
         {!imageSrc && !iframeHtml ? (
           <div className="flex flex-col items-center justify-center h-[560px] text-center px-12">
-            <div className="w-12 h-12 rounded bg-sky-500/10 text-sky-500 dark:text-sky-400 mx-auto flex items-center justify-center mb-3 shadow-sm">
+            <div className="w-12 h-12 rounded bg-sky-500/10 text-lab-accent mx-auto flex items-center justify-center mb-3 shadow-sm">
               <Sparkles className="w-6 h-6" aria-hidden="true" />
             </div>
             <h3 className="text-base font-bold text-lab-text mb-1">Canvas Ready</h3>
@@ -288,7 +289,7 @@ export const PreviewCanvas: React.FC<Props> = ({
         ) : (
           <div
             id="zoom-wrapper"
-            className={`relative rounded_SM shadow-2xl transition-transform duration-150 bg-lab-card mx-auto ${!iframeHtml ? 'w-full' : ''}`}
+            className={`relative rounded shadow-2xl transition-transform duration-150 bg-lab-card mx-auto ${!iframeHtml ? 'w-full' : ''}`}
             style={{ 
               width: iframeHtml ? '1024px' : undefined,
               transform: `scale(${zoom})`,
@@ -388,7 +389,6 @@ export const PreviewCanvas: React.FC<Props> = ({
               findings.map((finding, idx) => {
                 const isSelected = selectedFindingId === finding.id;
                 const isHovered = hoveredFindingId === finding.id;
-                const isProblematic = finding.severity === 'critical' || finding.severity === 'serious';
                 const bbox = finding.target.boundingBox;
                 if (!bbox) return null;
 
@@ -401,17 +401,18 @@ export const PreviewCanvas: React.FC<Props> = ({
                       top: `${bbox.y}%`,
                       width: `${bbox.w}%`,
                       height: `${bbox.h}%`,
+                      // Outline in the same severity color as the issue card's edge.
+                      ...(isSelected || isHovered ? {} : { ['--tw-ring-color' as string]: SEVERITY_BAR[finding.severity] }),
                     }}
                     onClick={() => onSelectFinding(isSelected ? null : finding.id)}
                     className={`absolute z-20 rounded transition-all cursor-pointer flex items-start justify-start ${
                       isSelected || isHovered
-                        ? 'ring-4 ring-sky-400 shadow-glow-cyan z-30'
-                        : isProblematic
-                        ? 'ring-2 ring-red-500 hover:ring-4 hover:ring-red-400'
-                        : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
+                        ? 'ring-4 ring-sky-400 z-30'
+                        : 'ring-2 hover:ring-4'
                     }`}
                   >
-                    <span className="bg-black/90 text-white font-mono text-xs font-bold min-w-[24px] h-6 px-1 flex items-center justify-center rounded-full shadow-md -translate-x-2 -translate-y-2">
+                    {/* Sits just above the box, so it does not cover the start of the text (inside the box only at the very top of the page). */}
+                    <span className={`absolute left-0 ${bbox.y < 3 ? 'top-0' : 'bottom-full mb-0.5'} bg-black/90 text-white font-mono text-xs font-bold min-w-[24px] h-6 px-1 flex items-center justify-center rounded-full shadow-md ring-1 ring-white`}>
                       {idx + 1}
                     </span>
                   </div>
@@ -438,14 +439,14 @@ export const PreviewCanvas: React.FC<Props> = ({
                     onClick={() => setActiveTabIdx(idx)}
                     className={`absolute z-20 rounded transition-all cursor-pointer flex items-center justify-center ${
                       isActive
-                        ? 'ring-4 ring-sky-400 shadow-glow-cyan z-30'
+                        ? 'ring-4 ring-sky-400 z-30'
                         : 'ring-2 ring-slate-400 hover:ring-4 hover:ring-sky-400'
                     }`}
                   >
                     <span
                       className={`min-w-[24px] h-6 px-1 rounded-full flex items-center justify-center text-xs font-bold font-mono shadow-lg ${
                         isActive
-                          ? 'bg-sky-400 text-lab-bg'
+                          ? 'bg-lab-accent text-lab-onAccent'
                           : 'bg-lab-card text-lab-text'
                       }`}
                     >
@@ -479,7 +480,7 @@ export const PreviewCanvas: React.FC<Props> = ({
                     }}
                     className={`absolute z-20 rounded transition-all cursor-pointer ${
                       isActive
-                        ? 'ring-4 ring-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)] z-30'
+                        ? 'ring-4 ring-amber-400 z-30'
                         : item.isProblematic
                         ? 'ring-2 ring-red-500 hover:ring-4 hover:ring-red-400'
                         : 'ring-2 ring-emerald-500 hover:ring-4 hover:ring-emerald-400'
@@ -505,7 +506,7 @@ export const PreviewCanvas: React.FC<Props> = ({
             type="button"
             onClick={onRunAudit}
             disabled={isAuditing}
-            className="px-4 py-1.5 rounded_SM text-sm font-bold uppercase tracking-wider bg-sky-500 hover:bg-sky-400 text-lab-bg flex items-center gap-1.5 shadow-glow-cyan transition-all"
+            className="px-4 py-1.5 rounded text-sm font-bold uppercase tracking-wider bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent flex items-center gap-1.5 transition-all"
           >
             <Play className={`w-3.5 h-3.5 fill-current ${isAuditing ? 'animate-spin' : ''}`} />
             <span>{isAuditing ? 'Auditing...' : 'Run Accessibility Audit'}</span>
@@ -560,8 +561,8 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={() => setIsAutoplaying(!isAutoplaying)}
               className={`px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isAutoplaying
-                  ? 'bg-amber-500 text-lab-bg shadow-glow-amber'
-                  : 'bg-sky-500 text-lab-bg hover:bg-sky-400 shadow-glow-cyan'
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover'
               }`}
             >
               {isAutoplaying ? (
@@ -621,8 +622,8 @@ export const PreviewCanvas: React.FC<Props> = ({
               onClick={toggleSpeechPlayback}
               className={`px-3.5 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 transition-all ${
                 isSpeaking
-                  ? 'bg-amber-500 text-lab-bg shadow-glow-amber'
-                  : 'bg-sky-500 text-lab-bg hover:bg-sky-400 shadow-glow-cyan'
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover'
               }`}
             >
               {isSpeaking ? (

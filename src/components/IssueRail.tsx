@@ -1,8 +1,10 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Finding, ModuleType, Severity } from '../types/finding';
-import { CheckCircle2, Search, FileDown, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { CheckCircle2, Search, FileDown, Sparkles } from 'lucide-react';
 import { FindingCard } from './FindingCard';
 import { SuggestionPanel } from './SuggestionPanel';
+import { SeverityDot } from './SeverityTag';
+import { CheckFilter, CHECK_OPTIONS } from './CheckFilter';
 
 interface Props {
   findings: Finding[];
@@ -27,7 +29,7 @@ export const IssueRail: React.FC<Props> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState<Severity | 'all'>('all');
-  const [selectedModule, setSelectedModule] = useState<ModuleType | 'all'>('all');
+  const [selectedModules, setSelectedModules] = useState<ModuleType[]>(CHECK_OPTIONS.map((o) => o.id));
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Suggestions view: opened from a card's bulb icon, replaces the list inside this
@@ -82,7 +84,7 @@ export const IssueRail: React.FC<Props> = ({
   // Filter findings
   const filteredFindings = findings.filter((f) => {
     if (selectedSeverity !== 'all' && f.severity !== selectedSeverity) return false;
-    if (selectedModule !== 'all' && f.module !== selectedModule) return false;
+    if (!selectedModules.includes(f.module)) return false;
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const matchText =
@@ -113,30 +115,24 @@ export const IssueRail: React.FC<Props> = ({
       className="bg-lab-card rounded p-5 shadow-panel flex flex-col gap-4 h-full overflow-hidden min-h-0"
     >
       {/* Rail Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-lab-text flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-sky-400" aria-hidden="true" />
-            <span>Audit Findings ({hasAudited ? findings.length : 0})</span>
-          </h2>
-          <p className="text-sm text-lab-muted">WCAG 2.2 AA deterministic violations</p>
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-lab-text">Findings</h2>
 
         {hasAudited && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={onExportJson}
               title="Download JSON canonical findings"
-              className="p-1.5 rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text text-sm shadow-sm transition-all"
+              className="w-8 h-8 inline-flex items-center justify-center rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text shadow-sm transition-all"
               aria-label="Export findings as JSON"
             >
-              <FileDown className="w-3.5 h-3.5" aria-hidden="true" />
+              <FileDown className="w-4 h-4" aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={onOpenReportModal}
-              className="px-2.5 py-1.5 rounded bg-sky-500 hover:bg-sky-400 text-lab-bg text-sm font-bold shadow-glow-cyan transition-all flex items-center gap-1"
+              className="h-8 px-2.5 rounded bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent text-sm font-bold transition-all flex items-center gap-1"
             >
               <span>Full Report</span>
             </button>
@@ -146,8 +142,8 @@ export const IssueRail: React.FC<Props> = ({
 
       {!hasAudited ? (
         /* Pre-Audit Clean State */
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-lab-subtle/40 rounded_SM min-h-[380px] shadow-inner">
-          <div className="w-12 h-12 rounded bg-sky-500/10 text-sky-400 flex items-center justify-center mb-3 shadow-sm">
+        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-lab-subtle/40 rounded min-h-[380px] shadow-inner">
+          <div className="w-12 h-12 rounded bg-lab-accent/10 text-lab-accent flex items-center justify-center mb-3 shadow-sm">
             <Sparkles className="w-6 h-6" aria-hidden="true" />
           </div>
           <h3 className="text-base font-bold text-lab-text mb-1">Ready for Audit</h3>
@@ -166,105 +162,45 @@ export const IssueRail: React.FC<Props> = ({
       ) : (
         /* Post-Audit Findings View */
         <>
-          {/* Severity Metric Pills */}
-          <div className="grid grid-cols-4 gap-1.5 text-center">
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'critical' ? 'all' : 'critical')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
-                selectedSeverity === 'critical'
-                  ? 'bg-red-500/20 text-red-700 dark:text-red-300 ring-2 ring-red-500/50 shadow-glow-red'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-red-500/30'
-              }`}
-            >
-              <span className="block text-sm font-extrabold font-mono text-red-600 dark:text-red-400">
-                {severityCounts.critical}
-              </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Critical</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'serious' ? 'all' : 'serious')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
-                selectedSeverity === 'serious'
-                  ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 ring-2 ring-orange-500/50 shadow-glow-amber'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-orange-500/30'
-              }`}
-            >
-              <span className="block text-sm font-extrabold font-mono text-orange-600 dark:text-orange-400">
-                {severityCounts.serious}
-              </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Serious</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'moderate' ? 'all' : 'moderate')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
-                selectedSeverity === 'moderate'
-                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/50 shadow-glow-amber'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-amber-500/30'
-              }`}
-            >
-              <span className="block text-sm font-extrabold font-mono text-amber-600 dark:text-amber-400">
-                {severityCounts.moderate}
-              </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Moderate</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSeverity(selectedSeverity === 'minor' ? 'all' : 'minor')}
-              className={`p-2 rounded_SM transition-all shadow-sm ${
-                selectedSeverity === 'minor'
-                  ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 ring-2 ring-sky-500/50 shadow-glow-cyan'
-                  : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-sky-500/30'
-              }`}
-            >
-              <span className="block text-sm font-extrabold font-mono text-sky-600 dark:text-sky-400">
-                {severityCounts.minor}
-              </span>
-              <span className="text-xs uppercase font-bold text-lab-dim">Minor</span>
-            </button>
+          {/* Severity filter as text tabs: no fills, the selected one is bold and underlined */}
+          <div role="group" aria-label="Filter by severity" className="flex flex-wrap gap-x-4 border-b border-lab-border">
+            {(['all', ...(['critical', 'serious', 'moderate', 'minor'] as Severity[]).filter((sev) => severityCounts[sev] > 0)] as (
+              | 'all'
+              | Severity
+            )[]).map((sev) => (
+              <button
+                key={sev}
+                type="button"
+                aria-pressed={selectedSeverity === sev}
+                onClick={() => setSelectedSeverity(sev)}
+                className={`-mb-px pb-2 inline-flex items-center gap-1.5 text-sm border-b-2 transition-colors ${
+                  selectedSeverity === sev
+                    ? 'border-lab-text text-lab-text font-bold'
+                    : 'border-transparent text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                {sev !== 'all' && <SeverityDot severity={sev} />}
+                {sev === 'all'
+                  ? `All ${findings.length}`
+                  : `${sev.charAt(0).toUpperCase() + sev.slice(1)} ${severityCounts[sev]}`}
+              </button>
+            ))}
           </div>
 
-          {/* Search and Filters */}
-          <div className="space-y-2">
-            <div className="relative">
+          {/* Search, with the check-type filter as a small dropdown beside it */}
+          <div className="flex gap-2">
+            <div className="relative flex-1 min-w-0">
               <Search className="w-3.5 h-3.5 text-lab-dim absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search issues, WCAG criteria, selectors..."
-                className="w-full bg-lab-card shadow-inner rounded_SM pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
+                placeholder="Search issues"
+                aria-label="Search issues"
+                className="w-full bg-lab-card border border-lab-border rounded pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
               />
             </div>
-
-            {/* Quick Filter Bar */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-sm no-scrollbar">
-              {(['all', 'contrast', 'keyboard', 'screenreader', 'structure'] as (ModuleType | 'all')[]).map(
-                (mod) => (
-                  <button
-                    key={mod}
-                    type="button"
-                    onClick={() => setSelectedModule(mod)}
-                    className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap transition-all shadow-sm ${
-                      selectedModule === mod
-                        ? 'bg-sky-500 text-white dark:text-lab-bg shadow-glow-cyan'
-                        : 'bg-lab-subtle text-lab-muted hover:text-lab-text hover:bg-lab-elevated'
-                    }`}
-                  >
-                    {mod === 'all'
-                      ? 'All Modules'
-                      : mod === 'screenreader'
-                      ? 'Screen Reader'
-                      : mod.charAt(0).toUpperCase() + mod.slice(1)}
-                  </button>
-                )
-              )}
-            </div>
+            <CheckFilter selected={selectedModules} onChange={setSelectedModules} />
           </div>
 
           {/* Findings List (Scrollable) */}
@@ -276,7 +212,7 @@ export const IssueRail: React.FC<Props> = ({
             className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 pb-1"
           >
             {filteredFindings.length === 0 ? (
-              <div className="text-center py-10 px-4 bg-lab-subtle/50 rounded_SM shadow-inner">
+              <div className="text-center py-10 px-4 bg-lab-subtle/50 rounded shadow-inner">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500 dark:text-emerald-400 mx-auto mb-2 opacity-80" aria-hidden="true" />
                 <p className="text-sm font-bold text-lab-text mb-0.5">No matching issues</p>
                 <p className="text-xs text-lab-dim">

@@ -16,9 +16,9 @@ interface Props {
 }
 
 /**
- * Round "x" button that sits inside the left edge of a text field.
+ * Round "x" button that sits inside the right edge of a text field.
  * The parent renders it only while the field has content, and reserves the
- * left padding (pl-10) so the text never shifts when it appears.
+ * right padding (pr-10) so the text never shifts when it appears.
  * 28px hit area, above the 24px minimum the tool itself audits for.
  */
 export const ClearButton: React.FC<Props> = ({ label, onClick, align = 'center' }) => (
@@ -27,7 +27,7 @@ export const ClearButton: React.FC<Props> = ({ label, onClick, align = 'center' 
     onClick={onClick}
     aria-label={label}
     title="Clear"
-    className={`absolute left-1.5 w-7 h-7 inline-flex items-center justify-center rounded-full text-lab-muted hover:text-lab-text hover:bg-lab-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500 ${
+    className={`absolute right-1.5 w-7 h-7 inline-flex items-center justify-center rounded-full text-lab-muted hover:text-lab-text hover:bg-lab-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500 ${
       align === 'center' ? 'top-1/2 -translate-y-1/2' : 'top-1.5'
     }`}
   >

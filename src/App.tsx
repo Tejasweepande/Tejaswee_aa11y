@@ -69,6 +69,8 @@ export const App: React.FC = () => {
   const [liveAnnouncement, setLiveAnnouncement] = useState('');
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  // The header's Export Report button appears only after the report has been opened once for this audit.
+  const [hasViewedReport, setHasViewedReport] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [webUrl, setWebUrl] = useState<string>('');
   const [pastedHtml, setPastedHtml] = useState<string>('');
@@ -277,6 +279,7 @@ export const App: React.FC = () => {
     setModuleToggles(item.moduleToggles);
     setExportScale(item.exportScale);
     setHasAudited(true);
+    setHasViewedReport(false);
     setInputMode(item.inputMode);
     setViewStep('results');
 
@@ -329,6 +332,7 @@ export const App: React.FC = () => {
     setFindings([]);
     setScreenReaderItems([]);
     setHasAudited(false);
+    setHasViewedReport(false);
     setSelectedSampleId(null);
     
     if (inputMode === 'figma') {
@@ -690,7 +694,7 @@ export const App: React.FC = () => {
   const auditNoticeBanner = auditNotice && (
     <div
       role="alert"
-      className={`p-3 rounded_SM border flex items-start gap-2.5 text-sm animate-fade-in ${
+      className={`p-3 rounded border flex items-start gap-2.5 text-sm animate-fade-in ${
         auditNotice.type === 'error'
           ? 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-700/70 text-red-900 dark:text-red-200'
           : auditNotice.type === 'warning'
@@ -727,7 +731,7 @@ export const App: React.FC = () => {
       <header className="border-b border-lab-border bg-lab-card/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-3.5">
         <div className="w-full mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded_SM bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-lab-bg font-extrabold shadow-glow-cyan">
+            <div className="w-9 h-9 rounded bg-lab-accent flex items-center justify-center text-lab-onAccent font-extrabold">
               <Sparkles className="w-5 h-5 fill-current" aria-hidden="true" />
             </div>
             <div>
@@ -749,7 +753,7 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 rounded_SM bg-lab-subtle border border-lab-border text-lab-muted hover:text-lab-text transition-colors flex items-center gap-1.5 text-sm font-semibold"
+              className="p-2 rounded bg-lab-subtle border border-lab-border text-lab-muted hover:text-lab-text transition-colors flex items-center gap-1.5 text-sm font-semibold"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
             >
               {theme === 'light' ? (
@@ -765,11 +769,11 @@ export const App: React.FC = () => {
               )}
             </button>
 
-            {hasAudited && (
+            {hasAudited && hasViewedReport && (
               <button
                 type="button"
                 onClick={() => setReportModalOpen(true)}
-                className="px-3.5 py-1.5 rounded_SM text-sm font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/40 transition-colors"
+                className="px-3.5 py-1.5 rounded text-sm font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/40 transition-colors"
               >
                 Export Report ({findings.length})
               </button>
@@ -810,8 +814,8 @@ export const App: React.FC = () => {
       ) : (
         /* Step 2: Preview & Issues List */
         <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-76px)] overflow-hidden">
-          {/* Centre Column: Preview Canvas + Interactive Multi-modal Barrier Simulator (Takes 75% = 9 cols) */}
-          <div className="lg:col-span-9 flex flex-col gap-4 h-full overflow-hidden min-h-0">
+          {/* Centre Column: Preview Canvas + Interactive Multi-modal Barrier Simulator (Takes 2/3 = 8 cols) */}
+          <div className="lg:col-span-8 flex flex-col gap-4 h-full overflow-hidden min-h-0">
             <button
               type="button"
               onClick={() => setViewStep('upload')}
@@ -821,7 +825,8 @@ export const App: React.FC = () => {
               Back to Upload
             </button>
 
-            {auditNoticeBanner}
+            {/* The results speak for themselves: only warnings and errors get a banner here. */}
+            {auditNotice?.type !== 'success' && auditNoticeBanner}
 
             <PreviewCanvas
               imageSrc={imageSrc}
@@ -841,15 +846,15 @@ export const App: React.FC = () => {
             />
           </div>
 
-          {/* Right Column: Issue Rail (Takes 25% = 3 cols) */}
-          <div className="lg:col-span-3 flex flex-col h-full overflow-hidden min-h-0 bg-lab-card/80 border border-lab-border rounded shadow-panel">
+          {/* Right Column: Issue Rail (Takes 1/3 = 4 cols) */}
+          <div className="lg:col-span-4 flex flex-col h-full overflow-hidden min-h-0 bg-lab-card/80 border border-lab-border rounded shadow-panel">
             <IssueRail
               findings={findings}
               selectedFindingId={selectedFindingId}
               onSelectFinding={handleSelectFinding}
               hoveredFindingId={hoveredFindingId}
               onHoverFinding={setHoveredFindingId}
-              onOpenReportModal={() => setReportModalOpen(true)}
+              onOpenReportModal={() => { setReportModalOpen(true); setHasViewedReport(true); }}
               onExportJson={handleExportJson}
               hasAudited={hasAudited}
             />
@@ -878,6 +883,7 @@ export const App: React.FC = () => {
           figmaToken={figmaPat}
           imageSrc={imageSrc}
           iframeHtml={iframeHtml}
+          moduleToggles={moduleToggles}
         />
       )}
     </div>

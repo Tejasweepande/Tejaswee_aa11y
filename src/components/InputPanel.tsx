@@ -94,35 +94,46 @@ export const InputPanel: React.FC<Props> = ({
       className="bg-lab-card/95 backdrop-blur-md border border-lab-border rounded shadow-panel flex flex-row h-full overflow-hidden"
     >
       {/* Left Navigation */}
-      <div className="w-16 shrink-0 border-r border-lab-border flex flex-col items-center py-5 gap-6 bg-lab-card/50">
-        <div className="flex flex-col gap-4 w-full px-2">
-           <button onClick={() => onSelectInput('image')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'image' ? 'bg-sky-500/20 text-sky-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Image Upload">
-             <UploadCloud className="w-5 h-5" />
-           </button>
-           <button onClick={() => onSelectInput('figma')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'figma' ? 'bg-fuchsia-500/20 text-fuchsia-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Figma Link">
-             <Layers className="w-5 h-5" />
-           </button>
-           <button onClick={() => onSelectInput('url')} className={`p-2 rounded flex justify-center transition-colors ${currentInput === 'url' ? 'bg-indigo-500/20 text-indigo-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Live URL">
-             <Globe className="w-5 h-5" />
-           </button>
-
-           <hr className="border-lab-border w-full my-1" />
-
-           <button onClick={() => onSelectInput('history')} className={`p-2 rounded flex justify-center transition-colors relative ${currentInput === 'history' ? 'bg-amber-500/20 text-amber-500' : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'}`} title="Audit History">
-             <History className="w-5 h-5" />
-             {pastAudits.length > 0 && (
-               <span className="absolute top-1 right-1 w-2 h-2 bg-sky-500 rounded-full"></span>
-             )}
-           </button>
+      {/* Each item shows its name under the icon, so it does not rely on a hover tooltip. */}
+      <nav aria-label="Audit source" className="w-20 shrink-0 border-r border-lab-border flex flex-col items-center py-5 bg-lab-card/50">
+        <div className="flex flex-col gap-2 w-full px-2">
+          {(
+            [
+              { mode: 'image', label: 'Image', Icon: UploadCloud },
+              { mode: 'figma', label: 'Figma', Icon: Layers },
+              { mode: 'url', label: 'Website', Icon: Globe },
+              { mode: 'history', label: 'History', Icon: History },
+            ] as { mode: InputMode; label: string; Icon: typeof History }[]
+          ).map(({ mode, label, Icon }) => (
+            <React.Fragment key={mode}>
+              {mode === 'history' && <hr className="border-lab-border w-full my-1" />}
+              <button
+                type="button"
+                onClick={() => onSelectInput(mode)}
+                aria-current={currentInput === mode ? 'page' : undefined}
+                className={`relative py-2 rounded flex flex-col items-center gap-1 transition-colors ${
+                  currentInput === mode
+                    ? 'bg-lab-accent/10 text-lab-accent'
+                    : 'text-lab-muted hover:text-lab-text hover:bg-lab-subtle'
+                }`}
+              >
+                <Icon className="w-5 h-5" aria-hidden="true" />
+                <span className="text-xs font-semibold">{label}</span>
+                {mode === 'history' && pastAudits.length > 0 && (
+                  <span className="absolute top-1.5 right-3 w-2 h-2 bg-lab-accent rounded-full" aria-hidden="true"></span>
+                )}
+              </button>
+            </React.Fragment>
+          ))}
         </div>
-      </div>
+      </nav>
 
       {/* Right Content Area */}
       <div className="flex-1 flex flex-col py-8 px-4 sm:px-8 overflow-y-auto">
        <div className="w-full max-w-xl mx-auto flex flex-col gap-5 flex-1">
         {/* Header */}
         <div>
-          <h2 className="text-base font-bold text-lab-text flex items-center gap-2">
+          <h2 className="text-xl font-bold text-lab-text flex items-center gap-2">
             {currentInput === 'history'
               ? 'Audit History'
               : currentInput === 'image'
@@ -132,7 +143,7 @@ export const InputPanel: React.FC<Props> = ({
               : 'Live Link'}
           </h2>
           {currentInput === 'history' && (
-            <p className="text-xs text-lab-muted mt-0.5">Past audits done on this product</p>
+            <p className="text-sm text-lab-muted mt-1">Past audits done on this product</p>
           )}
         </div>
 
@@ -143,7 +154,7 @@ export const InputPanel: React.FC<Props> = ({
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded_SM p-4 text-center bg-lab-subtle/50 cursor-pointer group"
+            className="ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded p-4 text-center bg-lab-subtle/50 cursor-pointer group"
             onClick={() => fileInputRef.current?.click()}
             role="region"
             aria-label="Image dropzone"
@@ -156,11 +167,11 @@ export const InputPanel: React.FC<Props> = ({
               className="hidden"
               aria-label="Upload interface screenshot or mockup"
             />
-            <div className="w-10 h-10 rounded-full bg-sky-500/10 text-sky-500 dark:text-sky-400 mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-sky-500/10 text-lab-accent mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <UploadCloud className="w-5 h-5" aria-hidden="true" />
             </div>
             <p className="text-sm font-semibold text-lab-text mb-0.5">
-              Upload any UI screenshot or <span className="text-sky-500 dark:text-sky-400 underline">browse</span>
+              Upload any UI screenshot or <span className="text-lab-accent underline">browse</span>
             </p>
             <p className="text-xs text-lab-dim">Instant Computer Vision &amp; Decile Contrast Audit</p>
           </div>
@@ -170,7 +181,7 @@ export const InputPanel: React.FC<Props> = ({
       {currentInput === 'history' && (
         <div className="space-y-4">
           {pastAudits.length === 0 ? (
-            <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded_SM border border-lab-border border-dashed">
+            <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
               No previous audits in this session.
             </div>
           ) : (
@@ -180,7 +191,7 @@ export const InputPanel: React.FC<Props> = ({
                   key={audit.id} 
                   type="button"
                   onClick={() => onLoadHistoryItem(audit)}
-                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded_SM border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated hover:shadow-glow-cyan"
+                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated"
                 >
                   <div className="flex justify-between items-center w-full">
                     <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
@@ -207,9 +218,9 @@ export const InputPanel: React.FC<Props> = ({
         <>
           {/* Export Scale Selector (image mode only — Figma/URL provide real pixel dimensions) */}
           {currentInput === 'image' && (
-            <div className="bg-lab-subtle rounded_SM p-3 shadow-sm">
+            <div className="bg-lab-subtle rounded p-3 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-lab-muted">Export Scale</label>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">Export Scale</h3>
               </div>
 
               <div className="grid grid-cols-4 gap-1">
@@ -218,10 +229,10 @@ export const InputPanel: React.FC<Props> = ({
                     key={sc}
                     type="button"
                     onClick={() => onChangeScale(sc)}
-                    className={`py-1.5 text-sm font-mono rounded transition-all shadow-sm ${
+                    className={`py-1.5 text-sm font-mono rounded transition-all ${
                       exportScale === sc
-                        ? 'bg-sky-500 text-white dark:text-lab-bg font-bold shadow-glow-cyan'
-                        : 'bg-lab-card text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
+                        ? 'bg-lab-card text-lab-text font-bold shadow-sm ring-1 ring-lab-border'
+                        : 'text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
                     }`}
                   >
                     {sc === 'unknown' ? 'Unknown' : `@${sc}`}
@@ -234,18 +245,17 @@ export const InputPanel: React.FC<Props> = ({
             </div>
           )}
       {currentInput === 'figma' && (
-        <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-lab-text">Figma Prototype Link</span>
-          </div>
+        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
+          <label htmlFor="figma-url" className="block text-sm font-semibold text-lab-text">Figma prototype link</label>
           <div className="relative">
             <input
+              id="figma-url"
               ref={figmaUrlRef}
               type="text"
               value={figmaUrl}
               onChange={(e) => onChangeFigmaUrl(e.target.value)}
               placeholder="https://www.figma.com/proto/... or /design/..."
-              className="w-full bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+              className="w-full bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
             />
             {figmaUrl.length > 0 && (
               <ClearButton
@@ -254,14 +264,16 @@ export const InputPanel: React.FC<Props> = ({
               />
             )}
           </div>
+          <label htmlFor="figma-token" className="block text-sm font-semibold text-lab-text pt-1">Figma access token</label>
           <div className="relative">
             <input
+              id="figma-token"
               ref={figmaPatRef}
               type="password"
               value={figmaPat}
               onChange={(e) => onChangeFigmaPat(e.target.value.trim())}
-              placeholder="Figma Personal Access Token (figd_...)"
-              className="w-full bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+              placeholder="figd_..."
+              className="w-full bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
             />
             {figmaPat.length > 0 && (
               <ClearButton
@@ -271,24 +283,34 @@ export const InputPanel: React.FC<Props> = ({
             )}
           </div>
           <p className="text-xs text-lab-dim leading-relaxed">
+            The token is needed to read the file.{' '}
+            <a
+              href="https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens"
+              target="_blank"
+              rel="noreferrer"
+              className="text-lab-accent underline font-semibold"
+            >
+              How to get a token<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </p>
+          <p className="text-xs text-lab-dim leading-relaxed">
             Extracts prototype transition links to walk user focus flow deterministically.
           </p>
         </div>
       )}
 
       {currentInput === 'url' && (
-        <div className="space-y-3 bg-lab-subtle rounded_SM p-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-lab-text">Website URL</span>
-          </div>
+        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
+          <label htmlFor="website-url" className="block text-sm font-semibold text-lab-text">Website URL</label>
           <div className="relative">
             <input
+              id="website-url"
               ref={webUrlRef}
               type="text"
               value={webUrl}
               onChange={(e) => onChangeWebUrl(e.target.value)}
               placeholder="https://example.com"
-              className="w-full bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
+              className="w-full bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none"
             />
             {webUrl.length > 0 && (
               <ClearButton
@@ -299,14 +321,15 @@ export const InputPanel: React.FC<Props> = ({
           </div>
           
           <div className="pt-2 border-t border-lab-border">
-            <span className="text-sm font-semibold text-lab-text block mb-2">HTML Fallback</span>
+            <label htmlFor="pasted-html" className="text-sm font-semibold text-lab-text block mb-2">HTML fallback</label>
             <div className="relative">
               <textarea
+                id="pasted-html"
                 ref={pastedHtmlRef}
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="w-full h-24 bg-lab-card shadow-inner rounded_SM pl-10 pr-3 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
@@ -329,9 +352,9 @@ export const InputPanel: React.FC<Props> = ({
 
       {/* Module Toggles */}
       <div>
-        <label className="text-sm font-semibold text-lab-muted block mb-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted mb-2">
           Audit Modules
-        </label>
+        </h3>
         <div className="grid grid-cols-2 gap-2">
           {(
             [
@@ -347,16 +370,16 @@ export const InputPanel: React.FC<Props> = ({
                 key={mod.id}
                 type="button"
                 onClick={() => onToggleModule(mod.id)}
-                className={`py-2 px-3 rounded_SM text-sm font-medium shadow-sm text-left flex items-center justify-between transition-all ${
+                className={`py-2 px-3 rounded text-sm font-medium shadow-sm text-left flex items-center justify-between transition-all ${
                   enabled
-                    ? 'bg-lab-card text-lab-text shadow-glow-cyan ring-1 ring-sky-500/30'
+                    ? 'bg-lab-card text-lab-text ring-1 ring-lab-accent'
                     : 'bg-lab-subtle/50 text-lab-dim hover:bg-lab-subtle'
                 }`}
               >
                 <span>{mod.label}</span>
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    enabled ? 'bg-sky-400 shadow-glow-cyan' : 'bg-lab-dim/30'
+                    enabled ? 'bg-lab-accent' : 'bg-lab-dim/30'
                   }`}
                 />
               </button>
@@ -373,13 +396,13 @@ export const InputPanel: React.FC<Props> = ({
         (() => {
           let isReadyToAudit = false;
           if (currentInput === 'image') isReadyToAudit = hasImage;
-          else if (currentInput === 'figma') isReadyToAudit = !!figmaUrl.trim();
+          else if (currentInput === 'figma') isReadyToAudit = !!figmaUrl.trim() && !!figmaPat.trim();
           else if (currentInput === 'url') isReadyToAudit = !!webUrl.trim() || !!pastedHtml.trim();
 
           const isDisabled = isAuditing || !isReadyToAudit;
           
-          let buttonClass = 'bg-sky-500 hover:bg-sky-400 text-lab-bg focus-visible:ring-2 shadow-glow-cyan';
-          if (isAuditing) buttonClass = 'bg-sky-500/50 text-lab-bg cursor-wait shadow-glow-cyan';
+          let buttonClass = 'bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent focus-visible:ring-2';
+          if (isAuditing) buttonClass = 'bg-lab-accent/60 text-lab-onAccent cursor-wait';
           else if (!isReadyToAudit) buttonClass = 'bg-lab-border text-lab-muted cursor-not-allowed opacity-60';
 
           return (
@@ -387,7 +410,7 @@ export const InputPanel: React.FC<Props> = ({
               type="button"
               onClick={onRunAudit}
               disabled={isDisabled}
-              className={`w-full mt-auto py-3 px-4 rounded_SM text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
+              className={`w-full mt-1 py-3 px-4 rounded text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
             >
               <Play className={`w-4 h-4 fill-current ${isAuditing ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{isAuditing ? 'Auditing Interface...' : 'Run Accessibility Audit'}</span>

@@ -28,6 +28,9 @@ export default {
           text: 'rgb(var(--lab-text) / <alpha-value>)',
           muted: 'rgb(var(--lab-muted) / <alpha-value>)',
           dim: 'rgb(var(--lab-dim) / <alpha-value>)',
+          accent: 'rgb(var(--lab-accent) / <alpha-value>)',
+          accentHover: 'rgb(var(--lab-accent-hover) / <alpha-value>)',
+          onAccent: 'rgb(var(--lab-on-accent) / <alpha-value>)',
         },
         barrier: {
           critical: '#DC2626',
@@ -46,10 +49,12 @@ export default {
         // The UI uses font-mono as a label style (numbers, chips, WCAG codes), so it follows Urbanist too.
         mono: ['Urbanist', 'system-ui', 'sans-serif'],
       },
+      // One corner radius for every rectangular element (buttons, fields, chips, cards,
+      // panels, dialogs). Change it here to change it everywhere. Pins and dots stay round (rounded-full).
+      borderRadius: {
+        DEFAULT: '4px',
+      },
       boxShadow: {
-        'glow-cyan': '0 0 24px -4px rgba(56, 189, 248, 0.25)',
-        'glow-amber': '0 0 24px -4px rgba(245, 158, 11, 0.25)',
-        'glow-ruby': '0 0 24px -4px rgba(239, 68, 68, 0.25)',
         'panel': 'var(--lab-shadow-panel)',
       },
       animation: {

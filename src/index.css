@@ -13,7 +13,11 @@
     --lab-border-hover: 209 213 219;
     --lab-text: 15 20 25;
     --lab-muted: 80 85 95;
-    --lab-dim: 120 125 135;
+    --lab-dim: 100 105 117;
+    /* Main action colour. White text on it measures 5.9:1. */
+    --lab-accent: 3 105 161;
+    --lab-accent-hover: 7 89 133;
+    --lab-on-accent: 255 255 255;
     --lab-shadow-panel: 0 16px 40px -4px rgba(15, 20, 25, 0.04), 0 8px 16px -4px rgba(15, 20, 25, 0.02), 0 0 0 1px rgba(15, 20, 25, 0.02);
   }
 
@@ -27,21 +31,26 @@
     --lab-border-hover: 59 72 96;
     --lab-text: 241 245 249;
     --lab-muted: 148 163 184;
-    --lab-dim: 100 116 139;
+    --lab-dim: 132 146 166;
+    /* Dark text on the light blue measures 9.2:1. */
+    --lab-accent: 56 189 248;
+    --lab-accent-hover: 125 211 252;
+    --lab-on-accent: 9 11 14;
     --lab-shadow-panel: 0 16px 40px -4px rgba(0, 0, 0, 0.5), 0 8px 16px -4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.02);
   }
   
   body {
     background-color: rgb(var(--lab-bg));
-    background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-    background-size: 24px 24px;
     color: rgb(var(--lab-text));
     font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
   
-  .dark body {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+
+  /* Placeholder text uses the dim grey (5:1 or more on fields), not the browser's 2.5:1 default. */
+  ::placeholder {
+    color: rgb(var(--lab-dim));
+    opacity: 1;
   }
 
   /* Accessible high-contrast focus rings for keyboard users (WCAG 2.4.7) */

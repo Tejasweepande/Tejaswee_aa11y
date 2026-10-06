@@ -94,7 +94,7 @@ export const CapabilityMatrix: React.FC<Props> = ({ currentInput, exportScale })
   ];
 
   return (
-    <div className="bg-lab-card border border-lab-border rounded_SM p-4 shadow-panel relative">
+    <div className="bg-lab-card border border-lab-border rounded p-4 shadow-panel relative">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
