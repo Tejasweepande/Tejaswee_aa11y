@@ -266,7 +266,7 @@ export const ReportModal: React.FC<Props> = ({
               <p className="text-sm text-lab-muted">
                 Evaluated against WCAG 2.2 (Levels A/AA) • Input: {inputMode.toUpperCase()} • Scale: {exportScale}
               </p>
-              <p className="text-sm font-semibold text-emerald-400 mt-1">
+              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mt-1">
                 {findings.length} findings • {exemptedCount} exempt
               </p>
             </div>
@@ -301,28 +301,28 @@ export const ReportModal: React.FC<Props> = ({
           {/* Metric Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-red-400 block mb-1">
+              <span className="text-xl font-mono font-extrabold text-red-700 dark:text-red-400 block mb-1">
                 {severityCounts.critical}
               </span>
               <span className="text-xs uppercase font-semibold text-lab-muted">Critical Barriers</span>
             </div>
 
             <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-orange-400 block mb-1">
+              <span className="text-xl font-mono font-extrabold text-orange-700 dark:text-orange-400 block mb-1">
                 {severityCounts.serious}
               </span>
               <span className="text-xs uppercase font-semibold text-lab-muted">Serious Issues</span>
             </div>
 
             <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-amber-400 block mb-1">
+              <span className="text-xl font-mono font-extrabold text-amber-700 dark:text-amber-400 block mb-1">
                 {severityCounts.moderate}
               </span>
               <span className="text-xs uppercase font-semibold text-lab-muted">Moderate Notices</span>
             </div>
 
             <div className="break-inside-avoid bg-lab-bg border border-lab-border rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold text-sky-400 block mb-1">
+              <span className="text-xl font-mono font-extrabold text-sky-700 dark:text-sky-400 block mb-1">
                 {severityCounts.minor}
               </span>
               <span className="text-xs uppercase font-semibold text-lab-muted">Minor Polish</span>
@@ -380,7 +380,7 @@ export const ReportModal: React.FC<Props> = ({
                     </td>
                     <td className="py-3 px-4 text-center font-mono font-bold">
                       {row.issueCount > 0 ? (
-                        <span className={row.status === 'failure' ? 'text-red-400' : 'text-amber-400'}>
+                        <span className={row.status === 'failure' ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}>
                           {row.issueCount}
                         </span>
                       ) : (
@@ -411,10 +411,10 @@ export const ReportModal: React.FC<Props> = ({
                             {index + 1}
                           </div>
                           <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${
-                            f.severity === 'critical' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                            f.severity === 'serious' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-                            f.severity === 'moderate' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                            'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                            f.severity === 'critical' ? 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20' :
+                            f.severity === 'serious' ? 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-500/20' :
+                            f.severity === 'moderate' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20' :
+                            'bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20'
                           }`}>
                             {f.severity}
                           </span>
@@ -496,7 +496,7 @@ export const ReportModal: React.FC<Props> = ({
           >
             {copiedFigma ? (
               <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
                 <span>Copied Figma Comments!</span>
               </>
             ) : (
@@ -529,12 +529,12 @@ export const ReportModal: React.FC<Props> = ({
                 <span>{pushingToFigma ? 'Pushing...' : pushSuccess ? 'Pushed Successfully!' : 'Push to Figma'}</span>
               </button>
               {pushError && (
-                <span className="text-xs text-red-400 max-w-xs leading-tight">
+                <span className="text-xs text-red-700 dark:text-red-400 max-w-xs leading-tight">
                   {pushError}
                 </span>
               )}
               {pushSuccess && (
-                <span className="text-xs text-emerald-400">
+                <span className="text-xs text-emerald-700 dark:text-emerald-400">
                   Press <strong>C</strong> in Figma to view comments.
                 </span>
               )}

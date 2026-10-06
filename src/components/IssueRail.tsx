@@ -177,7 +177,7 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-red-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-red-600 dark:text-red-400">
+              <span className="block text-sm font-extrabold font-mono text-red-700 dark:text-red-400">
                 {severityCounts.critical}
               </span>
               <span className="text-xs uppercase font-bold text-lab-dim">Critical</span>
@@ -192,7 +192,7 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-orange-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-orange-600 dark:text-orange-400">
+              <span className="block text-sm font-extrabold font-mono text-orange-700 dark:text-orange-400">
                 {severityCounts.serious}
               </span>
               <span className="text-xs uppercase font-bold text-lab-dim">Serious</span>
@@ -207,7 +207,7 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-amber-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-amber-600 dark:text-amber-400">
+              <span className="block text-sm font-extrabold font-mono text-amber-700 dark:text-amber-400">
                 {severityCounts.moderate}
               </span>
               <span className="text-xs uppercase font-bold text-lab-dim">Moderate</span>
@@ -222,7 +222,7 @@ export const IssueRail: React.FC<Props> = ({
                   : 'bg-lab-subtle text-lab-muted hover:bg-lab-elevated hover:ring-1 hover:ring-sky-500/30'
               }`}
             >
-              <span className="block text-sm font-extrabold font-mono text-sky-600 dark:text-sky-400">
+              <span className="block text-sm font-extrabold font-mono text-sky-700 dark:text-sky-400">
                 {severityCounts.minor}
               </span>
               <span className="text-xs uppercase font-bold text-lab-dim">Minor</span>
