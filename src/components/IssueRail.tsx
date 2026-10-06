@@ -4,6 +4,7 @@ import { CheckCircle2, Search, FileDown, Sparkles } from 'lucide-react';
 import { FindingCard } from './FindingCard';
 import { SuggestionPanel } from './SuggestionPanel';
 import { SeverityDot } from './SeverityTag';
+import { CheckFilter, CHECK_OPTIONS } from './CheckFilter';
 
 interface Props {
   findings: Finding[];
@@ -28,7 +29,7 @@ export const IssueRail: React.FC<Props> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState<Severity | 'all'>('all');
-  const [selectedModule, setSelectedModule] = useState<ModuleType | 'all'>('all');
+  const [selectedModules, setSelectedModules] = useState<ModuleType[]>(CHECK_OPTIONS.map((o) => o.id));
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Suggestions view: opened from a card's bulb icon, replaces the list inside this
@@ -83,7 +84,7 @@ export const IssueRail: React.FC<Props> = ({
   // Filter findings
   const filteredFindings = findings.filter((f) => {
     if (selectedSeverity !== 'all' && f.severity !== selectedSeverity) return false;
-    if (selectedModule !== 'all' && f.module !== selectedModule) return false;
+    if (!selectedModules.includes(f.module)) return false;
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const matchText =
@@ -199,21 +200,7 @@ export const IssueRail: React.FC<Props> = ({
                 className="w-full bg-lab-card shadow-inner rounded pl-8 pr-3 py-1.5 text-sm text-lab-text placeholder-lab-dim focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-sans"
               />
             </div>
-            <label className="shrink-0 flex items-center gap-1.5 rounded border border-lab-border bg-lab-card pl-2.5 text-sm text-lab-muted focus-within:ring-2 focus-within:ring-sky-500/50">
-              Check
-              <select
-                value={selectedModule}
-                onChange={(e) => setSelectedModule(e.target.value as ModuleType | 'all')}
-                // The surrounding label shows the focus ring (like the search field), so the select draws none of its own.
-                className="bg-transparent py-1.5 pr-2 text-sm font-semibold text-lab-text cursor-pointer focus:outline-none focus-visible:outline-none focus-visible:shadow-none"
-              >
-                <option value="all">All</option>
-                <option value="contrast">Contrast</option>
-                <option value="keyboard">Keyboard</option>
-                <option value="screenreader">Screen reader</option>
-                <option value="structure">Structure</option>
-              </select>
-            </label>
+            <CheckFilter selected={selectedModules} onChange={setSelectedModules} />
           </div>
 
           {/* Findings List (Scrollable) */}
