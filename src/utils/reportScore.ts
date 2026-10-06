@@ -55,11 +55,13 @@ export function buildRuleRows(findings: Finding[], modules: Record<ModuleType, b
 export type ScoreLabel = 'Good' | 'Fair' | 'Needs work' | 'Poor';
 
 export interface ScoreResult {
-  /** 0-100, or null when no rule was tested. */
+  /** 0-10, or null when no rule was tested. */
   score: number | null;
   label: ScoreLabel | null;
   /** True when the label was lowered because critical issues remain. */
   capped: boolean;
+  /** Passing = no rule fails (no critical or serious issues). */
+  passing: boolean;
   tested: number;
   passed: number;
   warnings: number;
@@ -67,28 +69,38 @@ export interface ScoreResult {
 }
 
 const labelFor = (score: number): ScoreLabel =>
-  score >= 90 ? 'Good' : score >= 70 ? 'Fair' : score >= 50 ? 'Needs work' : 'Poor';
+  score >= 9 ? 'Good' : score >= 7 ? 'Fair' : score >= 5 ? 'Needs work' : 'Poor';
+
+/** One plain sentence per label, for people who only read the summary. */
+export const SCORE_MEANING: Record<ScoreLabel, string> = {
+  Good: 'Passes the automated checks. Do the manual review before release.',
+  Fair: 'Mostly fine. Fix the remaining warnings when you can.',
+  'Needs work': 'Some people will struggle. Fix the critical and serious issues before release.',
+  Poor: 'Many rules fail. Some people can\'t use this at all.',
+};
 
 /**
- * Automated checks score: pass = 1 point, warning = 1/2, fail = 0, divided by the
- * rules tested. While any critical issue remains, the label is at best "Needs work".
+ * Automated checks score out of 10: pass = 1 point, warning = 1/2, fail = 0,
+ * divided by the rules tested. While any critical issue remains, the label is at
+ * best "Needs work".
  */
 export function computeScore(rows: RuleRow[], findings: Finding[]): ScoreResult {
   const tested = rows.filter((r) => r.status !== 'not-checked');
   const passed = tested.filter((r) => r.status === 'passed').length;
   const warnings = tested.filter((r) => r.status === 'warning').length;
   const failing = tested.filter((r) => r.status === 'failure').length;
+  const passing = failing === 0;
   if (tested.length === 0) {
-    return { score: null, label: null, capped: false, tested: 0, passed, warnings, failing };
+    return { score: null, label: null, capped: false, passing, tested: 0, passed, warnings, failing };
   }
-  const score = Math.round(((passed + warnings * 0.5) / tested.length) * 100);
+  const score = Math.round(((passed + warnings * 0.5) / tested.length) * 10);
   let label = labelFor(score);
   let capped = false;
   if (findings.some((f) => f.severity === 'critical') && (label === 'Good' || label === 'Fair')) {
     label = 'Needs work';
     capped = true;
   }
-  return { score, label, capped, tested: tested.length, passed, warnings, failing };
+  return { score, label, capped, passing, tested: tested.length, passed, warnings, failing };
 }
 
 const SEVERITY_ORDER: Severity[] = ['critical', 'serious', 'moderate', 'minor'];
