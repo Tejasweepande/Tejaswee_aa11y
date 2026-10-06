@@ -882,6 +882,7 @@ export const App: React.FC = () => {
           figmaToken={figmaPat}
           imageSrc={imageSrc}
           iframeHtml={iframeHtml}
+          moduleToggles={moduleToggles}
         />
       )}
     </div>

@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BarrierMap } from './BarrierMap';
-import { Finding, InputMode, ExportScale } from '../types/finding';
+import { InfoTip } from './InfoTip';
+import { ReportIssueCard } from './ReportIssueCard';
+import { Finding, InputMode, ExportScale, ModuleType, Severity } from '../types/finding';
+import { buildAffectedGroups, buildRuleRows, computeScore, RuleStatus, ScoreLabel } from '../utils/reportScore';
+import { capitalize } from '../utils/findingCard';
 import {
   X,
   Download,
   Copy,
   CheckCircle2,
-  AlertTriangle,
+  Info,
   Printer,
   Send,
   Loader2,
@@ -25,6 +29,8 @@ interface Props {
   exemptedDetails?: any[];
   imageSrc?: string | null;
   iframeHtml?: string | null;
+  /** Which audit modules were on; rules of switched-off modules count as not checked. */
+  moduleToggles: Record<ModuleType, boolean>;
 }
 
 const INPUT_LABEL: Partial<Record<InputMode, string>> = {
@@ -33,19 +39,42 @@ const INPUT_LABEL: Partial<Record<InputMode, string>> = {
   url: 'Website',
 };
 
-const ALL_CRITERIA = [
-  { sc: '1.1.1', name: 'Non-text Content', level: 'A' },
-  { sc: '1.3.1', name: 'Info and Relationships', level: 'A' },
-  { sc: '1.4.1', name: 'Use of Color', level: 'A' },
-  { sc: '1.4.3', name: 'Contrast (Minimum)', level: 'AA' },
-  { sc: '1.4.11', name: 'Non-text Contrast', level: 'AA' },
-  { sc: '2.1.1', name: 'Keyboard', level: 'A' },
-  { sc: '2.4.3', name: 'Focus Order', level: 'A' },
-  { sc: '2.4.4', name: 'Link Purpose (In Context)', level: 'A' },
-  { sc: '2.4.7', name: 'Focus Visible', level: 'AA' },
-  { sc: '2.5.8', name: 'Target Size (Minimum)', level: 'AA' },
-  { sc: '4.1.2', name: 'Name, Role, Value', level: 'A' },
-];
+type ReportTab = 'overview' | 'details';
+type PrintMode = 'overview' | 'details' | 'both';
+
+const SEVERITIES: Severity[] = ['critical', 'serious', 'moderate', 'minor'];
+
+const SEVERITY_BADGE: Record<Severity, string> = {
+  critical: 'bg-red-500/10 text-red-700 dark:text-red-400',
+  serious: 'bg-orange-500/10 text-orange-700 dark:text-orange-400',
+  moderate: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  minor: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
+};
+
+const SCORE_BADGE: Record<ScoreLabel, string> = {
+  Good: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  Fair: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
+  'Needs work': 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  Poor: 'bg-red-500/10 text-red-700 dark:text-red-400',
+};
+
+const STATUS_LABEL: Record<RuleStatus, string> = {
+  failure: 'Fails',
+  warning: 'Warning',
+  passed: 'Passes',
+  'not-checked': 'Not checked',
+};
+
+const STATUS_BADGE: Record<RuleStatus, string> = {
+  failure: 'bg-red-500/10 text-red-700 dark:text-red-400',
+  warning: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  passed: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  'not-checked': 'bg-lab-subtle text-lab-muted',
+};
+
+// Failing rules first, so the table reads like a to-do list.
+const STATUS_ORDER: RuleStatus[] = ['failure', 'warning', 'passed', 'not-checked'];
+
 
 export const ReportModal: React.FC<Props> = ({
   isOpen,
@@ -58,6 +87,7 @@ export const ReportModal: React.FC<Props> = ({
   exemptedCount = 0,
   imageSrc,
   iframeHtml,
+  moduleToggles,
 }) => {
   const [copiedFigma, setCopiedFigma] = useState(false);
   const [pushingToFigma, setPushingToFigma] = useState(false);
@@ -65,6 +95,16 @@ export const ReportModal: React.FC<Props> = ({
   const [pushError, setPushError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const overviewTabRef = useRef<HTMLButtonElement>(null);
+  const detailsTabRef = useRef<HTMLButtonElement>(null);
+  const printButtonRef = useRef<HTMLButtonElement>(null);
+  const [tab, setTab] = useState<ReportTab>('overview');
+  const [severityFilter, setSeverityFilter] = useState<'all' | Severity>('all');
+  // Print box: open while choosing, then printMode is set for the duration of printing.
+  const [printBoxOpen, setPrintBoxOpen] = useState(false);
+  const [printChoice, setPrintChoice] = useState<PrintMode>('both');
+  const [printChecklist, setPrintChecklist] = useState(true);
+  const [printMode, setPrintMode] = useState<PrintMode | null>(null);
 
   // Auto-focus close button and trap focus within dialog (R3, GEMINI.md §6B)
   useEffect(() => {
@@ -73,7 +113,8 @@ export const ReportModal: React.FC<Props> = ({
     closeButtonRef.current?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      // A small popup inside the report (info tip, print box) handles Escape itself.
+      if (e.key === 'Escape' && !e.defaultPrevented) {
         onClose();
         return;
       }
@@ -125,21 +166,23 @@ export const ReportModal: React.FC<Props> = ({
     minor: findings.filter((f) => f.severity === 'minor').length,
   };
 
-  const criteriaRows = ALL_CRITERIA.map(criterion => {
-    const issues = findings.filter(f => f.wcag.sc === criterion.sc);
-    const failureCount = issues.filter(f => ['critical', 'serious'].includes(f.severity)).length;
-    const warningCount = issues.filter(f => ['moderate', 'minor'].includes(f.severity)).length;
-    
-    let status: 'passed' | 'warning' | 'failure' = 'passed';
-    if (failureCount > 0) status = 'failure';
-    else if (warningCount > 0) status = 'warning';
-    
-    return {
-      ...criterion,
-      issueCount: issues.length,
-      status
-    };
-  });
+  const ruleRows = buildRuleRows(findings, moduleToggles);
+  const sortedRuleRows = [...ruleRows].sort((x, y) => STATUS_ORDER.indexOf(x.status) - STATUS_ORDER.indexOf(y.status));
+  const score = computeScore(ruleRows, findings);
+  const affected = buildAffectedGroups(findings, ruleRows);
+
+  const printOverview = printMode === 'overview' || printMode === 'both';
+  const printDetails = printMode === 'details' || printMode === 'both';
+
+  // From a pin on the map to its card: show it even if filtered out, then scroll and focus it.
+  const goToIssue = (finding: Finding) => {
+    if (severityFilter !== 'all' && severityFilter !== finding.severity) setSeverityFilter('all');
+    requestAnimationFrame(() => {
+      const card = document.getElementById(`report-issue-${finding.id}`);
+      card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      card?.focus({ preventScroll: true });
+    });
+  };
 
   const handleDownloadJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(findings, null, 2));
@@ -244,8 +287,17 @@ export const ReportModal: React.FC<Props> = ({
     }
   };
 
+  // Print the chosen parts. The cropped pictures render only now, then printing
+  // starts once they have had a moment to load; afterwards the screen view returns.
   const handlePrint = () => {
-    window.print();
+    setPrintBoxOpen(false);
+    setPrintMode(printChoice);
+    const reset = () => {
+      setPrintMode(null);
+      window.removeEventListener('afterprint', reset);
+    };
+    window.addEventListener('afterprint', reset);
+    window.setTimeout(() => window.print(), 600);
   };
 
   return createPortal(
@@ -280,186 +332,276 @@ export const ReportModal: React.FC<Props> = ({
           </button>
         </div>
 
+        {/* Tabs (screen only; printing uses the choice in the print box) */}
+        <div role="tablist" aria-label="Report view" className="print:hidden flex gap-1 border-b border-lab-border mb-5 -mt-1">
+          {(['overview', 'details'] as ReportTab[]).map((t) => (
+            <button
+              key={t}
+              id={`report-tab-${t}`}
+              ref={t === 'overview' ? overviewTabRef : detailsTabRef}
+              type="button"
+              role="tab"
+              aria-selected={tab === t}
+              aria-controls={`report-panel-${t}`}
+              tabIndex={tab === t ? 0 : -1}
+              onClick={() => setTab(t)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  const next = t === 'overview' ? 'details' : 'overview';
+                  setTab(next);
+                  (next === 'overview' ? overviewTabRef : detailsTabRef).current?.focus();
+                }
+              }}
+              className={`px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors ${
+                tab === t ? 'border-lab-accent text-lab-accent' : 'border-transparent text-lab-muted hover:text-lab-text'
+              }`}
+            >
+              {t === 'overview' ? 'Overview' : 'Details'}
+            </button>
+          ))}
+        </div>
+
         {/* Scrollable Report Content */}
         <div className="report-print-scroll flex-1 overflow-y-auto space-y-6 pr-2">
           {/* Statutory Disclaimer (§7 in GEMINI.md) */}
-          <div className="break-inside-avoid bg-lab-subtle border-l-4 border-amber-500 rounded p-3 flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="break-inside-avoid bg-lab-subtle rounded p-3 flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-lab-muted flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <h3 className="text-sm font-semibold text-lab-text mb-0.5">
-                Automated Testing Coverage Boundary Notice
-              </h3>
+              <h3 className="text-sm font-semibold text-lab-text mb-0.5">Automated checks only</h3>
               <p className="text-xs text-lab-muted leading-relaxed">
                 Automated accessibility testing tools detect approximately <strong>30% to 40%</strong> of all WCAG success criteria. <strong>This report never claims full legal or technical conformance.</strong> Overclaiming conformance is itself an accessibility harm. The findings below must be paired with the manual review checklist.
               </p>
             </div>
           </div>
 
-          {/* Metric Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold tabular-nums text-red-700 dark:text-red-400 block mb-1">
-                {severityCounts.critical}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Critical Barriers</span>
+          {/* ---------- Overview ---------- */}
+          <div
+            id="report-panel-overview"
+            role="tabpanel"
+            aria-labelledby="report-tab-overview"
+            className={`space-y-6 ${tab === 'overview' ? '' : 'hidden'} ${printOverview ? 'print:block' : 'print:hidden'}`}
+          >
+            <h3 className="hidden print:block text-lg font-bold text-lab-text">Overview</h3>
+
+            {/* KPI cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 print:grid-cols-4 gap-3">
+              <div className="break-inside-avoid bg-lab-subtle rounded p-4">
+                <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
+                  Automated checks score
+                  <InfoTip label="Automated checks score">
+                    <p>The share of tested WCAG rules that pass.</p>
+                    <ul className="list-disc pl-4 mt-1.5 space-y-1">
+                      <li>Pass = 1 point, warning = ½, fail = 0.</li>
+                      <li>90 and above Good · 70–89 Fair · 50–69 Needs work · below 50 Poor.</li>
+                      <li>While a critical issue remains, the label can't be better than Needs work.</li>
+                      <li>Rules that weren't checked are left out.</li>
+                    </ul>
+                  </InfoTip>
+                </div>
+                {score.score === null ? (
+                  <p className="mt-1 text-sm text-lab-muted">No rules were checked.</p>
+                ) : (
+                  <>
+                    <p className="mt-1 text-xl font-extrabold tabular-nums text-lab-text">
+                      {score.score}
+                      <span className="text-base font-semibold text-lab-dim"> / 100</span>
+                    </p>
+                    <span className={`inline-block mt-1.5 px-2 py-0.5 rounded text-xs font-bold ${SCORE_BADGE[score.label!]}`}>
+                      {score.label}
+                    </span>
+                    {score.capped && (
+                      <p className="mt-1.5 text-xs text-lab-muted">Held at Needs work while critical issues remain.</p>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="break-inside-avoid bg-lab-subtle rounded p-4">
+                <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
+                  Rules passed
+                  <InfoTip label="Rules passed">
+                    <ul className="list-disc pl-4 space-y-1">
+                      <li><strong className="text-lab-text">Pass:</strong> no issues found for the rule.</li>
+                      <li><strong className="text-lab-text">Warning:</strong> only moderate or minor issues.</li>
+                      <li><strong className="text-lab-text">Failing:</strong> at least one critical or serious issue.</li>
+                      <li><strong className="text-lab-text">Not checked:</strong> its audit module was off, or it can't be checked automatically.</li>
+                    </ul>
+                  </InfoTip>
+                </div>
+                <p className="mt-1 text-xl font-extrabold tabular-nums text-lab-text">
+                  {score.passed}
+                  <span className="text-base font-semibold text-lab-dim"> / {score.tested}</span>
+                </p>
+                <p className="mt-1.5 text-xs text-lab-muted">
+                  {score.warnings} with warnings · {score.failing} failing
+                  {ruleRows.length - score.tested > 0 && ` · ${ruleRows.length - score.tested} not checked`}
+                </p>
+              </div>
+
+              <div className="break-inside-avoid bg-lab-subtle rounded p-4">
+                <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
+                  Blockers
+                  <InfoTip label="Blockers">
+                    <p>Critical issues. They can stop some people from using the page at all, so fix them before release.</p>
+                  </InfoTip>
+                </div>
+                <p className={`mt-1 text-xl font-extrabold tabular-nums ${severityCounts.critical > 0 ? 'text-red-700 dark:text-red-400' : 'text-lab-text'}`}>
+                  {severityCounts.critical}
+                </p>
+                <p className="mt-1.5 text-xs text-lab-muted">Critical issues</p>
+              </div>
+
+              <div className="break-inside-avoid bg-lab-subtle rounded p-4">
+                <div className="flex items-center gap-0.5 text-sm font-semibold text-lab-muted">
+                  Total issues
+                  <InfoTip label="Total issues">
+                    <p>Every issue found, by severity: critical, serious, moderate and minor. One rule can have several issues.</p>
+                  </InfoTip>
+                </div>
+                <p className="mt-1 text-xl font-extrabold tabular-nums text-lab-text">{findings.length}</p>
+                <p className="mt-1.5 text-xs text-lab-muted">
+                  {SEVERITIES.filter((s) => severityCounts[s] > 0)
+                    .map((s) => `${severityCounts[s]} ${s}`)
+                    .join(' · ') || 'None found'}
+                </p>
+              </div>
             </div>
 
-            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold tabular-nums text-orange-700 dark:text-orange-400 block mb-1">
-                {severityCounts.serious}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Serious Issues</span>
-            </div>
-
-            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold tabular-nums text-amber-700 dark:text-amber-400 block mb-1">
-                {severityCounts.moderate}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Moderate Notices</span>
-            </div>
-
-            <div className="break-inside-avoid bg-lab-subtle rounded_SM p-3.5 text-center">
-              <span className="text-xl font-mono font-extrabold tabular-nums text-sky-700 dark:text-sky-400 block mb-1">
-                {severityCounts.minor}
-              </span>
-              <span className="text-xs font-semibold text-lab-muted">Minor Polish</span>
-            </div>
-          </div>
-
-          {/* Visual Barrier Map */}
-          {(imageSrc || iframeHtml) && (
-            <div>
-              <h3 className="break-after-avoid text-xs font-bold uppercase tracking-wider text-lab-muted mb-3">
-                Visual Barrier Map
-              </h3>
-              <BarrierMap imageSrc={imageSrc} iframeHtml={iframeHtml} findings={findings} />
-            </div>
-          )}
-
-          {/* Matrix Table */}
-          <div className="bg-lab-card border border-lab-border rounded overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-lab-border text-xs font-bold text-lab-muted uppercase tracking-wider">
-                  <th className="py-3 px-4 w-24">Criterion</th>
-                  <th className="py-3 px-4">Title</th>
-                  <th className="py-3 px-4 w-20 text-center">Level</th>
-                  <th className="py-3 px-4 w-24 text-center">Status</th>
-                  <th className="py-3 px-4 w-20 text-center">Issues</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-lab-border text-sm">
-                {criteriaRows.map(row => (
-                  <tr key={row.sc} className="break-inside-avoid hover:bg-lab-bg/50 transition-colors">
-                    <td className="py-3 px-4 font-mono text-lab-dim">{row.sc}</td>
-                    <td className="py-3 px-4 text-lab-text font-medium">{row.name}</td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-block px-1.5 py-0.5 rounded border border-lab-border text-xs font-bold text-lab-muted bg-lab-bg">
-                        {row.level}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      {row.status === 'failure' && (
-                        <div className="mx-auto w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
-                          <X className="w-3.5 h-3.5 text-red-700 dark:text-red-400" strokeWidth={3} aria-hidden="true" />
-                          <span className="sr-only">Fails</span>
-                        </div>
-                      )}
-                      {row.status === 'warning' && (
-                        <div className="mx-auto w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-sm">
-                          <span aria-hidden="true">!</span>
-                          <span className="sr-only">Warning</span>
-                        </div>
-                      )}
-                      {row.status === 'passed' && (
-                        <div className="mx-auto w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                          <div className="w-3.5 h-3.5 rounded-full bg-emerald-600" aria-hidden="true" />
-                          <span className="sr-only">Passes</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-center font-mono font-bold">
-                      {row.issueCount > 0 ? (
-                        <span className={row.status === 'failure' ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}>
-                          {row.issueCount}
-                        </span>
-                      ) : (
-                        <span className="text-lab-dim">--</span>
-                      )}
-                    </td>
+            {/* Who is affected */}
+            <div className="break-inside-avoid">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted mb-2">Who is affected</h3>
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-lab-border text-xs font-bold text-lab-muted uppercase tracking-wider">
+                    <th className="py-2.5 px-3">People</th>
+                    <th className="py-2.5 px-3">What gets in their way</th>
+                    <th className="py-2.5 px-3 w-20 text-right">Issues</th>
+                    <th className="py-2.5 px-3 w-32">Worst</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-lab-border">
+                  {affected.map((g) => (
+                    <tr key={g.people}>
+                      <td className="py-2.5 px-3 text-lab-text font-medium">{g.people}</td>
+                      <td className="py-2.5 px-3 text-lab-muted">{g.barriers}</td>
+                      <td className="py-2.5 px-3 text-right font-bold tabular-nums text-lab-text">{g.tested || g.issueCount > 0 ? g.issueCount : '–'}</td>
+                      <td className="py-2.5 px-3">
+                        {g.worst ? (
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${SEVERITY_BADGE[g.worst]}`}>{capitalize(g.worst)}</span>
+                        ) : g.tested ? (
+                          <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">No issues</span>
+                        ) : (
+                          <span className="text-xs text-lab-muted">Not checked</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* WCAG rules */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted mb-2">WCAG rules</h3>
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-lab-border text-xs font-bold text-lab-muted uppercase tracking-wider">
+                    <th className="py-2.5 px-3 w-20">Rule</th>
+                    <th className="py-2.5 px-3">Title</th>
+                    <th className="py-2.5 px-3 w-16">Level</th>
+                    <th className="py-2.5 px-3 w-32">Status</th>
+                    <th className="py-2.5 px-3 w-20 text-right">Issues</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-lab-border">
+                  {sortedRuleRows.map((row) => (
+                    <tr key={row.sc} className="break-inside-avoid">
+                      <td className="py-2.5 px-3 tabular-nums text-lab-muted">{row.sc}</td>
+                      <td className="py-2.5 px-3 text-lab-text">{row.name}</td>
+                      <td className="py-2.5 px-3 text-lab-muted">{row.level}</td>
+                      <td className="py-2.5 px-3">
+                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${STATUS_BADGE[row.status]}`}>
+                          {STATUS_LABEL[row.status]}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold tabular-nums text-lab-text">{row.issueCount > 0 ? row.issueCount : '–'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Detailed Findings List */}
-          <div className="space-y-4">
-            <h3 className="break-after-avoid text-xs font-bold uppercase tracking-wider text-lab-muted">
-              Detailed Findings
-            </h3>
-            <div className="space-y-4">
-              {findings.length === 0 ? (
-                <p className="text-base text-lab-muted italic p-4 bg-lab-card rounded border border-lab-border">No findings to display.</p>
-              ) : (
-                findings.map((f, index) => {
-                  return (
-                    <div key={f.id} className="break-inside-avoid bg-lab-card border border-lab-border rounded p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`min-w-[28px] h-7 px-1 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm bg-black text-white border border-white/20`}>
-                            {index + 1}
-                          </div>
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${
-                            f.severity === 'critical' ? 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20' :
-                            f.severity === 'serious' ? 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-500/20' :
-                            f.severity === 'moderate' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20' :
-                            'bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/20'
-                          }`}>
-                            {f.severity}
-                          </span>
-                          <span className="text-base font-bold text-lab-text">
-                            {f.wcag.sc} {f.wcag.name}
-                          </span>
-                          <span className="text-sm text-lab-muted border-l border-lab-border pl-3">
-                            {f.confidence === 'measured' ? 'Measured' : 'Predicted'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-lab-subtle rounded p-3 mb-3">
-                        <p className="text-sm text-lab-text font-mono">Evidence: {f.evidence}</p>
-                      </div>
+          {/* ---------- Details ---------- */}
+          <div
+            id="report-panel-details"
+            role="tabpanel"
+            aria-labelledby="report-tab-details"
+            className={`space-y-6 ${tab === 'details' ? '' : 'hidden'} ${printDetails ? 'print:block' : 'print:hidden'} ${printMode === 'both' ? 'print:break-before-page' : ''}`}
+          >
+            <h3 className="hidden print:block text-lg font-bold text-lab-text">Details</h3>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        {f.impact && (
-                          <div className="bg-lab-subtle rounded p-3 text-sm">
-                            <strong className="text-lab-muted block mb-1">Impact:</strong>
-                            <span className="text-lab-text">{f.impact}</span>
-                          </div>
-                        )}
-                        {f.fix && (
-                          <div className="bg-lab-subtle rounded p-3 text-sm">
-                            <strong className="text-lab-muted block mb-1">Fix:</strong>
-                            <span className="text-lab-text">{f.fix}</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {f.target.snippet && (
-                        <div className="bg-[#1e1e1e] rounded p-3 overflow-x-auto text-sm font-mono text-gray-300 print:bg-gray-100 print:text-gray-900 print:overflow-visible print:whitespace-pre-wrap print:break-words">
-                          {f.target.snippet}
-                        </div>
-                      )}
+            {/* Barrier map: screen only. Print shows a cropped picture on each issue instead. */}
+            {(imageSrc || iframeHtml) && (
+              <div className="print:hidden">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">Visual barrier map</h3>
+                  <p className="text-xs text-lab-muted">Select a pin to jump to its issue.</p>
+                </div>
+                <BarrierMap imageSrc={imageSrc} iframeHtml={iframeHtml} findings={findings} onPinClick={goToIssue} />
+              </div>
+            )}
+
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">Issues</h3>
+                {findings.length > 0 && (
+                  <div role="group" aria-label="Filter issues by severity" className="print:hidden flex flex-wrap gap-1.5">
+                    {(['all', ...SEVERITIES.filter((s) => severityCounts[s] > 0)] as ('all' | Severity)[]).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-pressed={severityFilter === s}
+                        onClick={() => setSeverityFilter(s)}
+                        className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
+                          severityFilter === s ? 'bg-lab-accent text-lab-onAccent' : 'bg-lab-subtle text-lab-muted hover:text-lab-text'
+                        }`}
+                      >
+                        {s === 'all' ? `All ${findings.length}` : `${capitalize(s)} ${severityCounts[s]}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {findings.length === 0 ? (
+                <p className="text-sm text-lab-muted p-4 bg-lab-subtle rounded">No issues found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {findings.map((f, index) => (
+                    // On screen the filter hides cards; print always includes every issue.
+                    <div key={f.id} className={severityFilter === 'all' || severityFilter === f.severity ? '' : 'hidden print:block'}>
+                      <ReportIssueCard
+                        finding={f}
+                        number={index + 1}
+                        showCrop={printMode !== null}
+                        imageSrc={imageSrc}
+                        iframeHtml={iframeHtml}
+                      />
                     </div>
-                  );
-                })
+                  ))}
+                </div>
               )}
             </div>
           </div>
 
-          {/* Manual Review Checklist (§7 in GEMINI.md) */}
-          <div className="break-inside-avoid bg-lab-subtle rounded_SM p-4 space-y-3">
+          {/* Manual Review Checklist (§7 in GEMINI.md): end of Details on screen; in print when ticked */}
+          <div
+            className={`break-inside-avoid bg-lab-subtle rounded_SM p-4 space-y-3 ${tab === 'details' ? '' : 'hidden'} ${
+              printMode !== null && printChecklist ? 'print:block' : 'print:hidden'
+            }`}
+          >
             <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">
               Essential Manual Review Checklist
             </h3>
@@ -541,14 +683,99 @@ export const ReportModal: React.FC<Props> = ({
           )}
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="px-3 py-2 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5"
+            <div
+              className="relative"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' && printBoxOpen) {
+                  e.preventDefault();
+                  setPrintBoxOpen(false);
+                  printButtonRef.current?.focus();
+                }
+              }}
             >
-              <Printer className="w-3.5 h-3.5 text-lab-muted" aria-hidden="true" />
-              <span>Print / PDF</span>
-            </button>
+              <button
+                ref={printButtonRef}
+                type="button"
+                onClick={() => setPrintBoxOpen((o) => !o)}
+                aria-expanded={printBoxOpen}
+                aria-controls="report-print-box"
+                className="px-3 py-2 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text flex items-center gap-1.5"
+              >
+                <Printer className="w-3.5 h-3.5 text-lab-muted" aria-hidden="true" />
+                <span>Print / PDF</span>
+              </button>
+
+              {printBoxOpen && (
+                <div
+                  id="report-print-box"
+                  role="group"
+                  aria-labelledby="report-print-box-title"
+                  className="absolute right-0 bottom-full mb-2 z-40 w-80 bg-lab-card border border-lab-border rounded shadow-xl p-4"
+                >
+                  <p id="report-print-box-title" className="text-base font-bold text-lab-text">Print / PDF</p>
+                  <p className="text-xs text-lab-muted mt-0.5 mb-3">Every issue is printed, whatever filter is on screen.</p>
+                  <fieldset className="space-y-2">
+                    <legend className="sr-only">What to print</legend>
+                    {(
+                      [
+                        { v: 'overview', t: 'Overview', d: 'Score, KPIs, who is affected and WCAG rules.' },
+                        { v: 'details', t: 'Details', d: 'Every issue with a cropped picture, impact and fix.' },
+                        { v: 'both', t: 'Both', d: 'Overview first, then Details.' },
+                      ] as { v: PrintMode; t: string; d: string }[]
+                    ).map((o) => (
+                      <label
+                        key={o.v}
+                        className={`flex gap-2.5 items-start p-2.5 rounded border cursor-pointer ${
+                          printChoice === o.v ? 'border-lab-accent bg-lab-accent/5' : 'border-lab-border'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="report-print-choice"
+                          value={o.v}
+                          checked={printChoice === o.v}
+                          onChange={() => setPrintChoice(o.v)}
+                          autoFocus={printChoice === o.v}
+                          className="mt-0.5 accent-[rgb(var(--lab-accent))]"
+                        />
+                        <span>
+                          <span className="block text-sm font-semibold text-lab-text">{o.t}</span>
+                          <span className="block text-xs text-lab-muted">{o.d}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
+                  <label className="flex items-center gap-2 mt-3 text-sm text-lab-text cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={printChecklist}
+                      onChange={(e) => setPrintChecklist(e.target.checked)}
+                      className="accent-[rgb(var(--lab-accent))]"
+                    />
+                    Include manual review checklist
+                  </label>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPrintBoxOpen(false);
+                        printButtonRef.current?.focus();
+                      }}
+                      className="px-3 py-1.5 rounded_SM text-sm font-semibold bg-lab-subtle hover:bg-lab-elevated border border-lab-border text-lab-text"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePrint}
+                      className="px-3 py-1.5 rounded_SM text-sm font-bold bg-lab-accent hover:bg-lab-accentHover text-lab-onAccent"
+                    >
+                      Print
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <button
               type="button"
