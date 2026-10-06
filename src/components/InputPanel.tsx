@@ -229,10 +229,10 @@ export const InputPanel: React.FC<Props> = ({
                     key={sc}
                     type="button"
                     onClick={() => onChangeScale(sc)}
-                    className={`py-1.5 text-sm font-mono rounded transition-all shadow-sm ${
+                    className={`py-1.5 text-sm font-mono rounded transition-all ${
                       exportScale === sc
-                        ? 'bg-lab-text text-lab-card font-bold'
-                        : 'bg-lab-card text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
+                        ? 'bg-lab-card text-lab-text font-bold shadow-sm ring-1 ring-lab-border'
+                        : 'text-lab-muted hover:bg-lab-elevated hover:text-lab-text'
                     }`}
                   >
                     {sc === 'unknown' ? 'Unknown' : `@${sc}`}

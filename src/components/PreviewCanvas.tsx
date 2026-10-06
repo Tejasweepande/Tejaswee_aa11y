@@ -193,8 +193,8 @@ export const PreviewCanvas: React.FC<Props> = ({
         {/* Mode Tabs */}
         <div
           role="tablist"
-          aria-label="Simulator View Modes"
-          className="flex items-center gap-1 bg-lab-bg p-1 rounded shadow-inner flex-wrap"
+          aria-label="Preview view"
+          className="flex items-center gap-1 bg-lab-subtle p-1 rounded flex-wrap"
         >
           <button
             role="tab"
@@ -202,12 +202,12 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('overlay')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'overlay'
-                ? 'bg-lab-text text-lab-card shadow-sm'
+                ? 'bg-lab-card text-lab-text shadow-sm ring-1 ring-lab-border'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Barrier Pins ({findings.length})</span>
+            <span>Issues</span>
           </button>
 
           <button
@@ -216,12 +216,12 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('keyboard')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'keyboard'
-                ? 'bg-lab-text text-lab-card shadow-sm'
+                ? 'bg-lab-card text-lab-text shadow-sm ring-1 ring-lab-border'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
             <Keyboard className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Focus Trajectory ({interactiveRegions.length} Stops)</span>
+            <span>Tab order</span>
           </button>
 
           <button
@@ -230,12 +230,12 @@ export const PreviewCanvas: React.FC<Props> = ({
             onClick={() => onChangeMode('screenreader')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold transition-all ${
               canvasMode === 'screenreader'
-                ? 'bg-lab-text text-lab-card shadow-sm'
+                ? 'bg-lab-card text-lab-text shadow-sm ring-1 ring-lab-border'
                 : 'text-lab-muted hover:text-lab-text'
             }`}
           >
             <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Speech HUD</span>
+            <span>Screen reader</span>
           </button>
         </div>
 
