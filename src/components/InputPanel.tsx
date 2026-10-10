@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { InputMode, ExportScale, ModuleType, AuditHistoryItem } from '../types/finding';
 import { ClearButton } from './ClearButton';
 import {
@@ -9,6 +9,26 @@ import {
   History,
   Clock,
 } from 'lucide-react';
+
+// Upload progress layer (the frosted glass that fills the box left to right)
+type UploadStage = 'reading' | 'waiting' | 'fading';
+const SWEEP_MS = 350; // time the glass needs to travel to 100%
+const FADE_MS = 300; // time the glass takes to clear once the preview is ready
+const PREVIEW_FALLBACK_MS = 4000; // never leave the glass up if the preview can't report back
+
+/** Resolves once the browser has painted a frame (or shortly after, in a hidden tab). */
+const nextPaint = () =>
+  new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
+    window.setTimeout(() => resolve(), 120);
+  });
+
+/** Material Design "delete" (bin) icon (Apache-2.0, google/material-design-icons). */
+const DeleteIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+  </svg>
+);
 
 interface Props {
   currentInput: InputMode;
@@ -30,6 +50,9 @@ interface Props {
   onChangePastedHtml: (html: string) => void;
   pastAudits: AuditHistoryItem[];
   hasImage: boolean;
+  imageSrc: string | null;
+  imageFileName: string;
+  onClearImage: () => void;
   onLoadHistoryItem: (item: AuditHistoryItem) => void;
 }
 
@@ -53,6 +76,9 @@ export const InputPanel: React.FC<Props> = ({
   onChangePastedHtml,
   pastAudits,
   hasImage,
+  imageSrc,
+  imageFileName,
+  onClearImage,
   onLoadHistoryItem,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,31 +87,126 @@ export const InputPanel: React.FC<Props> = ({
   const webUrlRef = useRef<HTMLInputElement>(null);
   const pastedHtmlRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // ---- Upload: read the file with real progress, show it as a glass layer, then reveal the preview
+  const [upload, setUpload] = useState<{ progress: number; stage: UploadStage } | null>(null);
+  const readerRef = useRef<FileReader | null>(null);
+  const uploadIdRef = useRef(0); // lets a newer upload / cancel make older callbacks harmless
+  const sweepDoneRef = useRef(false);
+  const previewReadyRef = useRef(false);
+  const fadeStartedRef = useRef(false);
+  const timersRef = useRef<number[]>([]);
+  const previewImgRef = useRef<HTMLImageElement>(null);
+
+  const clearTimers = () => {
+    timersRef.current.forEach((t) => window.clearTimeout(t));
+    timersRef.current = [];
+  };
+  const later = (fn: () => void, ms: number) => {
+    timersRef.current.push(window.setTimeout(fn, ms));
+  };
+
+  useEffect(
+    () => () => {
+      readerRef.current?.abort();
+      clearTimers();
+    },
+    []
+  );
+
+  // Clear the glass only when it has reached 100% AND the preview image is ready
+  const finishIfReady = (id: number) => {
+    if (id !== uploadIdRef.current || fadeStartedRef.current) return;
+    if (!sweepDoneRef.current || !previewReadyRef.current) return;
+    fadeStartedRef.current = true;
+    setUpload({ progress: 1, stage: 'fading' });
+    later(() => {
+      if (id === uploadIdRef.current) setUpload(null);
+    }, FADE_MS);
+  };
+
+  const handlePreviewSettled = () => {
+    previewReadyRef.current = true;
+    finishIfReady(uploadIdRef.current);
+  };
+
+  // Choosing the very same image again does not fire a new load event; catch that case here
+  useEffect(() => {
+    if (upload?.stage !== 'waiting') return;
+    const img = previewImgRef.current;
+    if (img && img.complete && img.naturalWidth > 0 && img.getAttribute('src') === imageSrc) {
+      handlePreviewSettled();
+    }
+  }, [upload?.stage, imageSrc]);
+
+  const cancelUpload = () => {
+    readerRef.current?.abort();
+    uploadIdRef.current += 1;
+    clearTimers();
+    setUpload(null);
+  };
+
+  const readFile = (file: File) => {
+    readerRef.current?.abort();
+    clearTimers();
+    const id = ++uploadIdRef.current;
+    sweepDoneRef.current = false;
+    previewReadyRef.current = false;
+    fadeStartedRef.current = false;
+    setUpload({ progress: 0, stage: 'reading' });
+    const painted = nextPaint(); // the empty (0%) layer is on screen before any real progress shows
 
     const reader = new FileReader();
+    readerRef.current = reader;
+    reader.onprogress = (e) => {
+      if (!e.lengthComputable || e.total === 0) return;
+      const p = Math.min(1, e.loaded / e.total);
+      painted.then(() => {
+        if (id !== uploadIdRef.current) return;
+        setUpload((u) => (u && u.stage === 'reading' ? { progress: Math.max(u.progress, p), stage: 'reading' } : u));
+      });
+    };
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
+      painted.then(() => {
+        if (id !== uploadIdRef.current || typeof reader.result !== 'string') return;
+        setUpload({ progress: 1, stage: 'waiting' });
+        later(() => {
+          sweepDoneRef.current = true;
+          finishIfReady(id);
+        }, SWEEP_MS);
+        later(() => {
+          previewReadyRef.current = true;
+          finishIfReady(id);
+        }, PREVIEW_FALLBACK_MS);
         onImageUploaded(reader.result, file.name);
-      }
+      });
+    };
+    reader.onerror = () => {
+      if (id === uploadIdRef.current) setUpload(null);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) readFile(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (!file) return;
+    if (file) readFile(file);
+  };
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onImageUploaded(reader.result, file.name);
-      }
-    };
-    reader.readAsDataURL(file);
+  const isImage = currentInput === 'image';
+  // An uploaded image is shown inside the dropzone itself
+  const hasPreview = isImage && hasImage && !!imageSrc;
+  const previewName = imageFileName || 'Uploaded image';
+
+  const handleClearImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // the dropzone is clickable (opens the file picker); the bin must not
+    cancelUpload();
+    if (fileInputRef.current) fileInputRef.current.value = ''; // so the same file can be chosen again
+    onClearImage();
   };
 
   return (
@@ -130,7 +251,7 @@ export const InputPanel: React.FC<Props> = ({
 
       {/* Right Content Area */}
       <div className="flex-1 flex flex-col py-8 px-4 sm:px-8 overflow-y-auto">
-       <div className="w-full max-w-xl mx-auto flex flex-col gap-5 flex-1">
+       <div className={`w-full max-w-xl mx-auto flex flex-col gap-5 flex-1 ${isImage ? 'min-h-0' : ''}`}>
         {/* Header */}
         <div>
           <h2 className="text-xl font-bold text-lab-text flex items-center gap-2">
@@ -147,14 +268,29 @@ export const InputPanel: React.FC<Props> = ({
           )}
         </div>
 
+      {/* Body. On the image page this is the part that gives way (the preview is cropped
+          from the bottom) so the instructions and the Run button always keep their space.
+          Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
+      <div
+        className={
+          isImage
+            ? 'flex-initial min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
+            : 'contents'
+        }
+      >
       {/* Mode Specific Inputs */}
       {currentInput === 'image' && (
-        <div className="space-y-4">
-          {/* File Upload Dropzone */}
+        <div className={hasPreview ? 'flex flex-col min-h-[96px]' : 'space-y-4'}>
+          {/* File Upload Dropzone. With an image loaded, the image fills the box at its full
+              width and is cropped from the bottom when space is short. */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded p-4 text-center bg-lab-subtle/50 cursor-pointer group"
+            className={`ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded ${
+              hasPreview ? '' : 'p-4 text-center '
+            }bg-lab-subtle/50 cursor-pointer group${
+              hasPreview ? ' relative flex-auto min-h-0 overflow-hidden' : upload ? ' relative overflow-hidden' : ''
+            }`}
             onClick={() => fileInputRef.current?.click()}
             role="region"
             aria-label="Image dropzone"
@@ -167,6 +303,36 @@ export const InputPanel: React.FC<Props> = ({
               className="hidden"
               aria-label="Upload interface screenshot or mockup"
             />
+            {hasPreview ? (
+              <>
+                <img
+                  ref={previewImgRef}
+                  onLoad={handlePreviewSettled}
+                  onError={handlePreviewSettled}
+                  src={imageSrc as string}
+                  alt={`Preview of ${previewName}`}
+                  draggable={false}
+                  className="block w-full h-auto select-none"
+                />
+                {/* Name and bin appear on hover or keyboard focus (always on touch screens). The strip is
+                    blurred and darkened so white text stays readable on any image, light or busy. */}
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 p-2 bg-black/60 backdrop-blur-lg border-b border-white/10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
+                  <span className="min-w-0 truncate pl-1 text-sm font-medium text-white" title={previewName}>
+                    {previewName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearImage}
+                    aria-label={`Remove image ${previewName}`}
+                    title="Remove image"
+                    className="shrink-0 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                  >
+                    <DeleteIcon />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
             <div className="w-10 h-10 rounded-full bg-sky-500/10 text-lab-accent mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <UploadCloud className="w-5 h-5" aria-hidden="true" />
             </div>
@@ -174,6 +340,29 @@ export const InputPanel: React.FC<Props> = ({
               Upload any UI screenshot or <span className="text-lab-accent underline">browse</span>
             </p>
             <p className="text-xs text-lab-dim">Instant Computer Vision &amp; Decile Contrast Audit</p>
+              </>
+            )}
+
+            {/* Upload progress: a frosted-glass layer that fills the box from left to right
+                with the real read progress (no numbers), then clears to reveal the preview. */}
+            {upload && (
+              <div
+                role="progressbar"
+                aria-label="Uploading image"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(upload.progress * 100)}
+                onClick={(e) => e.stopPropagation()}
+                className={`absolute inset-0 z-20 overflow-hidden cursor-progress transition-opacity ease-out motion-reduce:transition-none ${
+                  upload.stage === 'fading' ? 'opacity-0 duration-300' : 'opacity-100 duration-0'
+                }`}
+              >
+                <div
+                  className="absolute inset-0 bg-lab-accent/30 backdrop-blur-md border-r-2 border-lab-accent shadow-[4px_0_16px_rgb(var(--lab-accent)/0.35)] transition-transform duration-300 ease-out motion-reduce:transition-none"
+                  style={{ transform: `translateX(${(upload.progress - 1) * 100}%)` }}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -391,6 +580,8 @@ export const InputPanel: React.FC<Props> = ({
         </>
       )}
 
+      </div>
+
       {/* Launch Action Button */}
       {currentInput !== 'history' && (
         (() => {
@@ -410,7 +601,7 @@ export const InputPanel: React.FC<Props> = ({
               type="button"
               onClick={onRunAudit}
               disabled={isDisabled}
-              className={`w-full mt-1 py-3 px-4 rounded text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
+              className={`shrink-0 w-full mt-1 py-3 px-4 rounded text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
             >
               <Play className={`w-4 h-4 fill-current ${isAuditing ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{isAuditing ? 'Auditing Interface...' : 'Run Accessibility Audit'}</span>

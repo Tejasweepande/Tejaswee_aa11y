@@ -299,10 +299,8 @@ export const App: React.FC = () => {
 
     const img = new Image();
     img.onload = () => {
-      setAuditNotice({
-        type: 'info',
-        message: `Image "${name}" (${img.naturalWidth || img.width}×${img.naturalHeight || img.height}) loaded. Click "Run Accessibility Audit" to inspect.`,
-      });
+      // No on-screen confirmation banner: the preview and progress layer inside the
+      // upload box already show it. Screen reader users still get the announcement.
       setLiveAnnouncement(`Image ${name} loaded.`);
       
       // Auto-run offline segmentation immediately so canvas is alive (without running full audit yet)
@@ -317,6 +315,18 @@ export const App: React.FC = () => {
       }
     };
     img.src = dataUrl;
+  };
+
+  // Remove the uploaded image (bin icon on the preview). Undoes what an upload sets,
+  // including the "Image ... loaded" notice, which would be stale without an image.
+  const handleClearImage = () => {
+    setImageSrc(null);
+    setImageFileName('');
+    setRegions([]);
+    setSelectedFindingId(null);
+    setHoveredFindingId(null);
+    setAuditNotice(null);
+    setLiveAnnouncement('Image removed.');
   };
 
   /**
@@ -807,6 +817,9 @@ export const App: React.FC = () => {
             onChangePastedHtml={setPastedHtml}
             pastAudits={pastAudits}
             hasImage={!!imageSrc}
+            imageSrc={imageSrc}
+            imageFileName={imageFileName}
+            onClearImage={handleClearImage}
             onLoadHistoryItem={handleLoadHistoryItem}
           />
           </div>
