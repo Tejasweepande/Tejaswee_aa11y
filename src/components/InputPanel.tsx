@@ -314,8 +314,9 @@ export const InputPanel: React.FC<Props> = ({
                   draggable={false}
                   className="block w-full h-auto select-none"
                 />
-                {/* Name and bin appear on hover or keyboard focus (always on touch screens) */}
-                <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 p-2 bg-gradient-to-b from-black/70 to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
+                {/* Name and bin appear on hover or keyboard focus (always on touch screens). The strip is
+                    blurred and darkened so white text stays readable on any image, light or busy. */}
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 p-2 bg-black/60 backdrop-blur-lg border-b border-white/10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
                   <span className="min-w-0 truncate pl-1 text-sm font-medium text-white" title={previewName}>
                     {previewName}
                   </span>
@@ -324,7 +325,7 @@ export const InputPanel: React.FC<Props> = ({
                     onClick={handleClearImage}
                     aria-label={`Remove image ${previewName}`}
                     title="Remove image"
-                    className="shrink-0 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white inline-flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                    className="shrink-0 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white inline-flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
                   >
                     <DeleteIcon />
                   </button>
@@ -357,7 +358,7 @@ export const InputPanel: React.FC<Props> = ({
                 }`}
               >
                 <div
-                  className="absolute inset-0 bg-white/30 dark:bg-white/15 backdrop-blur-md border-r-2 border-lab-accent shadow-[4px_0_16px_rgba(56,189,248,0.3)] transition-transform duration-300 ease-out motion-reduce:transition-none"
+                  className="absolute inset-0 bg-lab-accent/30 backdrop-blur-md border-r-2 border-lab-accent shadow-[4px_0_16px_rgb(var(--lab-accent)/0.35)] transition-transform duration-300 ease-out motion-reduce:transition-none"
                   style={{ transform: `translateX(${(upload.progress - 1) * 100}%)` }}
                 />
               </div>
