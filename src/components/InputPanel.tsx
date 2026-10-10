@@ -10,6 +10,13 @@ import {
   Clock,
 } from 'lucide-react';
 
+/** Material Design "delete" (bin) icon (Apache-2.0, google/material-design-icons). */
+const DeleteIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+  </svg>
+);
+
 interface Props {
   currentInput: InputMode;
   onSelectInput: (mode: InputMode) => void;
@@ -30,6 +37,9 @@ interface Props {
   onChangePastedHtml: (html: string) => void;
   pastAudits: AuditHistoryItem[];
   hasImage: boolean;
+  imageSrc: string | null;
+  imageFileName: string;
+  onClearImage: () => void;
   onLoadHistoryItem: (item: AuditHistoryItem) => void;
 }
 
@@ -53,6 +63,9 @@ export const InputPanel: React.FC<Props> = ({
   onChangePastedHtml,
   pastAudits,
   hasImage,
+  imageSrc,
+  imageFileName,
+  onClearImage,
   onLoadHistoryItem,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +99,17 @@ export const InputPanel: React.FC<Props> = ({
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const isImage = currentInput === 'image';
+  // An uploaded image is shown inside the dropzone itself
+  const hasPreview = isImage && hasImage && !!imageSrc;
+  const previewName = imageFileName || 'Uploaded image';
+
+  const handleClearImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // the dropzone is clickable (opens the file picker); the bin must not
+    if (fileInputRef.current) fileInputRef.current.value = ''; // so the same file can be chosen again
+    onClearImage();
   };
 
   return (
@@ -130,7 +154,7 @@ export const InputPanel: React.FC<Props> = ({
 
       {/* Right Content Area */}
       <div className="flex-1 flex flex-col py-8 px-4 sm:px-8 overflow-y-auto">
-       <div className="w-full max-w-xl mx-auto flex flex-col gap-5 flex-1">
+       <div className={`w-full max-w-xl mx-auto flex flex-col gap-5 flex-1 ${isImage ? 'min-h-0' : ''}`}>
         {/* Header */}
         <div>
           <h2 className="text-xl font-bold text-lab-text flex items-center gap-2">
@@ -147,14 +171,27 @@ export const InputPanel: React.FC<Props> = ({
           )}
         </div>
 
+      {/* Body. On the image page this is the part that gives way (the preview is cropped
+          from the bottom) so the instructions and the Run button always keep their space.
+          Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
+      <div
+        className={
+          isImage
+            ? 'flex-initial min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
+            : 'contents'
+        }
+      >
       {/* Mode Specific Inputs */}
       {currentInput === 'image' && (
-        <div className="space-y-4">
-          {/* File Upload Dropzone */}
+        <div className={hasPreview ? 'flex flex-col min-h-[96px]' : 'space-y-4'}>
+          {/* File Upload Dropzone. With an image loaded, the image fills the box at its full
+              width and is cropped from the bottom when space is short. */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded p-4 text-center bg-lab-subtle/50 cursor-pointer group"
+            className={`ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded ${
+              hasPreview ? '' : 'p-4 text-center '
+            }bg-lab-subtle/50 cursor-pointer group${hasPreview ? ' relative flex-auto min-h-0 overflow-hidden' : ''}`}
             onClick={() => fileInputRef.current?.click()}
             role="region"
             aria-label="Image dropzone"
@@ -167,6 +204,32 @@ export const InputPanel: React.FC<Props> = ({
               className="hidden"
               aria-label="Upload interface screenshot or mockup"
             />
+            {hasPreview ? (
+              <>
+                <img
+                  src={imageSrc as string}
+                  alt={`Preview of ${previewName}`}
+                  draggable={false}
+                  className="block w-full h-auto select-none"
+                />
+                {/* Name and bin appear on hover or keyboard focus (always on touch screens) */}
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 p-2 bg-gradient-to-b from-black/70 to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
+                  <span className="min-w-0 truncate pl-1 text-sm font-medium text-white" title={previewName}>
+                    {previewName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearImage}
+                    aria-label={`Remove image ${previewName}`}
+                    title="Remove image"
+                    className="shrink-0 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white inline-flex items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                  >
+                    <DeleteIcon />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
             <div className="w-10 h-10 rounded-full bg-sky-500/10 text-lab-accent mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <UploadCloud className="w-5 h-5" aria-hidden="true" />
             </div>
@@ -174,6 +237,8 @@ export const InputPanel: React.FC<Props> = ({
               Upload any UI screenshot or <span className="text-lab-accent underline">browse</span>
             </p>
             <p className="text-xs text-lab-dim">Instant Computer Vision &amp; Decile Contrast Audit</p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -391,6 +456,8 @@ export const InputPanel: React.FC<Props> = ({
         </>
       )}
 
+      </div>
+
       {/* Launch Action Button */}
       {currentInput !== 'history' && (
         (() => {
@@ -410,7 +477,7 @@ export const InputPanel: React.FC<Props> = ({
               type="button"
               onClick={onRunAudit}
               disabled={isDisabled}
-              className={`w-full mt-1 py-3 px-4 rounded text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
+              className={`shrink-0 w-full mt-1 py-3 px-4 rounded text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${buttonClass}`}
             >
               <Play className={`w-4 h-4 fill-current ${isAuditing ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{isAuditing ? 'Auditing Interface...' : 'Run Accessibility Audit'}</span>

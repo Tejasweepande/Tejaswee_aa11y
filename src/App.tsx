@@ -319,6 +319,18 @@ export const App: React.FC = () => {
     img.src = dataUrl;
   };
 
+  // Remove the uploaded image (bin icon on the preview). Undoes what an upload sets,
+  // including the "Image ... loaded" notice, which would be stale without an image.
+  const handleClearImage = () => {
+    setImageSrc(null);
+    setImageFileName('');
+    setRegions([]);
+    setSelectedFindingId(null);
+    setHoveredFindingId(null);
+    setAuditNotice(null);
+    setLiveAnnouncement('Image removed.');
+  };
+
   /**
    * Deterministic Audit Execution (Rules R1, R2, R5)
    * Triggered when the user explicitly clicks the Audit button!
@@ -807,6 +819,9 @@ export const App: React.FC = () => {
             onChangePastedHtml={setPastedHtml}
             pastAudits={pastAudits}
             hasImage={!!imageSrc}
+            imageSrc={imageSrc}
+            imageFileName={imageFileName}
+            onClearImage={handleClearImage}
             onLoadHistoryItem={handleLoadHistoryItem}
           />
           </div>
