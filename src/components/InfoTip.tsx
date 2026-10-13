@@ -127,12 +127,14 @@ export const InfoTip: React.FC<Props> = ({
         // The transparent top padding bridges the gap to the button, so the pointer can move
         // from the button onto the panel without the panel closing.
         <div className={`absolute top-full z-30 pt-1 ${align === 'right' ? 'right-0' : 'left-0'} ${panelClassName}`}>
+          {/* Body text uses the same size as the helper text under form fields (text-xs,
+              leading-relaxed); the title stays one step larger. */}
           <div
             id={panelId}
             role="note"
-            className="bg-lab-card border border-lab-border rounded shadow-lg p-3 text-sm text-lab-muted leading-relaxed font-normal normal-case tracking-normal text-left"
+            className="bg-lab-card border border-lab-border rounded shadow-lg p-3 text-xs text-lab-muted leading-relaxed font-normal normal-case tracking-normal text-left"
           >
-            <p className="font-bold text-lab-text mb-1">{label}</p>
+            <p className="text-sm font-bold text-lab-text mb-1">{label}</p>
             {children}
           </div>
         </div>
