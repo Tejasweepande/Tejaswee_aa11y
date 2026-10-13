@@ -151,7 +151,7 @@ export const InputPanel: React.FC<Props> = ({
                 buttonLabel={HOW_IT_WORKS[currentInput].title}
                 icon={<MaterialInfoIcon />}
                 align="right"
-                panelClassName="w-96 max-w-[calc(100vw-4rem)]"
+                panelClassName="w-80 max-w-[calc(100vw-4rem)]"
                 openOnHover
               >
                 <ol className="list-decimal pl-5 space-y-1.5 marker:text-lab-dim">
