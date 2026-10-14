@@ -740,7 +740,7 @@ export const App: React.FC = () => {
       {/* Top Application Header */}
       <header className="border-b border-lab-border bg-lab-card/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-3.5">
         <div className="w-full mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Logo className="h-7 w-auto shrink-0 text-lab-accent" />
             <h1 className="text-lg font-extrabold tracking-tight whitespace-nowrap text-lab-text">A11y Lab</h1>
           </div>
