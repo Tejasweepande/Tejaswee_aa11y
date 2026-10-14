@@ -27,7 +27,7 @@ import { PreviewCanvas, CanvasMode } from './components/PreviewCanvas';
 import { IssueRail } from './components/IssueRail';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { ReportModal } from './components/ReportModal';
-import { Logo } from './components/Logo';
+import { BrandLockup } from './components/BrandLockup';
 
 import {
   AlertCircle,
@@ -740,22 +740,7 @@ export const App: React.FC = () => {
       {/* Top Application Header */}
       <header className="border-b border-lab-border bg-lab-card/80 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 py-3.5">
         <div className="w-full mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Logo className="h-7 w-auto shrink-0 text-lab-accent" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-extrabold tracking-tight text-lab-text">
-                  A11y Lab
-                </h1>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800/80">
-                  WCAG 2.2 • ARIA 1.2
-                </span>
-              </div>
-              <p className="text-xs text-lab-muted">
-                Accessibility auditor &amp; barrier perception simulator
-              </p>
-            </div>
-          </div>
+          <BrandLockup />
           <div className="flex items-center gap-2">
             {/* Light / Dark Mode Toggle */}
             <button
