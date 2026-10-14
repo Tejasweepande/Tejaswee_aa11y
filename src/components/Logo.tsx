@@ -10,13 +10,12 @@ import React from 'react';
  * Decorative by default (the product name is written next to it). Pass `title` when the
  * mark stands alone, so it gets an accessible name.
  */
-export const Logo: React.FC<{ className?: string; style?: React.CSSProperties; title?: string }> = ({ className, style, title }) => (
+export const Logo: React.FC<{ className?: string; title?: string }> = ({ className, title }) => (
   <svg
     viewBox="0 0 898 454"
     fill="currentColor"
     xmlns="http://www.w3.org/2000/svg"
     className={className}
-    style={style}
     role={title ? 'img' : undefined}
     aria-hidden={title ? undefined : true}
     focusable="false"
