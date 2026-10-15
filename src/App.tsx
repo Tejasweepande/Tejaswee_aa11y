@@ -7,6 +7,7 @@ import {
   UIElementRegion,
   ScreenReaderItem,
   AuditHistoryItem,
+  AuditHistoryMeta,
 } from './types/finding';
 import { SAMPLE_MOCKUPS } from './data/sampleMockups';
 import { sampleDecileCore, DecileSampleResult } from './engine/decileSampling';
@@ -26,6 +27,9 @@ import { InputPanel } from './components/InputPanel';
 import { PreviewCanvas, CanvasMode } from './components/PreviewCanvas';
 import { IssueRail } from './components/IssueRail';
 import { ApiKeyModal } from './components/ApiKeyModal';
+import { HistoryContext, useAuditHistoryState } from './hooks/useAuditHistory';
+import { KeyVaultContext, useKeyVaultState } from './hooks/useKeyVault';
+import type { SavedKeys } from './storage/keyVault';
 import { ReportModal } from './components/ReportModal';
 
 import {
@@ -55,7 +59,9 @@ export const App: React.FC = () => {
   const [hoveredFindingId, setHoveredFindingId] = useState<string | null>(null);
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('overlay');
   const [hasAudited, setHasAudited] = useState<boolean>(false);
-  const [pastAudits, setPastAudits] = useState<AuditHistoryItem[]>([]);
+  // Saved on this device (IndexedDB): survives a refresh, newest 20 kept
+  const history = useAuditHistoryState();
+  const { add: addAuditToHistory, load: loadSavedAudit } = history;
   const [viewStep, setViewStep] = useState<'upload' | 'results'>('upload');
 
   const [moduleToggles, setModuleToggles] = useState<Record<ModuleType, boolean>>({
@@ -76,6 +82,18 @@ export const App: React.FC = () => {
   const [pastedHtml, setPastedHtml] = useState<string>('');
   const [figmaUrl, setFigmaUrl] = useState<string>('');
   const [figmaPat, setFigmaPat] = useState<string>('');
+  // "Remember on this device": saved keys come back only into fields that are still empty
+  const figmaPatNow = useRef(figmaPat);
+  figmaPatNow.current = figmaPat;
+  const geminiKeyNow = useRef(geminiApiKey);
+  geminiKeyNow.current = geminiApiKey;
+  const keyVault = useKeyVaultState(
+    { figmaToken: figmaPat, geminiKey: geminiApiKey },
+    useCallback((loaded: SavedKeys) => {
+      if (loaded.figmaToken && !figmaPatNow.current) setFigmaPat(loaded.figmaToken);
+      if (loaded.geminiKey && !geminiKeyNow.current) setGeminiApiKey(loaded.geminiKey);
+    }, [])
+  );
   const [imageFileName, setImageFileName] = useState<string>('');
 
   const [auditNotice, setAuditNotice] = useState<{
@@ -145,6 +163,7 @@ export const App: React.FC = () => {
 
     const historyItem: AuditHistoryItem = {
       id: `audit-${Date.now()}`,
+      createdAt: new Date().toISOString(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       inputMode: auditResultMode,
       label,
@@ -163,8 +182,8 @@ export const App: React.FC = () => {
       moduleToggles: currentModuleToggles,
       exportScale: auditExportScale,
     };
-    setPastAudits((prev) => [historyItem, ...prev]);
-  }, []);
+    void addAuditToHistory(historyItem);
+  }, [addAuditToHistory]);
 
   const executeAuditOnRegions = useCallback((
     targetRegions: UIElementRegion[],
@@ -263,7 +282,13 @@ export const App: React.FC = () => {
     setLiveAnnouncement(announcement);
   }, [inputMode, moduleToggles]);
 
-  const handleLoadHistoryItem = useCallback((item: AuditHistoryItem) => {
+  const handleLoadHistoryItem = useCallback(async (meta: AuditHistoryMeta) => {
+    const item = await loadSavedAudit(meta.id);
+    if (!item) {
+      setAuditNotice({ type: 'error', message: 'That saved audit could not be opened. It may have been removed from this browser.' });
+      return;
+    }
+    setAuditNotice(null);
     setImageSrc(item.imageSrc);
     setIframeHtml(item.iframeHtml);
     // don't have imageFileName in history item currently, maybe we can keep it as is or pull from label
@@ -285,7 +310,7 @@ export const App: React.FC = () => {
 
     // Switch to overlay mode on load
     setCanvasMode('overlay');
-  }, []);
+  }, [loadSavedAudit]);
 
   // Removed initial sample mockup on mount to require explicit user upload
 
@@ -724,6 +749,9 @@ export const App: React.FC = () => {
   );
 
   return (
+    // Saved history and saved keys are shared with the panels below through these two providers
+    <HistoryContext.Provider value={history}>
+    <KeyVaultContext.Provider value={keyVault}>
     <div className="h-screen overflow-hidden bg-lab-bg text-lab-text flex flex-col font-sans">
       {/* WCAG 2.2 Live Region Announcement (Rule R3) */}
       <div
@@ -815,12 +843,14 @@ export const App: React.FC = () => {
             onChangeWebUrl={setWebUrl}
             pastedHtml={pastedHtml}
             onChangePastedHtml={setPastedHtml}
-            pastAudits={pastAudits}
+            pastAudits={history.items}
             hasImage={!!imageSrc}
             imageSrc={imageSrc}
             imageFileName={imageFileName}
             onClearImage={handleClearImage}
             onLoadHistoryItem={handleLoadHistoryItem}
+            onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
+            hasGeminiKey={!!geminiApiKey}
           />
           </div>
         </main>
@@ -900,5 +930,7 @@ export const App: React.FC = () => {
         />
       )}
     </div>
+    </KeyVaultContext.Provider>
+    </HistoryContext.Provider>
   );
 };

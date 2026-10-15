@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { InputMode, ExportScale, ModuleType, AuditHistoryItem } from '../types/finding';
+import { InputMode, ExportScale, ModuleType, AuditHistoryMeta } from '../types/finding';
 import { ClearButton } from './ClearButton';
+import { RememberKeys } from './RememberKeys';
+import { HistoryTools, formatWhen } from './HistoryTools';
 import {
   UploadCloud,
   Layers,
@@ -8,6 +10,7 @@ import {
   Play,
   History,
   Clock,
+  Key,
 } from 'lucide-react';
 
 // Upload progress layer (the frosted glass that fills the box left to right)
@@ -48,12 +51,16 @@ interface Props {
   onChangeWebUrl: (url: string) => void;
   pastedHtml: string;
   onChangePastedHtml: (html: string) => void;
-  pastAudits: AuditHistoryItem[];
+  /** Saved audits, light summaries only; the full audit is loaded when one is opened */
+  pastAudits: AuditHistoryMeta[];
   hasImage: boolean;
   imageSrc: string | null;
   imageFileName: string;
   onClearImage: () => void;
-  onLoadHistoryItem: (item: AuditHistoryItem) => void;
+  onLoadHistoryItem: (item: AuditHistoryMeta) => void;
+  /** Opens the Gemini key dialog (Image page). Optional so the panel works without it. */
+  onOpenApiKeyModal?: () => void;
+  hasGeminiKey?: boolean;
 }
 
 export const InputPanel: React.FC<Props> = ({
@@ -80,6 +87,8 @@ export const InputPanel: React.FC<Props> = ({
   imageFileName,
   onClearImage,
   onLoadHistoryItem,
+  onOpenApiKeyModal,
+  hasGeminiKey = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const figmaUrlRef = useRef<HTMLInputElement>(null);
@@ -371,7 +380,7 @@ export const InputPanel: React.FC<Props> = ({
         <div className="space-y-4">
           {pastAudits.length === 0 ? (
             <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
-              No previous audits in this session.
+              No saved audits yet. Each audit you run is saved on this device automatically.
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -384,7 +393,7 @@ export const InputPanel: React.FC<Props> = ({
                 >
                   <div className="flex justify-between items-center w-full">
                     <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
-                    <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {audit.timestamp}</span>
+                    <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {formatWhen(audit)}</span>
                   </div>
                   <div className="flex items-center text-xs text-lab-muted w-full">
                     <span className="flex gap-3">
@@ -400,6 +409,7 @@ export const InputPanel: React.FC<Props> = ({
               ))}
             </div>
           )}
+          <HistoryTools />
         </div>
       )}
 
@@ -471,6 +481,7 @@ export const InputPanel: React.FC<Props> = ({
               />
             )}
           </div>
+          <RememberKeys />
           <p className="text-xs text-lab-dim leading-relaxed">
             The token is needed to read the file.{' '}
             <a
@@ -541,9 +552,21 @@ export const InputPanel: React.FC<Props> = ({
 
       {/* Module Toggles */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted mb-2">
-          Audit Modules
-        </h3>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">
+            Audit Modules
+          </h3>
+          {currentInput === 'image' && onOpenApiKeyModal && (
+            <button
+              type="button"
+              onClick={onOpenApiKeyModal}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-lab-accent hover:underline focus-visible:ring-2 focus-visible:ring-sky-500 rounded"
+            >
+              <Key className="w-3 h-3" aria-hidden="true" />
+              {hasGeminiKey ? 'Gemini AI vision: on' : 'Add Gemini key (optional)'}
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {(
             [

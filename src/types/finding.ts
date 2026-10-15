@@ -127,6 +127,9 @@ export type CapabilityMatrixData = Record<InputMode, Record<ModuleType, Capabili
 
 export interface AuditHistoryItem {
   id: string;
+  /** When the audit ran, as an ISO date. Older items may not have it. */
+  createdAt?: string;
+  /** Time of day only (legacy display field). */
   timestamp: string;
   inputMode: InputMode;
   label: string;
@@ -147,3 +150,9 @@ export interface AuditHistoryItem {
   moduleToggles: Record<ModuleType, boolean>;
   exportScale: ExportScale;
 }
+
+/** The light part of a history item: enough to list it. The heavy part (screenshot, page HTML, findings) is loaded when an audit is opened. */
+export type AuditHistoryMeta = Pick<
+  AuditHistoryItem,
+  'id' | 'createdAt' | 'timestamp' | 'inputMode' | 'label' | 'regionsCount' | 'findingsCount'
+>;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Key, ShieldAlert, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { RememberKeys } from './RememberKeys';
 
 interface Props {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export const ApiKeyModal: React.FC<Props> = ({
       aria-labelledby="api-key-dialog-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-sm animate-fade-in"
     >
-      <div className="bg-lab-card border border-lab-border rounded max-w-md w-full p-6 shadow-2xl relative">
+      <div className="bg-lab-card border border-lab-border rounded max-w-md w-full max-h-full overflow-y-auto p-6 shadow-2xl relative">
         <button
           type="button"
           onClick={onClose}
@@ -66,7 +67,7 @@ export const ApiKeyModal: React.FC<Props> = ({
         <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
           <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <p className="text-sm text-amber-900 dark:text-amber-200/90 leading-relaxed">
-            <strong className="font-semibold">Privacy:</strong> API keys reside strictly in React memory for this active session. They are never saved to localStorage, disk, or telemetry.
+            <strong className="font-semibold">Privacy:</strong> The key stays in this browser. It is sent only to Google&apos;s Gemini API when you run an audit, and the screenshot you audit is sent with it. It is kept in memory for this visit unless you choose Remember on this device below.
           </p>
         </div>
 
@@ -94,6 +95,8 @@ export const ApiKeyModal: React.FC<Props> = ({
             </p>
           </div>
 
+          <RememberKeys />
+
           <div className="flex items-center justify-between pt-2 border-t border-lab-border">
             <button
               type="button"
@@ -116,7 +119,7 @@ export const ApiKeyModal: React.FC<Props> = ({
                 className="px-4 py-2 rounded text-sm font-bold bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover focus-visible:ring-2 flex items-center gap-1.5 shadow-sm transition-all"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                Save for Session
+                Use this key
               </button>
             </div>
           </div>
