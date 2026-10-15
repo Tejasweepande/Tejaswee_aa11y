@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { InputMode, ExportScale, ModuleType, AuditHistoryItem } from '../types/finding';
+import { InputMode, ExportScale, ModuleType, AuditHistoryMeta } from '../types/finding';
 import { ClearButton } from './ClearButton';
 import {
   UploadCloud,
@@ -9,6 +9,7 @@ import {
   History,
   Clock,
 } from 'lucide-react';
+import { HistoryTools, formatWhen } from './HistoryTools';
 
 // Upload progress layer (the frosted glass that fills the box left to right)
 type UploadStage = 'reading' | 'waiting' | 'fading';
@@ -48,12 +49,13 @@ interface Props {
   onChangeWebUrl: (url: string) => void;
   pastedHtml: string;
   onChangePastedHtml: (html: string) => void;
-  pastAudits: AuditHistoryItem[];
+  /** Saved audits, light summaries only; the full audit is loaded when one is opened */
+  pastAudits: AuditHistoryMeta[];
   hasImage: boolean;
   imageSrc: string | null;
   imageFileName: string;
   onClearImage: () => void;
-  onLoadHistoryItem: (item: AuditHistoryItem) => void;
+  onLoadHistoryItem: (item: AuditHistoryMeta) => void;
 }
 
 export const InputPanel: React.FC<Props> = ({
@@ -371,7 +373,7 @@ export const InputPanel: React.FC<Props> = ({
         <div className="space-y-4">
           {pastAudits.length === 0 ? (
             <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
-              No previous audits in this session.
+              No saved audits yet. Each audit you run is saved on this device automatically.
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -384,7 +386,7 @@ export const InputPanel: React.FC<Props> = ({
                 >
                   <div className="flex justify-between items-center w-full">
                     <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
-                    <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {audit.timestamp}</span>
+                    <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {formatWhen(audit)}</span>
                   </div>
                   <div className="flex items-center text-xs text-lab-muted w-full">
                     <span className="flex gap-3">
@@ -400,6 +402,7 @@ export const InputPanel: React.FC<Props> = ({
               ))}
             </div>
           )}
+          <HistoryTools />
         </div>
       )}
 
