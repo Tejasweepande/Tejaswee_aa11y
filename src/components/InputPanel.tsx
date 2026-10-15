@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { InputMode, ExportScale, ModuleType, AuditHistoryMeta } from '../types/finding';
 import { ClearButton } from './ClearButton';
-import { RememberKeys } from './RememberKeys';
-import { HistoryTools, formatWhen } from './HistoryTools';
 import {
   UploadCloud,
   Layers,
@@ -12,6 +10,8 @@ import {
   Clock,
   Key,
 } from 'lucide-react';
+import { RememberKeys } from './RememberKeys';
+import { HistoryTools, formatWhen } from './HistoryTools';
 
 // Upload progress layer (the frosted glass that fills the box left to right)
 type UploadStage = 'reading' | 'waiting' | 'fading';
