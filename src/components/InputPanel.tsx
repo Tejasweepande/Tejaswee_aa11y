@@ -8,7 +8,10 @@ import {
   Play,
   History,
   Clock,
+  Key,
 } from 'lucide-react';
+
+import { RememberKeys } from './RememberKeys';
 
 // Upload progress layer (the frosted glass that fills the box left to right)
 type UploadStage = 'reading' | 'waiting' | 'fading';
@@ -40,6 +43,9 @@ interface Props {
   onToggleModule: (mod: ModuleType) => void;
   onRunAudit: () => void;
   isAuditing: boolean;
+  /** Opens the Gemini key dialog (Image page). Optional so the panel works without it. */
+  onOpenApiKeyModal?: () => void;
+  hasGeminiKey?: boolean;
   figmaUrl: string;
   onChangeFigmaUrl: (url: string) => void;
   figmaPat: string;
@@ -66,6 +72,8 @@ export const InputPanel: React.FC<Props> = ({
   onToggleModule,
   onRunAudit,
   isAuditing,
+  onOpenApiKeyModal,
+  hasGeminiKey = false,
   figmaUrl,
   onChangeFigmaUrl,
   figmaPat,
@@ -471,6 +479,7 @@ export const InputPanel: React.FC<Props> = ({
               />
             )}
           </div>
+          <RememberKeys />
           <p className="text-xs text-lab-dim leading-relaxed">
             The token is needed to read the file.{' '}
             <a
@@ -541,9 +550,21 @@ export const InputPanel: React.FC<Props> = ({
 
       {/* Module Toggles */}
       <div>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted mb-2">
-          Audit Modules
-        </h3>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">
+            Audit Modules
+          </h3>
+          {currentInput === 'image' && onOpenApiKeyModal && (
+            <button
+              type="button"
+              onClick={onOpenApiKeyModal}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-lab-accent hover:underline focus-visible:ring-2 focus-visible:ring-sky-500 rounded"
+            >
+              <Key className="w-3 h-3" aria-hidden="true" />
+              {hasGeminiKey ? 'Gemini AI vision: on' : 'Add Gemini key (optional)'}
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {(
             [
