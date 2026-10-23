@@ -491,15 +491,15 @@ export const InputPanel: React.FC<Props> = ({
               />
             )}
           </div>
-          <p className="text-xs text-lab-dim leading-relaxed">
-            The token is needed to read the file.{' '}
+          <p className="text-xs text-lab-dim leading-relaxed !mt-2">
+            Lets this tool read your Figma file.{' '}
             <a
               href="https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens"
               target="_blank"
               rel="noreferrer"
               className="text-lab-accent underline font-semibold"
             >
-              How to get a token<span className="sr-only"> (opens in a new tab)</span>
+              Get a token<span className="sr-only"> (opens in a new tab)</span>
             </a>
           </p>
         </div>
@@ -545,8 +545,8 @@ export const InputPanel: React.FC<Props> = ({
                 />
               )}
             </div>
-            <p className="text-xs text-lab-dim leading-relaxed mt-1.5">
-              On the target page, right-click and choose "View Page Source", then select all and copy the HTML into the box above.
+            <p className="text-xs text-lab-dim leading-relaxed mt-2">
+              On your page, right-click → “View Page Source” → Select all → Copy → Paste into the box above.
             </p>
           </div>
         </div>
