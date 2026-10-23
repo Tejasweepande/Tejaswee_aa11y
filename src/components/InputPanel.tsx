@@ -535,7 +535,7 @@ export const InputPanel: React.FC<Props> = ({
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="block w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
