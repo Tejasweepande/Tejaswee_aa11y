@@ -1,8 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Download, Trash2, Upload } from 'lucide-react';
 import { useHistoryController } from '../hooks/useAuditHistory';
 import { MAX_HISTORY } from '../storage/historyStore';
 import { createdAtMs } from '../storage/historyFile';
+import { formatBytes } from '../storage/storageInfo';
 import { AuditHistoryMeta } from '../types/finding';
 
 /** "Oct 15, 10:20 AM". Older items without a date show the time they were saved. */
@@ -23,11 +24,23 @@ export const HistoryTools: React.FC = () => {
   const h = useHistoryController();
   const [confirming, setConfirming] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const refreshInfo = h?.refreshInfo;
+
+  useEffect(() => {
+    void refreshInfo?.();
+  }, [refreshInfo]);
 
   if (!h) return null;
-  const { items, notice, canSave } = h;
+  const { items, notice, info, canSave } = h;
 
-  const saveLine = canSave ? '' : 'This browser is not letting the app save, so audits last only until you refresh.';
+  const persistLine =
+    !canSave
+      ? 'This browser is not letting the app save, so audits last only until you refresh.'
+      : info?.persisted === true
+      ? 'Your browser will keep this until you clear it.'
+      : info?.persisted === false
+      ? 'Your browser may clear this if it runs low on space. Export a backup to be safe.'
+      : '';
 
   return (
     <div className="space-y-3 pt-1" data-testid="history-tools">
@@ -79,7 +92,8 @@ export const HistoryTools: React.FC = () => {
       </div>
 
       <p className="text-xs text-lab-dim leading-relaxed">
-        Saved on this device only. Keeps the latest {MAX_HISTORY} audits ({items.length} saved now). {saveLine}
+        Saved on this device only. Keeps the latest {MAX_HISTORY} audits ({items.length} saved now)
+        {info?.usageBytes != null ? `, using ${formatBytes(info.usageBytes)} of browser storage` : ''}. {persistLine}
       </p>
 
       <div role="status" aria-live="polite" className={notice ? `text-sm leading-relaxed ${notice.kind === 'error' ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-lab-text'}` : 'sr-only'}>

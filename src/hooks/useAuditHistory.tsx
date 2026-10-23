@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { AuditHistoryItem, AuditHistoryMeta } from '../types/finding';
 import { MAX_HISTORY, clearHistory, importAudits, listAudits, loadAllAudits, loadAudit, saveAudit } from '../storage/historyStore';
 import { MAX_IMPORT_BYTES, buildHistoryFile, createdAtMs, historyFileName, parseHistoryFile, toMeta } from '../storage/historyFile';
+import { StorageInfo, getStorageInfo } from '../storage/storageInfo';
 
 /**
  * The saved audit history, kept on this device (IndexedDB). Each finished audit is saved
@@ -19,11 +20,13 @@ export interface HistoryController {
   /** false when the browser cannot save at all (items then live in memory only) */
   canSave: boolean;
   notice: HistoryNotice | null;
+  info: StorageInfo | null;
   add: (item: AuditHistoryItem) => Promise<void>;
   load: (id: string) => Promise<AuditHistoryItem | null>;
   clear: () => Promise<void>;
   exportAll: () => Promise<void>;
   importFile: (file: File) => Promise<void>;
+  refreshInfo: () => Promise<void>;
   dismissNotice: () => void;
 }
 
@@ -57,8 +60,13 @@ export function useAuditHistoryState(): HistoryController {
   const [ready, setReady] = useState(false);
   const [canSave, setCanSave] = useState(true);
   const [notice, setNotice] = useState<HistoryNotice | null>(null);
+  const [info, setInfo] = useState<StorageInfo | null>(null);
   // Audits the browser would not save: kept here so they can still be opened this session
   const memoryOnly = useRef(new Map<string, AuditHistoryItem>());
+
+  const refreshInfo = useCallback(async () => {
+    setInfo(await getStorageInfo());
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -79,6 +87,7 @@ export function useAuditHistoryState(): HistoryController {
     if (res.ok) {
       memoryOnly.current.delete(stamped.id);
       setCanSave(true);
+      void refreshInfo();
       return;
     }
     memoryOnly.current.set(stamped.id, stamped);
@@ -93,7 +102,7 @@ export function useAuditHistoryState(): HistoryController {
           ? 'This browser is not letting the app save audits (a private window can do this). They will be lost when you refresh.'
           : 'This audit could not be saved. You can still open it until you refresh.',
     });
-  }, []);
+  }, [refreshInfo]);
 
   const load = useCallback(async (id: string) => {
     const inMemory = memoryOnly.current.get(id);
@@ -114,7 +123,8 @@ export function useAuditHistoryState(): HistoryController {
     memoryOnly.current.clear();
     setItems([]);
     setNotice({ kind: 'success', text: 'Saved history cleared.' });
-  }, []);
+    void refreshInfo();
+  }, [refreshInfo]);
 
   const exportAll = useCallback(async () => {
     let all: AuditHistoryItem[] = [];
@@ -161,6 +171,7 @@ export function useAuditHistoryState(): HistoryController {
         const { added, duplicates } = await importAudits(parsed.items);
         setItems(await listAudits());
         setCanSave(true);
+        void refreshInfo();
         const fresh = parsed.items.length - duplicates;
         const bits = [`Imported ${plural(added, 'audit', 'audits')}`];
         if (duplicates > 0) bits.push(`${duplicates} already saved`);
@@ -171,10 +182,10 @@ export function useAuditHistoryState(): HistoryController {
         setNotice({ kind: 'error', text: 'The audits could not be saved on this device.' });
       }
     },
-    []
+    [refreshInfo]
   );
 
   const dismissNotice = useCallback(() => setNotice(null), []);
 
-  return { items, ready, canSave, notice, add, load, clear, exportAll, importFile, dismissNotice };
+  return { items, ready, canSave, notice, info, add, load, clear, exportAll, importFile, refreshInfo, dismissNotice };
 }
