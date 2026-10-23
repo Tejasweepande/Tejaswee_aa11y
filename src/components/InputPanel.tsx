@@ -11,7 +11,7 @@ import {
   History,
   Clock,
 } from 'lucide-react';
-import { HistoryTools, formatWhen } from './HistoryTools';
+import { HistoryActions, HistoryNotice, HistoryStorageNote, formatWhen } from './HistoryTools';
 
 // Upload progress layer (the frosted glass that fills the box left to right)
 type UploadStage = 'reading' | 'waiting' | 'fading';
@@ -268,6 +268,7 @@ export const InputPanel: React.FC<Props> = ({
                 ? 'Figma Upload'
                 : 'Live Link'}
             </h2>
+            {currentInput === 'history' && <HistoryActions />}
             {currentInput !== 'history' && (
               <InfoTip
                 label={HOW_IT_WORKS[currentInput].title}
@@ -390,7 +391,8 @@ export const InputPanel: React.FC<Props> = ({
       )}
 
       {currentInput === 'history' && (
-        <div className="space-y-4">
+        <div>
+          <HistoryNotice />
           {pastAudits.length === 0 ? (
             <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
               No saved audits yet. Each audit you run is saved on this device automatically.
@@ -422,7 +424,7 @@ export const InputPanel: React.FC<Props> = ({
               ))}
             </div>
           )}
-          <HistoryTools />
+          <HistoryStorageNote />
         </div>
       )}
 
