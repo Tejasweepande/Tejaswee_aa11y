@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { requestPersistence } from '../storage/persistence';
 import {
   DerivedKey,
   MIN_PASSPHRASE_LENGTH,
@@ -128,6 +129,7 @@ export function useKeyVaultState(keys: SavedKeys, applyLoaded: (loaded: SavedKey
     await saveEncrypted(keysRef.current, derived);
     derivedRef.current = derived;
     setStatus('unlocked');
+    void requestPersistence(); // keys are now saved on this device: ask the browser to keep them
     return true;
   }, []);
 
@@ -138,6 +140,7 @@ export function useKeyVaultState(keys: SavedKeys, applyLoaded: (loaded: SavedKey
         await savePlain(keysRef.current);
         derivedRef.current = null;
         setStatus('plain');
+        void requestPersistence();
         return true;
       }, false),
     [withBusy, encryptWith]

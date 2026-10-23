@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { AuditHistoryItem, AuditHistoryMeta } from '../types/finding';
 import { MAX_HISTORY, clearHistory, importAudits, listAudits, loadAllAudits, loadAudit, saveAudit } from '../storage/historyStore';
 import { MAX_IMPORT_BYTES, buildHistoryFile, createdAtMs, historyFileName, parseHistoryFile, toMeta } from '../storage/historyFile';
+import { requestPersistence } from '../storage/persistence';
 import { StorageInfo, getStorageInfo } from '../storage/storageInfo';
 
 /**
@@ -87,7 +88,8 @@ export function useAuditHistoryState(): HistoryController {
     if (res.ok) {
       memoryOnly.current.delete(stamped.id);
       setCanSave(true);
-      void refreshInfo();
+      // Ask the browser to keep the data now that there is something worth keeping (never on page load)
+      void requestPersistence().finally(() => void refreshInfo());
       return;
     }
     memoryOnly.current.set(stamped.id, stamped);
@@ -171,7 +173,7 @@ export function useAuditHistoryState(): HistoryController {
         const { added, duplicates } = await importAudits(parsed.items);
         setItems(await listAudits());
         setCanSave(true);
-        void refreshInfo();
+        void requestPersistence().finally(() => void refreshInfo());
         const fresh = parsed.items.length - duplicates;
         const bits = [`Imported ${plural(added, 'audit', 'audits')}`];
         if (duplicates > 0) bits.push(`${duplicates} already saved`);
