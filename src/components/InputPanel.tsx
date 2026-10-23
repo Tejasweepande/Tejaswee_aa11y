@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { InputMode, ExportScale, ModuleType, AuditHistoryItem } from '../types/finding';
 import { ClearButton } from './ClearButton';
+import { InfoTip, MaterialInfoIcon } from './InfoTip';
+import { HOW_IT_WORKS } from '../data/howItWorks';
 import {
   UploadCloud,
   Layers,
@@ -262,15 +264,33 @@ export const InputPanel: React.FC<Props> = ({
        <div className={`w-full max-w-xl mx-auto flex flex-col gap-5 flex-1 ${isImage ? 'min-h-0' : ''}`}>
         {/* Header */}
         <div>
-          <h2 className="text-xl font-bold text-lab-text flex items-center gap-2">
-            {currentInput === 'history'
-              ? 'Audit History'
-              : currentInput === 'image'
-              ? 'Image Upload'
-              : currentInput === 'figma'
-              ? 'Figma Upload'
-              : 'Live Link'}
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-bold text-lab-text flex items-center gap-2">
+              {currentInput === 'history'
+                ? 'Audit History'
+                : currentInput === 'image'
+                ? 'Image Upload'
+                : currentInput === 'figma'
+                ? 'Figma Upload'
+                : 'Live Link'}
+            </h2>
+            {currentInput !== 'history' && (
+              <InfoTip
+                label={HOW_IT_WORKS[currentInput].title}
+                buttonLabel={HOW_IT_WORKS[currentInput].title}
+                icon={<MaterialInfoIcon />}
+                align="right"
+                panelClassName="w-80 max-w-[calc(100vw-4rem)]"
+                openOnHover
+              >
+                <ol className="list-decimal pl-5 space-y-1.5 marker:text-lab-dim">
+                  {HOW_IT_WORKS[currentInput].steps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+              </InfoTip>
+            )}
+          </div>
           {currentInput === 'history' && (
             <p className="text-sm text-lab-muted mt-1">Past audits done on this product</p>
           )}
@@ -479,21 +499,18 @@ export const InputPanel: React.FC<Props> = ({
               />
             )}
           </div>
-          <RememberKeys />
-          <p className="text-xs text-lab-dim leading-relaxed">
-            The token is needed to read the file.{' '}
+          <p className="text-xs text-lab-dim leading-relaxed !mt-2">
+            Lets this tool read your Figma file.{' '}
             <a
               href="https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens"
               target="_blank"
               rel="noreferrer"
               className="text-lab-accent underline font-semibold"
             >
-              How to get a token<span className="sr-only"> (opens in a new tab)</span>
+              Get a token<span className="sr-only"> (opens in a new tab)</span>
             </a>
           </p>
-          <p className="text-xs text-lab-dim leading-relaxed">
-            Extracts prototype transition links to walk user focus flow deterministically.
-          </p>
+          <RememberKeys />
         </div>
       )}
 
@@ -527,7 +544,7 @@ export const InputPanel: React.FC<Props> = ({
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="block w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
@@ -537,14 +554,10 @@ export const InputPanel: React.FC<Props> = ({
                 />
               )}
             </div>
-            <p className="text-xs text-lab-dim leading-relaxed mt-1.5">
-              On the target page, right-click and choose "View Page Source", then select all and copy the HTML into the box above.
+            <p className="text-xs text-lab-dim leading-relaxed mt-2">
+              On your page, right-click → “View Page Source” → Select all → Copy → Paste into the box above.
             </p>
           </div>
-          
-          <p className="text-xs text-lab-dim leading-relaxed">
-            Automatically fetches a visual screenshot and evaluates the underlying DOM. Use the HTML fallback if the site blocks public proxies.
-          </p>
         </div>
       )}
 
