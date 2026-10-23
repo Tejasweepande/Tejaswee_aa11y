@@ -1,32 +1,26 @@
 /**
- * Tiny promise wrapper around IndexedDB. Everything the app saves on the user's device
- * lives in one database with three stores:
- *   history_meta  the light summary of each audit (for the list)
- *   history_data  the full audit (screenshot, page HTML, findings...), loaded on demand
- *   vault         the saved Figma token / Gemini key (plain or encrypted)
- * Nothing here ever leaves the browser.
+ * Tiny promise wrapper around IndexedDB, the browser's built-in storage that lives on the
+ * user's own device. Each feature opens its own database (history, saved keys) so they stay
+ * independent of each other. Nothing here ever leaves the browser.
  */
-const DB_NAME = 'a11y-lab';
 const DB_VERSION = 1;
 
-export const STORE_META = 'history_meta';
-export const STORE_DATA = 'history_data';
-export const STORE_VAULT = 'vault';
+const connections = new Map<string, Promise<IDBDatabase>>();
 
-let dbPromise: Promise<IDBDatabase> | null = null;
-
-export function openDb(): Promise<IDBDatabase> {
-  if (!dbPromise) {
-    dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
+/** Open (and on first use create) a database whose stores all use `id` as their key. */
+export function openDb(name: string, stores: readonly string[]): Promise<IDBDatabase> {
+  let pending = connections.get(name);
+  if (!pending) {
+    pending = new Promise<IDBDatabase>((resolve, reject) => {
       if (typeof indexedDB === 'undefined') {
         reject(new Error('IndexedDB is not available in this browser'));
         return;
       }
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      const req = indexedDB.open(name, DB_VERSION);
       req.onupgradeneeded = () => {
         const db = req.result;
-        for (const name of [STORE_META, STORE_DATA, STORE_VAULT]) {
-          if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' });
+        for (const store of stores) {
+          if (!db.objectStoreNames.contains(store)) db.createObjectStore(store, { keyPath: 'id' });
         }
       };
       req.onsuccess = () => {
@@ -34,29 +28,32 @@ export function openDb(): Promise<IDBDatabase> {
         // Another tab upgrading the database: step aside, reopen on next use
         db.onversionchange = () => {
           db.close();
-          dbPromise = null;
+          connections.delete(name);
         };
         resolve(db);
       };
       req.onerror = () => reject(req.error ?? new Error('Could not open the database'));
       req.onblocked = () => reject(new Error('The database is blocked by another tab'));
     }).catch((err) => {
-      dbPromise = null;
+      connections.delete(name);
       throw err;
     });
+    connections.set(name, pending);
   }
-  return dbPromise;
+  return pending;
 }
 
-/** For tests: close the connection so a "page refresh" can reopen it. */
-export async function closeDb(): Promise<void> {
-  if (!dbPromise) return;
-  try {
-    (await dbPromise).close();
-  } catch {
-    /* already closed */
+/** For tests: close every connection so a "page refresh" can reopen them. */
+export async function closeAllDbs(): Promise<void> {
+  const all = Array.from(connections.values());
+  connections.clear();
+  for (const p of all) {
+    try {
+      (await p).close();
+    } catch {
+      /* already closed */
+    }
   }
-  dbPromise = null;
 }
 
 export const request = <T>(req: IDBRequest<T>): Promise<T> =>

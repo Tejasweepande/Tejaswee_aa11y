@@ -3,7 +3,7 @@ import { Download, Trash2, Upload } from 'lucide-react';
 import { useHistoryController } from '../hooks/useAuditHistory';
 import { MAX_HISTORY } from '../storage/historyStore';
 import { createdAtMs } from '../storage/historyFile';
-import { formatBytes } from '../storage/persistence';
+import { formatBytes } from '../storage/storageInfo';
 import { AuditHistoryMeta } from '../types/finding';
 
 /** "Oct 15, 10:20 AM". Older items without a date show the time they were saved. */

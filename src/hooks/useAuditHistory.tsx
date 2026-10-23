@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { AuditHistoryItem, AuditHistoryMeta } from '../types/finding';
 import { MAX_HISTORY, clearHistory, importAudits, listAudits, loadAllAudits, loadAudit, saveAudit } from '../storage/historyStore';
 import { MAX_IMPORT_BYTES, buildHistoryFile, createdAtMs, historyFileName, parseHistoryFile, toMeta } from '../storage/historyFile';
-import { StorageInfo, getStorageInfo, requestPersistence } from '../storage/persistence';
+import { StorageInfo, getStorageInfo } from '../storage/storageInfo';
 
 /**
  * The saved audit history, kept on this device (IndexedDB). Each finished audit is saved
@@ -87,7 +87,6 @@ export function useAuditHistoryState(): HistoryController {
     if (res.ok) {
       memoryOnly.current.delete(stamped.id);
       setCanSave(true);
-      void requestPersistence(); // asked after a first real save, never on page load
       void refreshInfo();
       return;
     }
@@ -172,7 +171,6 @@ export function useAuditHistoryState(): HistoryController {
         const { added, duplicates } = await importAudits(parsed.items);
         setItems(await listAudits());
         setCanSave(true);
-        void requestPersistence();
         void refreshInfo();
         const fresh = parsed.items.length - duplicates;
         const bits = [`Imported ${plural(added, 'audit', 'audits')}`];

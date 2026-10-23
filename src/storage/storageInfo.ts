@@ -1,24 +1,12 @@
 /**
- * Ask the browser not to clear this site's saved data automatically when disk space is low.
- * Chrome and Edge decide from how the site is used, Firefox asks the user, Safari decides by
- * itself. It is a request, never a guarantee, so the app also offers Export as a backup.
+ * What the browser says about this site's saved data: how much space it uses, and whether the
+ * browser has promised not to clear it when disk space runs low. Read-only; it asks for nothing.
  */
 export interface StorageInfo {
   supported: boolean;
   persisted: boolean | null; // null = the browser cannot say
   usageBytes: number | null;
   quotaBytes: number | null;
-}
-
-export async function requestPersistence(): Promise<boolean> {
-  try {
-    if (typeof navigator === 'undefined' || !navigator.storage) return false;
-    if (navigator.storage.persisted && (await navigator.storage.persisted())) return true;
-    if (!navigator.storage.persist) return false;
-    return await navigator.storage.persist();
-  } catch {
-    return false;
-  }
 }
 
 export async function getStorageInfo(): Promise<StorageInfo> {

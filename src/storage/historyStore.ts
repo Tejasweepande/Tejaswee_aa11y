@@ -1,6 +1,10 @@
 import { AuditHistoryItem, AuditHistoryMeta } from '../types/finding';
 import { createdAtMs, toMeta } from './historyFile';
-import { STORE_DATA, STORE_META, isQuotaError, openDb, request, transactionDone } from './idb';
+import { isQuotaError, openDb, request, transactionDone } from './idb';
+
+export const STORE_META = 'history_meta'; // the light summary of each audit (for the list)
+export const STORE_DATA = 'history_data'; // the full audit, loaded when it is opened
+const openHistoryDb = () => openDb('a11y-lab-history', [STORE_META, STORE_DATA]);
 
 /** How many audits are kept. Older ones are removed automatically. */
 export const MAX_HISTORY = 20;
@@ -11,19 +15,19 @@ const newestFirst = (a: AuditHistoryMeta, b: AuditHistoryMeta) => createdAtMs(b)
 
 /** Newest first. Light summaries only. */
 export async function listAudits(): Promise<AuditHistoryMeta[]> {
-  const db = await openDb();
+  const db = await openHistoryDb();
   const metas = (await request(db.transaction(STORE_META, 'readonly').objectStore(STORE_META).getAll())) as AuditHistoryMeta[];
   return metas.sort(newestFirst);
 }
 
 export async function loadAudit(id: string): Promise<AuditHistoryItem | null> {
-  const db = await openDb();
+  const db = await openHistoryDb();
   const rec = (await request(db.transaction(STORE_DATA, 'readonly').objectStore(STORE_DATA).get(id))) as { id: string; item: AuditHistoryItem } | undefined;
   return rec ? rec.item : null;
 }
 
 async function writeAndPrune(items: AuditHistoryItem[], keep: number): Promise<{ added: number }> {
-  const db = await openDb();
+  const db = await openHistoryDb();
   const tx = db.transaction([STORE_META, STORE_DATA], 'readwrite');
   const metaStore = tx.objectStore(STORE_META);
   const dataStore = tx.objectStore(STORE_DATA);
@@ -67,7 +71,7 @@ export async function saveAudit(item: AuditHistoryItem): Promise<SaveResult> {
 }
 
 export async function clearHistory(): Promise<void> {
-  const db = await openDb();
+  const db = await openHistoryDb();
   const tx = db.transaction([STORE_META, STORE_DATA], 'readwrite');
   tx.objectStore(STORE_META).clear();
   tx.objectStore(STORE_DATA).clear();
