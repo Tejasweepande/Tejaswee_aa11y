@@ -288,26 +288,27 @@ export const InputPanel: React.FC<Props> = ({
           )}
         </div>
 
-      {/* Body. On the image page this is the part that gives way (the preview is cropped
-          from the bottom) so the instructions and the Run button always keep their space.
-          Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
+      {/* Body. On the image page this fills the room between the title and the Run button: the
+          dropzone grows to take whatever is left, so the settings and the Run button sit at the
+          bottom of the page. When room is short the preview is cropped from the bottom and this
+          part scrolls. Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
       <div
         className={
           isImage
-            ? 'flex-initial min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
+            ? 'flex-1 min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
             : 'contents'
         }
       >
       {/* Mode Specific Inputs */}
       {currentInput === 'image' && (
-        <div className={hasPreview ? 'flex flex-col min-h-[96px]' : 'space-y-4'}>
+        <div className={`flex flex-col flex-1 ${hasPreview ? 'min-h-[96px]' : 'min-h-[118px]'}`}>
           {/* File Upload Dropzone. With an image loaded, the image fills the box at its full
               width and is cropped from the bottom when space is short. */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             className={`ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded ${
-              hasPreview ? '' : 'p-4 text-center '
+              hasPreview ? '' : 'p-4 text-center flex-1 flex flex-col items-center justify-center '
             }bg-lab-subtle/50 cursor-pointer group${
               hasPreview ? ' relative flex-auto min-h-0 overflow-hidden' : upload ? ' relative overflow-hidden' : ''
             }`}
