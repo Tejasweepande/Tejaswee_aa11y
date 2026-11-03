@@ -506,7 +506,7 @@ export const InputPanel: React.FC<Props> = ({
       )}
 
       {currentInput === 'url' && (
-        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
+        <div className="flex flex-col gap-3 flex-1 bg-lab-subtle rounded p-3 shadow-sm">
           <label htmlFor="website-url" className="block text-sm font-semibold text-lab-text">Website URL</label>
           <div className="relative">
             <input
@@ -526,16 +526,16 @@ export const InputPanel: React.FC<Props> = ({
             )}
           </div>
           
-          <div className="pt-2 border-t border-lab-border">
+          <div className="flex flex-col flex-1 pt-2 border-t border-lab-border">
             <label htmlFor="pasted-html" className="text-sm font-semibold text-lab-text block mb-2">HTML fallback</label>
-            <div className="relative">
+            <div className="relative flex flex-col flex-1 min-h-[96px]">
               <textarea
                 id="pasted-html"
                 ref={pastedHtmlRef}
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="block w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="block w-full flex-1 min-h-[96px] bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
