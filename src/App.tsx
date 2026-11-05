@@ -81,6 +81,8 @@ export const App: React.FC = () => {
   // The audit waits (keyAnswer) for the user's answer: a key, or null for "skip".
   const [keyPrompt, setKeyPrompt] = useState<KeyPromptWhy | null>(null);
   const keyAnswer = useRef<((key: string | null) => void) | null>(null);
+  // Once the user skips Gemini, they are not asked again in this tab (a refresh asks again)
+  const geminiSkipped = useRef(false);
   const askForGeminiKey = (why: KeyPromptWhy) =>
     new Promise<string | null>((resolve) => {
       keyAnswer.current = resolve;
@@ -574,7 +576,6 @@ export const App: React.FC = () => {
     img.onload = async () => {
       let targetRegions: UIElementRegion[] = [];
       let isPartial = false;
-      let aiErrorNotice = '';
 
       // 1. If an explicit benchmark is loaded, use its calibrated regions
       let source: 'sample' | 'yolo' | 'offline' | 'gemini' = 'sample';
@@ -582,9 +583,10 @@ export const App: React.FC = () => {
         const sample = SAMPLE_MOCKUPS.find((s) => s.id === selectedSampleId);
         targetRegions = sample ? sample.regions : regions;
       } else {
-        // The order: (2) Hugging Face YOLOv11 on the local Python server, (3) the offline detector,
-        // (4) Gemini Vision, which is only offered when neither of those could read the screenshot.
-        // A tier has "failed" when it errors, or finds fewer than MIN_USABLE_REGIONS elements.
+        // The order: (2) Hugging Face YOLOv11 on the local Python server, (3) the offline detector, which
+        // cannot name elements and so is never the answer on its own, then (4) the Gemini key dialog.
+        // YOLO has "failed" when it errors, gets no answer in time, or finds fewer than MIN_USABLE_REGIONS elements.
+        // On the public site there is no YOLO server, so every image goes on to step 4.
 
         // 2. Hugging Face YOLOv11 (the Local AI backend)
         setAuditNotice({ type: 'info', message: 'Calling Local AI Backend (Hugging Face YOLOv11) to identify UI elements (it gives up after 15 seconds)...' });
@@ -595,17 +597,17 @@ export const App: React.FC = () => {
             isPartial = res.isPartial;
             source = 'yolo';
           } else {
-            aiErrorNotice = `Local AI: found only ${res.regions.length} elements`;
+            console.warn(`[Local AI] found only ${res.regions.length} elements`);
           }
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.warn('[Local AI error]', msg);
-          aiErrorNotice = `Local AI: ${msg}`;
+          console.warn('[Local AI error]', err instanceof Error ? err.message : String(err));
         }
 
-        // 3. Offline detector, measured from the real pixels. It counts as failed when fewer than
-        //    MIN_USABLE_REGIONS places had real contrast (a blank, photographic or very low-contrast image).
+        // 3. Offline detector. It measures contrast zones from the real pixels, but it cannot read text or
+        //    name elements, so it is never accepted as the answer on its own. It is the fallback, used only
+        //    if Gemini is skipped or fails.
         let offlineRegions: UIElementRegion[] = [];
+        let offlineClearZones = 0;
         if (targetRegions.length === 0) {
           const canvas = hiddenCanvasRef.current || document.createElement('canvas');
           canvas.width = img.naturalWidth || img.width || 800;
@@ -615,25 +617,25 @@ export const App: React.FC = () => {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             const found = detectHeuristicRegions(canvas);
             offlineRegions = found.regions;
-            if (found.clearZones >= MIN_USABLE_REGIONS) {
-              targetRegions = offlineRegions;
-              source = 'offline';
-            }
+            offlineClearZones = found.clearZones;
           }
         }
 
-        // 4. Gemini Vision. Asked for only now. A key that is already in memory is used without asking;
-        //    the dialog comes back only if Gemini fails (limit used up, key not accepted, no connection).
-        let geminiOffered = false;
+        // 4. Gemini Vision. The key dialog opens here, because YOLO could not read the screenshot. A key that is
+        //    already in memory is used without asking; the dialog comes back only if Gemini fails (limit used up,
+        //    key not accepted, no connection, no answer in time). After a skip it is not shown again in this tab.
         if (targetRegions.length === 0) {
-          geminiOffered = true;
           let key = geminiApiKey.trim();
           let why: KeyPromptWhy = { kind: 'needed' };
           let lastFailure = '';
           for (;;) {
             if (!key) {
+              if (geminiSkipped.current) break;
               const entered = await askForGeminiKey(why);
-              if (!entered) break; // the user skipped Gemini
+              if (!entered) {
+                geminiSkipped.current = true;
+                break;
+              }
               key = entered;
               setGeminiApiKey(key);
             }
@@ -657,14 +659,17 @@ export const App: React.FC = () => {
             }
           }
           if (targetRegions.length === 0) {
-            // Skipped, or Gemini could not help: carry on with the offline detector's best effort
+            // Skipped, or Gemini could not help: use the offline detector's contrast zones
             targetRegions = offlineRegions;
             source = 'offline';
+            const lessDetail = ' It cannot read text or name elements, so the results are less detailed.';
             setAuditNotice({
               type: 'warning',
               message: lastFailure
-                ? `Gemini Vision could not read this screenshot. ${lastFailure} Continuing with the offline detector; the results may be incomplete.`
-                : 'The offline detector found few clear elements in this screenshot, so the results may be incomplete. Gemini Vision was skipped.',
+                ? `Gemini Vision could not read this screenshot. ${lastFailure} The offline detector's contrast zones were used instead.${lessDetail}`
+                : `Gemini Vision was skipped, so the offline detector's contrast zones were used.${lessDetail}${
+                    offlineClearZones < MIN_USABLE_REGIONS ? ' This screenshot has few clear areas, so they may be incomplete.' : ''
+                  }`,
             });
           }
         }
@@ -674,16 +679,6 @@ export const App: React.FC = () => {
             type: 'success',
             message: `AI Vision: extracted ${targetRegions.length} UI elements. Running deterministic WCAG 2.2 checks...`,
           });
-        } else if (!geminiOffered) {
-          // The offline detector found enough on its own (Gemini was never asked about)
-          setAuditNotice(
-            aiErrorNotice
-              ? { type: 'warning', message: `${aiErrorNotice}. Proceeding with deterministic local Computer Vision & decile sampling.` }
-              : {
-                  type: 'info',
-                  message: `Offline mode: identified ${targetRegions.length} contrast zones. Run the Python backend for deeper results (real text and element names).`,
-                }
-          );
         }
       }
 

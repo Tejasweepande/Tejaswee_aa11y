@@ -92,8 +92,8 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
 
         {why.kind === 'needed' ? (
           <p id={leadId} className="text-sm text-lab-text leading-relaxed mb-4">
-            The built-in detectors could not find enough clear elements in this screenshot. Gemini Vision can read it instead. Paste a
-            Gemini API key to try it.
+            The AI model server is not available here, and the offline detector can only measure contrast: it cannot read text or name
+            elements. Gemini Vision can read this screenshot properly. Paste a Gemini API key to use it, or skip to continue offline.
           </p>
         ) : (
           <div id={leadId} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
