@@ -9,10 +9,10 @@ import {
   Globe,
   Play,
   History,
-  Clock,
   Key,
 } from 'lucide-react';
-import { HistoryActions, HistoryNotice, HistoryStorageNote, formatWhen } from './HistoryTools';
+import { HistoryNotice } from './HistoryTools';
+import { HistoryEntries } from './HistoryEntries';
 
 import { RememberKeys } from './RememberKeys';
 
@@ -276,7 +276,6 @@ export const InputPanel: React.FC<Props> = ({
                 ? 'Figma Upload'
                 : 'Live Link'}
             </h2>
-            {currentInput === 'history' && <HistoryActions />}
             {currentInput !== 'history' && (
               <InfoTip
                 label={HOW_IT_WORKS[currentInput].title}
@@ -299,26 +298,27 @@ export const InputPanel: React.FC<Props> = ({
           )}
         </div>
 
-      {/* Body. On the image page this is the part that gives way (the preview is cropped
-          from the bottom) so the instructions and the Run button always keep their space.
-          Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
+      {/* Body. On the image page this fills the room between the title and the Run button: the
+          dropzone grows to take whatever is left, so the settings and the Run button sit at the
+          bottom of the page. When room is short the preview is cropped from the bottom and this
+          part scrolls. Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
       <div
         className={
           isImage
-            ? 'flex-initial min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
+            ? 'flex-1 min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
             : 'contents'
         }
       >
       {/* Mode Specific Inputs */}
       {currentInput === 'image' && (
-        <div className={hasPreview ? 'flex flex-col min-h-[96px]' : 'space-y-4'}>
+        <div className={`flex flex-col flex-1 ${hasPreview ? 'min-h-[96px]' : 'min-h-[118px]'}`}>
           {/* File Upload Dropzone. With an image loaded, the image fills the box at its full
               width and is cropped from the bottom when space is short. */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             className={`ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded ${
-              hasPreview ? '' : 'p-4 text-center '
+              hasPreview ? '' : 'p-4 text-center flex-1 flex flex-col items-center justify-center '
             }bg-lab-subtle/50 cursor-pointer group${
               hasPreview ? ' relative flex-auto min-h-0 overflow-hidden' : upload ? ' relative overflow-hidden' : ''
             }`}
@@ -401,38 +401,7 @@ export const InputPanel: React.FC<Props> = ({
       {currentInput === 'history' && (
         <div>
           <HistoryNotice />
-          {pastAudits.length === 0 ? (
-            <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
-              No saved audits yet. Each audit you run is saved on this device automatically.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {pastAudits.map((audit) => (
-                <button 
-                  key={audit.id} 
-                  type="button"
-                  onClick={() => onLoadHistoryItem(audit)}
-                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated"
-                >
-                  <div className="flex justify-between items-center w-full">
-                    <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
-                    <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {formatWhen(audit)}</span>
-                  </div>
-                  <div className="flex items-center text-xs text-lab-muted w-full">
-                    <span className="flex gap-3">
-                      <span title="Regions Scanned" className="flex items-center gap-1">
-                        <span className="font-semibold text-lab-text">{audit.regionsCount}</span> Regions
-                      </span>
-                      <span title="Barriers Found" className={`flex items-center gap-1 font-semibold ${audit.findingsCount > 0 ? "text-amber-500" : "text-emerald-500"}`}>
-                        {audit.findingsCount} Barriers
-                      </span>
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-          <HistoryStorageNote />
+          <HistoryEntries items={pastAudits} onOpen={onLoadHistoryItem} />
         </div>
       )}
 
@@ -520,7 +489,7 @@ export const InputPanel: React.FC<Props> = ({
       )}
 
       {currentInput === 'url' && (
-        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
+        <div className="flex flex-col gap-3 flex-1 bg-lab-subtle rounded p-3 shadow-sm">
           <label htmlFor="website-url" className="block text-sm font-semibold text-lab-text">Website URL</label>
           <div className="relative">
             <input
@@ -540,16 +509,16 @@ export const InputPanel: React.FC<Props> = ({
             )}
           </div>
           
-          <div className="pt-2 border-t border-lab-border">
+          <div className="flex flex-col flex-1 pt-2 border-t border-lab-border">
             <label htmlFor="pasted-html" className="text-sm font-semibold text-lab-text block mb-2">HTML fallback</label>
-            <div className="relative">
+            <div className="relative flex flex-col flex-1 min-h-[96px]">
               <textarea
                 id="pasted-html"
                 ref={pastedHtmlRef}
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="block w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="block w-full flex-1 min-h-[96px] bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
