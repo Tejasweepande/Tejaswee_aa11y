@@ -22,8 +22,6 @@ import { validateLiveUrl, prepareIframeSrcdoc, fetchUrlFromLocalAI } from './ada
 import { extractFromDOM } from './engine/domEngine';
 import { parseFigmaUrl, fetchFigmaNode, fetchFigmaImage, extractFromFigma } from './adapters/figmaAdapter';
 import { getContrastRatio } from './engine/colorUtils';
-import { KeyVaultContext, useKeyVaultState } from './hooks/useKeyVault';
-import type { SavedKeys } from './storage/keyVault';
 
 import { InputPanel } from './components/InputPanel';
 import { PreviewCanvas, CanvasMode } from './components/PreviewCanvas';
@@ -82,18 +80,6 @@ export const App: React.FC = () => {
   const [pastedHtml, setPastedHtml] = useState<string>('');
   const [figmaUrl, setFigmaUrl] = useState<string>('');
   const [figmaPat, setFigmaPat] = useState<string>('');
-  // "Remember on this device": saved keys come back only into fields that are still empty
-  const figmaPatNow = useRef(figmaPat);
-  figmaPatNow.current = figmaPat;
-  const geminiKeyNow = useRef(geminiApiKey);
-  geminiKeyNow.current = geminiApiKey;
-  const keyVault = useKeyVaultState(
-    { figmaToken: figmaPat, geminiKey: geminiApiKey },
-    useCallback((loaded: SavedKeys) => {
-      if (loaded.figmaToken && !figmaPatNow.current) setFigmaPat(loaded.figmaToken);
-      if (loaded.geminiKey && !geminiKeyNow.current) setGeminiApiKey(loaded.geminiKey);
-    }, [])
-  );
   const [imageFileName, setImageFileName] = useState<string>('');
 
   const [auditNotice, setAuditNotice] = useState<{
@@ -810,7 +796,6 @@ export const App: React.FC = () => {
         <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 h-[calc(100vh-76px)] overflow-hidden flex flex-col gap-4">
           {auditNoticeBanner}
           <div className="flex-1 min-h-0">
-          <KeyVaultContext.Provider value={keyVault}>
           <InputPanel
             currentInput={inputMode}
             onSelectInput={setInputMode}
@@ -835,10 +820,7 @@ export const App: React.FC = () => {
             imageFileName={imageFileName}
             onClearImage={handleClearImage}
             onLoadHistoryItem={handleLoadHistoryItem}
-            onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
-            hasGeminiKey={!!geminiApiKey}
           />
-          </KeyVaultContext.Provider>
           </div>
         </main>
       ) : (
@@ -893,14 +875,12 @@ export const App: React.FC = () => {
       )}
 
       {/* Modals */}
-      <KeyVaultContext.Provider value={keyVault}>
       <ApiKeyModal
         isOpen={apiKeyModalOpen}
         onClose={() => setApiKeyModalOpen(false)}
         apiKey={geminiApiKey}
         onSaveKey={setGeminiApiKey}
       />
-      </KeyVaultContext.Provider>
 
       {reportModalOpen && (
         <ReportModal
