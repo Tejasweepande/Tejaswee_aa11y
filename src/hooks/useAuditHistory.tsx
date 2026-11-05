@@ -22,7 +22,12 @@ export interface HistoryController {
   add: (item: AuditHistoryItem) => Promise<void>;
   load: (id: string) => Promise<AuditHistoryItem | null>;
   /** Save one audit as a .json file on the user's computer. */
-  downloadOne: (id: string) => Promise<void>;
+  downloadJson: (id: string) => Promise<void>;
+  /**
+   * Get one audit ready for its full report. Returns the audit (and tells the user what to do in the
+   * print window), or null (and says why) when it cannot be found.
+   */
+  prepareReport: (id: string) => Promise<AuditHistoryItem | null>;
   /** Delete one audit from this device. */
   remove: (id: string) => Promise<void>;
   dismissNotice: () => void;
@@ -31,7 +36,7 @@ export interface HistoryController {
 export const HistoryContext = createContext<HistoryController | null>(null);
 export const useHistoryController = () => useContext(HistoryContext);
 
-function downloadJson(name: string, data: unknown) {
+function saveJsonFile(name: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -98,18 +103,31 @@ export function useAuditHistoryState(): HistoryController {
     }
   }, []);
 
-  const downloadOne = useCallback(
+  const downloadJson = useCallback(
     async (id: string) => {
       const item = await load(id);
       if (!item) {
         setNotice({ kind: 'error', text: 'That audit could not be found, so it could not be downloaded.' });
         return;
       }
-      downloadJson(auditFileName(item), buildHistoryFile([item]));
+      saveJsonFile(auditFileName(item), buildHistoryFile([item]));
       setNotice({
         kind: 'success',
-        text: `Downloaded “${item.label}”. The file contains its screenshot and the links you scanned, so keep it private. It does not contain your Figma token or Gemini key.`,
+        text: `Downloaded “${item.label}” as a JSON file. It contains the screenshot and the links you scanned, so keep it private. It does not contain your Figma token or Gemini key.`,
       });
+    },
+    [load]
+  );
+
+  const prepareReport = useCallback(
+    async (id: string) => {
+      const item = await load(id);
+      if (!item) {
+        setNotice({ kind: 'error', text: 'That audit could not be found, so its report could not be opened.' });
+        return null;
+      }
+      setNotice({ kind: 'info', text: `Opening the report for “${item.label}”. In the print window, choose “Save as PDF”.` });
+      return item;
     },
     [load]
   );
@@ -133,5 +151,5 @@ export function useAuditHistoryState(): HistoryController {
 
   const dismissNotice = useCallback(() => setNotice(null), []);
 
-  return { items, ready, canSave, notice, add, load, downloadOne, remove, dismissNotice };
+  return { items, ready, canSave, notice, add, load, downloadJson, prepareReport, remove, dismissNotice };
 }

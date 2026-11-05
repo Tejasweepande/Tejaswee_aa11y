@@ -22,12 +22,18 @@ export function buildHistoryFile(items: AuditHistoryItem[]): HistoryFile {
   return { app: HISTORY_FILE_APP, kind: HISTORY_FILE_KIND, version: HISTORY_FILE_VERSION, exportedAt: new Date().toISOString(), items };
 }
 
-/** "a11y-lab-error-mesages-png-2026-10-26.json": the audit's name and the day it was run. */
-export const auditFileName = (item: Pick<AuditHistoryItem, 'label' | 'createdAt'>): string => {
+/** "error-mesages-png-2026-10-26": the audit's name and the day it was run, safe to use in a file name. */
+const nameAndDay = (item: Pick<AuditHistoryItem, 'label' | 'createdAt'>): string => {
   const slug = item.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48).replace(/-+$/g, '') || 'audit';
   const day = (item.createdAt && !Number.isNaN(Date.parse(item.createdAt)) ? new Date(item.createdAt) : new Date()).toISOString().slice(0, 10);
-  return `a11y-lab-${slug}-${day}.json`;
+  return `${slug}-${day}`;
 };
+
+/** "a11y-lab-error-mesages-png-2026-10-26.json" */
+export const auditFileName = (item: Pick<AuditHistoryItem, 'label' | 'createdAt'>): string => `a11y-lab-${nameAndDay(item)}.json`;
+
+/** "a11y-lab-report-error-mesages-png-2026-10-26": the page title while a report prints, which is what the browser suggests as the PDF's name. */
+export const reportTitle = (item: Pick<AuditHistoryItem, 'label' | 'createdAt'>): string => `a11y-lab-report-${nameAndDay(item)}`;
 
 /** The light summary of an item, as shown in the history list. */
 export function toMeta(item: AuditHistoryItem): AuditHistoryMeta {
