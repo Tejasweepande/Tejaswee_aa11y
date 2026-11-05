@@ -124,10 +124,11 @@ export const IssueRail: React.FC<Props> = ({
               type="button"
               onClick={onExportJson}
               title="Download JSON canonical findings"
-              className="w-8 h-8 inline-flex items-center justify-center rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text shadow-sm transition-all"
+              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded bg-lab-subtle hover:bg-lab-elevated text-lab-muted hover:text-lab-text text-sm font-semibold shadow-sm transition-all"
               aria-label="Export findings as JSON"
             >
               <FileDown className="w-4 h-4" aria-hidden="true" />
+              <span>JSON</span>
             </button>
             <button
               type="button"
