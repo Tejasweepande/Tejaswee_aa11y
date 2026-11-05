@@ -4,16 +4,22 @@ import { Finding, Severity } from '../types/finding';
 import { buildFindingCardModel } from '../utils/findingCard';
 
 /**
- * Left severity bar colors, sampled from the design (critical / moderate / minor).
- * "Serious" is not in the design; it sits between critical and moderate.
- * Severity is also written out as text on every card, so the bar is a
+ * Severity colors. The values live in index.css as CSS variables (one set per theme, and a light set for
+ * surfaces that are always white), so these strings follow the theme by themselves.
+ *
+ * Red, orange and yellow are clearly different from each other for quick identification. The yellow is
+ * faint on white, so in the light theme its dots, bars and rings fade from gold at the edge to yellow in
+ * the middle (see index.css). Severity is also written out as text on every card, so color is a
  * redundant cue and not the only way to tell severity apart.
+ *
+ * Draw a severity with the classes in index.css: `sev-dot`, `sev-bar`, `sev-ring`, `sev-box`, together
+ * with `data-severity`. Use these strings only where a plain color value is needed.
  */
 export const SEVERITY_BAR: Record<Severity, string> = {
-  critical: '#CA3A31',
-  serious: '#DD6B20',
-  moderate: '#F1AB54',
-  minor: '#34728D',
+  critical: 'var(--sev-critical)',
+  serious: 'var(--sev-serious)',
+  moderate: 'var(--sev-moderate)',
+  minor: 'var(--sev-minor)',
 };
 
 // Secondary text. The design uses #808080 (3.95:1 on white), which is below the
@@ -96,7 +102,7 @@ export const FindingCard: React.FC<Props> = ({
       aria-labelledby={titleId}
       onMouseEnter={isList ? () => onHover?.(true) : undefined}
       onMouseLeave={isList ? () => onHover?.(false) : undefined}
-      className={`group relative flex items-stretch gap-3 pr-4 bg-white text-black rounded border border-black/10 shadow-sm transition-shadow ${
+      className={`sev-light group relative flex items-stretch gap-3 pr-4 bg-white text-black rounded border border-black/10 shadow-sm transition-shadow ${
         highlighted ? 'ring-2 ring-sky-500' : ''
       }`}
     >
@@ -112,11 +118,7 @@ export const FindingCard: React.FC<Props> = ({
       )}
 
       {/* Severity bar */}
-      <span
-        aria-hidden="true"
-        className="w-1 shrink-0 self-stretch rounded-l"
-        style={{ backgroundColor: SEVERITY_BAR[model.severity] }}
-      />
+      <span aria-hidden="true" data-severity={model.severity} className="sev-bar w-1 shrink-0 self-stretch rounded-l" />
 
       <div className={`relative flex-1 min-w-0 py-4 ${isList ? 'pointer-events-none' : ''}`}>
         {/* Header: number + severity, actions */}

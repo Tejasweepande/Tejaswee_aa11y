@@ -5,6 +5,11 @@
 @layer base {
   :root {
     color-scheme: light;
+    /* Severity colors. Serious (orange), moderate (yellow) and minor (blue) are the same in both themes. */
+    --sev-critical: #A82A25; /* the deeper red; the dark theme cannot go this dark (3:1 on its cards) */
+    --sev-serious: #E8710A;
+    --sev-moderate: #F4C430;
+    --sev-minor: #34728D;
     --lab-bg: 252 252 253;
     --lab-card: 255 255 255;
     --lab-subtle: 244 245 247;
@@ -23,6 +28,7 @@
 
   :root.dark {
     color-scheme: dark;
+    --sev-critical: #CA3A31;
     --lab-bg: 9 11 14;
     --lab-card: 18 22 30;
     --lab-subtle: 24 30 41;
@@ -152,6 +158,7 @@
     animation: none !important;
 
     /* Light palette whatever theme is on screen (dark text on white paper) */
+    --sev-critical: #A82A25;
     --lab-bg: 252 252 253;
     --lab-card: 255 255 255;
     --lab-subtle: 244 245 247;
@@ -186,5 +193,51 @@
   .report-print-root * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Severity paint. Draw a severity with a shape class plus data-severity="critical|serious|moderate|minor":
+     sev-dot  the 8px dot next to a label      sev-bar  the bar on a card's edge
+     sev-ring a 2px ring (Tailwind ring-2)     sev-box  a 2px outline drawn inside the box
+   Colors are the --sev-* variables above, so they follow the theme.
+   ------------------------------------------------------------------------------------------------ */
+[data-severity='critical'] { --sev-color: var(--sev-critical); }
+[data-severity='serious']  { --sev-color: var(--sev-serious); }
+[data-severity='moderate'] { --sev-color: var(--sev-moderate); }
+[data-severity='minor']    { --sev-color: var(--sev-minor); }
+
+.sev-dot, .sev-bar { background: var(--sev-color); }
+.sev-box { box-shadow: inset 0 0 0 2px var(--sev-color); }
+
+/* A surface that is always white (the report's issue cards) uses the light-theme colors whatever the theme */
+.sev-light { --sev-critical: #A82A25; }
+
+/* The yellow is faint on white (1.6:1). On a light surface its dot, bar and rings fade from gold (#B8860B) at the
+   outer edge to yellow in the middle. Same size as the plain shape: the fade is inside it, nothing is added. */
+:is(:root:not(.dark), .sev-light) .sev-dot[data-severity='moderate'] {
+  background: radial-gradient(circle closest-side, var(--sev-moderate) 0%, var(--sev-moderate) 30%, #B8860B 100%);
+}
+:is(:root:not(.dark), .sev-light) .sev-bar[data-severity='moderate'] {
+  background: linear-gradient(90deg, #B8860B 0%, var(--sev-moderate) 50%, #B8860B 100%);
+}
+:is(:root:not(.dark), .sev-light) .sev-ring[data-severity='moderate']:not(:hover) {
+  --tw-ring-shadow: 0 0 0 0.67px var(--sev-moderate), 0 0 0 1.33px #D6A51D, 0 0 0 2px #B8860B;
+}
+:is(:root:not(.dark), .sev-light) .sev-box[data-severity='moderate'] {
+  box-shadow: inset 0 0 0 0.67px #B8860B, inset 0 0 0 1.33px #D6A51D, inset 0 0 0 2px var(--sev-moderate);
+}
+@media print {
+  .sev-dot[data-severity='moderate'] {
+    background: radial-gradient(circle closest-side, var(--sev-moderate) 0%, var(--sev-moderate) 30%, #B8860B 100%);
+  }
+  .sev-bar[data-severity='moderate'] {
+    background: linear-gradient(90deg, #B8860B 0%, var(--sev-moderate) 50%, #B8860B 100%);
+  }
+  .sev-ring[data-severity='moderate'] {
+    --tw-ring-shadow: 0 0 0 0.67px var(--sev-moderate), 0 0 0 1.33px #D6A51D, 0 0 0 2px #B8860B;
+  }
+  .sev-box[data-severity='moderate'] {
+    box-shadow: inset 0 0 0 0.67px #B8860B, inset 0 0 0 1.33px #D6A51D, inset 0 0 0 2px var(--sev-moderate);
   }
 }

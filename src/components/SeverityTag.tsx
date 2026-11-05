@@ -1,6 +1,5 @@
 import React from 'react';
 import { Severity } from '../types/finding';
-import { SEVERITY_BAR } from './FindingCard';
 
 /**
  * Severity shown the same way everywhere: a dot in the severity color (the same
@@ -8,11 +7,7 @@ import { SEVERITY_BAR } from './FindingCard';
  * The color never carries the text, so every label stays readable.
  */
 export const SeverityDot: React.FC<{ severity: Severity; className?: string }> = ({ severity, className = '' }) => (
-  <span
-    aria-hidden="true"
-    className={`inline-block w-2 h-2 rounded-full shrink-0 ${className}`}
-    style={{ backgroundColor: SEVERITY_BAR[severity] }}
-  />
+  <span aria-hidden="true" data-severity={severity} className={`sev-dot inline-block w-2 h-2 rounded-full shrink-0 ${className}`} />
 );
 
 export const SeverityTag: React.FC<{ severity: Severity; children?: React.ReactNode }> = ({ severity, children }) => (
