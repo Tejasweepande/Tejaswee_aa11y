@@ -21,9 +21,8 @@ interface Props {
  * Asks for a Google Gemini key, but only when the built-in detectors could not read the screenshot,
  * or when Gemini was tried and failed (a used-up limit, a key Google does not accept, no connection).
  *
- * The key lives in this tab's memory only. The field always opens EMPTY: a key that was entered
- * earlier is never shown again, so anyone else using this browser cannot read it back. Because of
- * that, a failed key is thrown away and the user is asked for a new one.
+ * The key is saved in this browser (see storage/geminiKey.ts), so it is asked for once. The field always opens
+ * EMPTY: a key entered earlier is never shown again.
  */
 export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
   const titleId = useId();
@@ -92,14 +91,13 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
 
         {why.kind === 'needed' ? (
           <p id={leadId} className="text-sm text-lab-text leading-relaxed mb-4">
-            The AI model server is not available here, and the offline detector can only measure contrast: it cannot read text or name
-            elements. Gemini Vision can read this screenshot properly. Paste a Gemini API key to use it, or skip to continue offline.
+            We couldn&apos;t analyse this screenshot with our built-in methods. Add your Gemini API key to see the analysis.
           </p>
         ) : (
           <div id={leadId} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
             <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm text-red-900 dark:text-red-200/90 leading-relaxed">
-              <strong className="font-semibold">Gemini could not read it.</strong> {why.message} Enter a key to try again, or skip Gemini.
+              <strong className="font-semibold">Gemini could not read it.</strong> {why.message} Enter a key to try again, or skip.
             </p>
           </div>
         )}
@@ -144,15 +142,15 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
               <li>Click “Get API key”, then “Create API key”.</li>
               <li>Copy the key (it starts with “AIza”) and paste it above.</li>
             </ol>
-            <p className="mt-1.5">A free key has a limit per minute and per day. If you reach it, you will be asked for another key.</p>
+            <p className="mt-1.5">A free key has a limit per minute and per day. If the key runs out of credit or stops working, you will be asked again.</p>
           </div>
 
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded p-3 mt-4 flex items-start gap-2.5">
             <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-xs text-amber-900 dark:text-amber-200/90 leading-relaxed">
-              <strong className="font-semibold">Privacy:</strong> your key stays in this tab&apos;s memory only. It is never saved, never shown
-              again, and goes only to Google. It is gone when you refresh or close the tab. Your screenshot is sent to Google to be read, and
-              on a free key Google may use it to improve its products, so skip this for confidential designs.
+              <strong className="font-semibold">Privacy:</strong> your key is saved in this browser only, on this device, like your audit history,
+              so you only add it once. It is never shown again and goes only to Google. Your screenshot is sent to Google to be read, and on a
+              free key Google may use it to improve its products, so skip this for confidential designs.
             </p>
           </div>
 
@@ -162,7 +160,7 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
               onClick={onSkip}
               className="px-3.5 py-2 rounded text-sm font-medium text-lab-muted hover:text-lab-text hover:bg-lab-subtle transition-colors"
             >
-              Skip Gemini
+              Skip
             </button>
             <button
               type="submit"

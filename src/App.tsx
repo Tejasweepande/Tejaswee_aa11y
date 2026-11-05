@@ -30,6 +30,7 @@ import { InputPanel } from './components/InputPanel';
 import { PreviewCanvas, CanvasMode } from './components/PreviewCanvas';
 import { IssueRail } from './components/IssueRail';
 import { ApiKeyModal, KeyPromptWhy } from './components/ApiKeyModal';
+import { forgetGeminiKey, loadGeminiKey, saveGeminiKey } from './storage/geminiKey';
 import { HistoryContext, useAuditHistoryState } from './hooks/useAuditHistory';
 import { ReportModal } from './components/ReportModal';
 import { Logo } from './components/Logo';
@@ -81,7 +82,7 @@ export const App: React.FC = () => {
   // The audit waits (keyAnswer) for the user's answer: a key, or null for "skip".
   const [keyPrompt, setKeyPrompt] = useState<KeyPromptWhy | null>(null);
   const keyAnswer = useRef<((key: string | null) => void) | null>(null);
-  // Once the user skips Gemini, they are not asked again in this tab (a refresh asks again)
+  // Once the user skips Gemini, it is not tried or asked about again in this tab (a refresh starts over)
   const geminiSkipped = useRef(false);
   const askForGeminiKey = (why: KeyPromptWhy) =>
     new Promise<string | null>((resolve) => {
@@ -97,7 +98,8 @@ export const App: React.FC = () => {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   // The header's Export Report button appears only after the report has been opened once for this audit.
   const [hasViewedReport, setHasViewedReport] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
+  // Only used when the browser will not store the key (it is then remembered for the open tab only)
+  const geminiKeyMemory = useRef('');
   const [webUrl, setWebUrl] = useState<string>('');
   const [pastedHtml, setPastedHtml] = useState<string>('');
   const [figmaUrl, setFigmaUrl] = useState<string>('');
@@ -621,41 +623,51 @@ export const App: React.FC = () => {
           }
         }
 
-        // 4. Gemini Vision. The key dialog opens here, because YOLO could not read the screenshot. A key that is
-        //    already in memory is used without asking; the dialog comes back only if Gemini fails (limit used up,
-        //    key not accepted, no connection, no answer in time). After a skip it is not shown again in this tab.
+        // 4. Gemini Vision. The key dialog opens here, because the first two readers could not do it. The key is
+        //    saved in this browser (like the audit history), so it is asked for once and a refresh does not ask
+        //    again. The dialog comes back only if Gemini fails (out of credit or limit reached, key not accepted,
+        //    no connection, no answer in time). After a skip it is not shown again in this tab.
         if (targetRegions.length === 0) {
-          let key = geminiApiKey.trim();
-          let why: KeyPromptWhy = { kind: 'needed' };
           let lastFailure = '';
-          for (;;) {
-            if (!key) {
-              if (geminiSkipped.current) break;
-              const entered = await askForGeminiKey(why);
-              if (!entered) {
-                geminiSkipped.current = true;
+          if (!geminiSkipped.current) {
+            let key = geminiKeyMemory.current || (await loadGeminiKey());
+            let keyIsSaved = key !== '';
+            let why: KeyPromptWhy = { kind: 'needed' };
+            for (;;) {
+              if (!key) {
+                const entered = await askForGeminiKey(why);
+                if (!entered) {
+                  geminiSkipped.current = true;
+                  break;
+                }
+                key = entered;
+                keyIsSaved = false;
+              }
+              setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API (Gemini 3.6 Flash) to identify UI elements...' });
+              try {
+                const res = await extractRegionsFromImageViaGemini(imageSrc, key);
+                if (res.regions.length < MIN_USABLE_REGIONS) {
+                  throw new GeminiFailure('other', `Gemini found only ${res.regions.length} elements in this screenshot.`, 'fewer than 3 regions');
+                }
+                targetRegions = res.regions;
+                isPartial = res.isPartial;
+                source = 'gemini';
+                geminiKeyMemory.current = key;
+                void saveGeminiKey(key); // so a refresh does not ask again
                 break;
+              } catch (err) {
+                console.warn('[Gemini Vision API error]', scrubKey(err instanceof Error ? err.message : String(err), key));
+                const failure = err instanceof GeminiFailure ? err : null;
+                lastFailure = failure ? failure.userMessage : 'Gemini could not read this screenshot.';
+                // A key Google does not accept is useless, so forget it. A key that is out of credit, or a failed
+                // connection, may recover, so a saved key is kept until a new one replaces it.
+                if (failure?.kind === 'key' && keyIsSaved) {
+                  geminiKeyMemory.current = '';
+                  void forgetGeminiKey();
+                }
+                key = '';
+                why = { kind: 'failed', message: lastFailure };
               }
-              key = entered;
-              setGeminiApiKey(key);
-            }
-            setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API (Gemini 3.6 Flash) to identify UI elements...' });
-            try {
-              const res = await extractRegionsFromImageViaGemini(imageSrc, key);
-              if (res.regions.length < MIN_USABLE_REGIONS) {
-                throw new GeminiFailure('other', `Gemini found only ${res.regions.length} elements in this screenshot.`, 'fewer than 3 regions');
-              }
-              targetRegions = res.regions;
-              isPartial = res.isPartial;
-              source = 'gemini';
-              break;
-            } catch (err) {
-              console.warn('[Gemini Vision API error]', scrubKey(err instanceof Error ? err.message : String(err), key));
-              lastFailure = err instanceof GeminiFailure ? err.userMessage : 'Gemini could not read this screenshot.';
-              // The key is not shown again, so a key that failed is thrown away and a new one is asked for
-              key = '';
-              setGeminiApiKey('');
-              why = { kind: 'failed', message: lastFailure };
             }
           }
           if (targetRegions.length === 0) {

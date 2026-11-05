@@ -65,7 +65,7 @@ function classifyHttpFailure(status: number, message: string): GeminiFailureKind
 }
 
 const USER_MESSAGES: Record<Exclude<GeminiFailureKind, 'other'>, string> = {
-  quota: 'This key has reached its Gemini usage limit. Free keys have a limit per minute and per day.',
+  quota: 'This key has run out of credit or reached its usage limit.',
   key: 'Google did not accept this key. Check that you copied all of it.',
   network: 'The app could not reach Google, or Google did not answer in time. Check your internet connection.',
 };
