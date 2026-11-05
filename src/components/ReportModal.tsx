@@ -33,6 +33,11 @@ interface Props {
   iframeHtml?: string | null;
   /** Which audit modules were on; rules of switched-off modules count as not checked. */
   moduleToggles: Record<ModuleType, boolean>;
+  /**
+   * Used by "Download Report" on a saved audit: start printing the FULL report (overview, details and
+   * the checklist) as soon as it opens, and close it when printing is done or cancelled.
+   */
+  autoPrint?: boolean;
 }
 
 const INPUT_LABEL: Partial<Record<InputMode, string>> = {
@@ -95,6 +100,7 @@ export const ReportModal: React.FC<Props> = ({
   imageSrc,
   iframeHtml,
   moduleToggles,
+  autoPrint = false,
 }) => {
   const [copiedFigma, setCopiedFigma] = useState(false);
   const [pushingToFigma, setPushingToFigma] = useState(false);
@@ -296,16 +302,28 @@ export const ReportModal: React.FC<Props> = ({
 
   // Print the chosen parts. The cropped pictures render only now, then printing
   // starts once they have had a moment to load; afterwards the screen view returns.
-  const handlePrint = () => {
+  const startPrint = (mode: PrintMode, closeWhenDone: boolean) => {
     setPrintBoxOpen(false);
-    setPrintMode(printChoice);
+    setPrintMode(mode);
     const reset = () => {
       setPrintMode(null);
       window.removeEventListener('afterprint', reset);
+      if (closeWhenDone) onClose();
     };
     window.addEventListener('afterprint', reset);
     window.setTimeout(() => window.print(), 600);
   };
+  const handlePrint = () => startPrint(printChoice, false);
+
+  // "Download Report" on a saved audit: print everything straight away (once), then close
+  const autoPrintStarted = useRef(false);
+  useEffect(() => {
+    if (autoPrint && isOpen && !autoPrintStarted.current) {
+      autoPrintStarted.current = true;
+      startPrint('both', true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPrint, isOpen]);
 
   return createPortal(
     <div
