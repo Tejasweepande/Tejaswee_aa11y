@@ -1,19 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { InputMode, ExportScale, ModuleType, AuditHistoryItem } from '../types/finding';
+import { InputMode, ExportScale, ModuleType, AuditHistoryMeta } from '../types/finding';
 import { ClearButton } from './ClearButton';
 import { InfoTip, MaterialInfoIcon } from './InfoTip';
 import { HOW_IT_WORKS } from '../data/howItWorks';
 import {
-  Key,
   UploadCloud,
   Layers,
   Globe,
   Play,
   History,
-  Clock,
 } from 'lucide-react';
-
-import { RememberKeys } from './RememberKeys';
+import { HistoryNotice } from './HistoryTools';
+import { HistoryEntries } from './HistoryEntries';
 
 // Upload progress layer (the frosted glass that fills the box left to right)
 type UploadStage = 'reading' | 'waiting' | 'fading';
@@ -45,9 +43,6 @@ interface Props {
   onToggleModule: (mod: ModuleType) => void;
   onRunAudit: () => void;
   isAuditing: boolean;
-  /** Opens the Gemini key dialog (Image page). Optional so the panel works without it. */
-  onOpenApiKeyModal?: () => void;
-  hasGeminiKey?: boolean;
   figmaUrl: string;
   onChangeFigmaUrl: (url: string) => void;
   figmaPat: string;
@@ -56,12 +51,13 @@ interface Props {
   onChangeWebUrl: (url: string) => void;
   pastedHtml: string;
   onChangePastedHtml: (html: string) => void;
-  pastAudits: AuditHistoryItem[];
+  /** Saved audits, light summaries only; the full audit is loaded when one is opened */
+  pastAudits: AuditHistoryMeta[];
   hasImage: boolean;
   imageSrc: string | null;
   imageFileName: string;
   onClearImage: () => void;
-  onLoadHistoryItem: (item: AuditHistoryItem) => void;
+  onLoadHistoryItem: (item: AuditHistoryMeta) => void;
 }
 
 export const InputPanel: React.FC<Props> = ({
@@ -74,8 +70,6 @@ export const InputPanel: React.FC<Props> = ({
   onToggleModule,
   onRunAudit,
   isAuditing,
-  onOpenApiKeyModal,
-  hasGeminiKey = false,
   figmaUrl,
   onChangeFigmaUrl,
   figmaPat,
@@ -296,26 +290,27 @@ export const InputPanel: React.FC<Props> = ({
           )}
         </div>
 
-      {/* Body. On the image page this is the part that gives way (the preview is cropped
-          from the bottom) so the instructions and the Run button always keep their space.
-          Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
+      {/* Body. On the image page this fills the room between the title and the Run button: the
+          dropzone grows to take whatever is left, so the settings and the Run button sit at the
+          bottom of the page. When room is short the preview is cropped from the bottom and this
+          part scrolls. Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
       <div
         className={
           isImage
-            ? 'flex-initial min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
+            ? 'flex-1 min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
             : 'contents'
         }
       >
       {/* Mode Specific Inputs */}
       {currentInput === 'image' && (
-        <div className={hasPreview ? 'flex flex-col min-h-[96px]' : 'space-y-4'}>
+        <div className={`flex flex-col flex-1 ${hasPreview ? 'min-h-[96px]' : 'min-h-[118px]'}`}>
           {/* File Upload Dropzone. With an image loaded, the image fills the box at its full
               width and is cropped from the bottom when space is short. */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             className={`ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded ${
-              hasPreview ? '' : 'p-4 text-center '
+              hasPreview ? '' : 'p-4 text-center flex-1 flex flex-col items-center justify-center '
             }bg-lab-subtle/50 cursor-pointer group${
               hasPreview ? ' relative flex-auto min-h-0 overflow-hidden' : upload ? ' relative overflow-hidden' : ''
             }`}
@@ -396,38 +391,9 @@ export const InputPanel: React.FC<Props> = ({
       )}
 
       {currentInput === 'history' && (
-        <div className="space-y-4">
-          {pastAudits.length === 0 ? (
-            <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
-              No previous audits in this session.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {pastAudits.map((audit) => (
-                <button 
-                  key={audit.id} 
-                  type="button"
-                  onClick={() => onLoadHistoryItem(audit)}
-                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated"
-                >
-                  <div className="flex justify-between items-center w-full">
-                    <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
-                    <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {audit.timestamp}</span>
-                  </div>
-                  <div className="flex items-center text-xs text-lab-muted w-full">
-                    <span className="flex gap-3">
-                      <span title="Regions Scanned" className="flex items-center gap-1">
-                        <span className="font-semibold text-lab-text">{audit.regionsCount}</span> Regions
-                      </span>
-                      <span title="Barriers Found" className={`flex items-center gap-1 font-semibold ${audit.findingsCount > 0 ? "text-amber-500" : "text-emerald-500"}`}>
-                        {audit.findingsCount} Barriers
-                      </span>
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+        <div>
+          <HistoryNotice />
+          <HistoryEntries items={pastAudits} onOpen={onLoadHistoryItem} />
         </div>
       )}
 
@@ -510,12 +476,11 @@ export const InputPanel: React.FC<Props> = ({
               Get a token<span className="sr-only"> (opens in a new tab)</span>
             </a>
           </p>
-          <RememberKeys />
         </div>
       )}
 
       {currentInput === 'url' && (
-        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
+        <div className="flex flex-col gap-3 flex-1 bg-lab-subtle rounded p-3 shadow-sm">
           <label htmlFor="website-url" className="block text-sm font-semibold text-lab-text">Website URL</label>
           <div className="relative">
             <input
@@ -535,16 +500,16 @@ export const InputPanel: React.FC<Props> = ({
             )}
           </div>
           
-          <div className="pt-2 border-t border-lab-border">
+          <div className="flex flex-col flex-1 pt-2 border-t border-lab-border">
             <label htmlFor="pasted-html" className="text-sm font-semibold text-lab-text block mb-2">HTML fallback</label>
-            <div className="relative">
+            <div className="relative flex flex-col flex-1 min-h-[96px]">
               <textarea
                 id="pasted-html"
                 ref={pastedHtmlRef}
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="block w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="block w-full flex-1 min-h-[96px] bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
@@ -563,21 +528,9 @@ export const InputPanel: React.FC<Props> = ({
 
       {/* Module Toggles */}
       <div>
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted">
-            Audit Modules
-          </h3>
-          {currentInput === 'image' && onOpenApiKeyModal && (
-            <button
-              type="button"
-              onClick={onOpenApiKeyModal}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-lab-accent hover:underline focus-visible:ring-2 focus-visible:ring-sky-500 rounded"
-            >
-              <Key className="w-3 h-3" aria-hidden="true" />
-              {hasGeminiKey ? 'Gemini AI vision: on' : 'Add Gemini key (optional)'}
-            </button>
-          )}
-        </div>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-lab-muted mb-2">
+          Audit Modules
+        </h3>
         <div className="grid grid-cols-2 gap-2">
           {(
             [

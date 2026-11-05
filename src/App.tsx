@@ -7,6 +7,7 @@ import {
   UIElementRegion,
   ScreenReaderItem,
   AuditHistoryItem,
+  AuditHistoryMeta,
 } from './types/finding';
 import { SAMPLE_MOCKUPS } from './data/sampleMockups';
 import { sampleDecileCore, DecileSampleResult } from './engine/decileSampling';
@@ -21,13 +22,12 @@ import { validateLiveUrl, prepareIframeSrcdoc, fetchUrlFromLocalAI } from './ada
 import { extractFromDOM } from './engine/domEngine';
 import { parseFigmaUrl, fetchFigmaNode, fetchFigmaImage, extractFromFigma } from './adapters/figmaAdapter';
 import { getContrastRatio } from './engine/colorUtils';
-import { KeyVaultContext, useKeyVaultState } from './hooks/useKeyVault';
-import type { SavedKeys } from './storage/keyVault';
 
 import { InputPanel } from './components/InputPanel';
 import { PreviewCanvas, CanvasMode } from './components/PreviewCanvas';
 import { IssueRail } from './components/IssueRail';
 import { ApiKeyModal } from './components/ApiKeyModal';
+import { HistoryContext, useAuditHistoryState } from './hooks/useAuditHistory';
 import { ReportModal } from './components/ReportModal';
 import { Logo } from './components/Logo';
 
@@ -57,7 +57,9 @@ export const App: React.FC = () => {
   const [hoveredFindingId, setHoveredFindingId] = useState<string | null>(null);
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('overlay');
   const [hasAudited, setHasAudited] = useState<boolean>(false);
-  const [pastAudits, setPastAudits] = useState<AuditHistoryItem[]>([]);
+  // Saved on this device (IndexedDB): survives a refresh, newest 20 kept
+  const history = useAuditHistoryState();
+  const { add: addAuditToHistory, load: loadSavedAudit } = history;
   const [viewStep, setViewStep] = useState<'upload' | 'results'>('upload');
 
   const [moduleToggles, setModuleToggles] = useState<Record<ModuleType, boolean>>({
@@ -78,18 +80,6 @@ export const App: React.FC = () => {
   const [pastedHtml, setPastedHtml] = useState<string>('');
   const [figmaUrl, setFigmaUrl] = useState<string>('');
   const [figmaPat, setFigmaPat] = useState<string>('');
-  // "Remember on this device": saved keys come back only into fields that are still empty
-  const figmaPatNow = useRef(figmaPat);
-  figmaPatNow.current = figmaPat;
-  const geminiKeyNow = useRef(geminiApiKey);
-  geminiKeyNow.current = geminiApiKey;
-  const keyVault = useKeyVaultState(
-    { figmaToken: figmaPat, geminiKey: geminiApiKey },
-    useCallback((loaded: SavedKeys) => {
-      if (loaded.figmaToken && !figmaPatNow.current) setFigmaPat(loaded.figmaToken);
-      if (loaded.geminiKey && !geminiKeyNow.current) setGeminiApiKey(loaded.geminiKey);
-    }, [])
-  );
   const [imageFileName, setImageFileName] = useState<string>('');
 
   const [auditNotice, setAuditNotice] = useState<{
@@ -159,6 +149,7 @@ export const App: React.FC = () => {
 
     const historyItem: AuditHistoryItem = {
       id: `audit-${Date.now()}`,
+      createdAt: new Date().toISOString(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       inputMode: auditResultMode,
       label,
@@ -177,8 +168,8 @@ export const App: React.FC = () => {
       moduleToggles: currentModuleToggles,
       exportScale: auditExportScale,
     };
-    setPastAudits((prev) => [historyItem, ...prev]);
-  }, []);
+    void addAuditToHistory(historyItem);
+  }, [addAuditToHistory]);
 
   const executeAuditOnRegions = useCallback((
     targetRegions: UIElementRegion[],
@@ -277,7 +268,13 @@ export const App: React.FC = () => {
     setLiveAnnouncement(announcement);
   }, [inputMode, moduleToggles]);
 
-  const handleLoadHistoryItem = useCallback((item: AuditHistoryItem) => {
+  const handleLoadHistoryItem = useCallback(async (meta: AuditHistoryMeta) => {
+    const item = await loadSavedAudit(meta.id);
+    if (!item) {
+      setAuditNotice({ type: 'error', message: 'That saved audit could not be opened. It may have been removed from this browser.' });
+      return;
+    }
+    setAuditNotice(null);
     setImageSrc(item.imageSrc);
     setIframeHtml(item.iframeHtml);
     // don't have imageFileName in history item currently, maybe we can keep it as is or pull from label
@@ -299,7 +296,7 @@ export const App: React.FC = () => {
 
     // Switch to overlay mode on load
     setCanvasMode('overlay');
-  }, []);
+  }, [loadSavedAudit]);
 
   // Removed initial sample mockup on mount to require explicit user upload
 
@@ -738,6 +735,8 @@ export const App: React.FC = () => {
   );
 
   return (
+    // The saved history is shared with the History page below through this provider
+    <HistoryContext.Provider value={history}>
     <div className="h-screen overflow-hidden bg-lab-bg text-lab-text flex flex-col font-sans">
       {/* WCAG 2.2 Live Region Announcement (Rule R3) */}
       <div
@@ -797,7 +796,6 @@ export const App: React.FC = () => {
         <main className="flex-1 min-h-0 w-full mx-auto p-4 sm:p-6 h-[calc(100vh-76px)] overflow-hidden flex flex-col gap-4">
           {auditNoticeBanner}
           <div className="flex-1 min-h-0">
-          <KeyVaultContext.Provider value={keyVault}>
           <InputPanel
             currentInput={inputMode}
             onSelectInput={setInputMode}
@@ -816,16 +814,13 @@ export const App: React.FC = () => {
             onChangeWebUrl={setWebUrl}
             pastedHtml={pastedHtml}
             onChangePastedHtml={setPastedHtml}
-            pastAudits={pastAudits}
+            pastAudits={history.items}
             hasImage={!!imageSrc}
             imageSrc={imageSrc}
             imageFileName={imageFileName}
             onClearImage={handleClearImage}
             onLoadHistoryItem={handleLoadHistoryItem}
-            onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
-            hasGeminiKey={!!geminiApiKey}
           />
-          </KeyVaultContext.Provider>
           </div>
         </main>
       ) : (
@@ -880,14 +875,12 @@ export const App: React.FC = () => {
       )}
 
       {/* Modals */}
-      <KeyVaultContext.Provider value={keyVault}>
       <ApiKeyModal
         isOpen={apiKeyModalOpen}
         onClose={() => setApiKeyModalOpen(false)}
         apiKey={geminiApiKey}
         onSaveKey={setGeminiApiKey}
       />
-      </KeyVaultContext.Provider>
 
       {reportModalOpen && (
         <ReportModal
@@ -906,5 +899,6 @@ export const App: React.FC = () => {
         />
       )}
     </div>
+    </HistoryContext.Provider>
   );
 };
