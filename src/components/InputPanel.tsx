@@ -291,26 +291,27 @@ export const InputPanel: React.FC<Props> = ({
           )}
         </div>
 
-      {/* Body. On the image page this is the part that gives way (the preview is cropped
-          from the bottom) so the instructions and the Run button always keep their space.
-          Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
+      {/* Body. On the image page this fills the room between the title and the Run button: the
+          dropzone grows to take whatever is left, so the settings and the Run button sit at the
+          bottom of the page. When room is short the preview is cropped from the bottom and this
+          part scrolls. Elsewhere it is display: contents, i.e. it changes nothing about the layout. */}
       <div
         className={
           isImage
-            ? 'flex-initial min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
+            ? 'flex-1 min-h-0 flex flex-col gap-5 overflow-y-auto px-1 -mx-1 py-1 -my-1'
             : 'contents'
         }
       >
       {/* Mode Specific Inputs */}
       {currentInput === 'image' && (
-        <div className={hasPreview ? 'flex flex-col min-h-[96px]' : 'space-y-4'}>
+        <div className={`flex flex-col flex-1 ${hasPreview ? 'min-h-[96px]' : 'min-h-[118px]'}`}>
           {/* File Upload Dropzone. With an image loaded, the image fills the box at its full
               width and is cropped from the bottom when space is short. */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             className={`ring-2 ring-dashed ring-lab-border hover:ring-sky-500/40 transition-colors rounded ${
-              hasPreview ? '' : 'p-4 text-center '
+              hasPreview ? '' : 'p-4 text-center flex-1 flex flex-col items-center justify-center '
             }bg-lab-subtle/50 cursor-pointer group${
               hasPreview ? ' relative flex-auto min-h-0 overflow-hidden' : upload ? ' relative overflow-hidden' : ''
             }`}
@@ -511,7 +512,7 @@ export const InputPanel: React.FC<Props> = ({
       )}
 
       {currentInput === 'url' && (
-        <div className="space-y-3 bg-lab-subtle rounded p-3 shadow-sm">
+        <div className="flex flex-col gap-3 flex-1 bg-lab-subtle rounded p-3 shadow-sm">
           <label htmlFor="website-url" className="block text-sm font-semibold text-lab-text">Website URL</label>
           <div className="relative">
             <input
@@ -531,16 +532,16 @@ export const InputPanel: React.FC<Props> = ({
             )}
           </div>
           
-          <div className="pt-2 border-t border-lab-border">
+          <div className="flex flex-col flex-1 pt-2 border-t border-lab-border">
             <label htmlFor="pasted-html" className="text-sm font-semibold text-lab-text block mb-2">HTML fallback</label>
-            <div className="relative">
+            <div className="relative flex flex-col flex-1 min-h-[96px]">
               <textarea
                 id="pasted-html"
                 ref={pastedHtmlRef}
                 value={pastedHtml}
                 onChange={(e) => onChangePastedHtml(e.target.value)}
                 placeholder="Paste raw HTML here if the auto-fetch proxy fails due to CORS..."
-                className="block w-full h-24 bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
+                className="block w-full flex-1 min-h-[96px] bg-lab-card border border-lab-border rounded pl-3 pr-10 py-2.5 text-sm font-mono text-lab-text focus:ring-2 focus:ring-sky-500/50 focus:outline-none resize-none"
               />
               {pastedHtml.length > 0 && (
                 <ClearButton
