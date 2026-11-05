@@ -14,9 +14,12 @@ import { sampleDecileCore, DecileSampleResult } from './engine/decileSampling';
 import { auditElements } from './engine/wcagRules';
 import { buildScreenReaderItems } from './engine/screenReaderEngine';
 import {
+  GeminiFailure,
+  detectHeuristicRegions,
   extractRegionsFromImageViaGemini,
   extractRegionsFromLocalAI,
   generateHeuristicRegions,
+  scrubKey,
 } from './adapters/imageAdapter';
 import { validateLiveUrl, prepareIframeSrcdoc, fetchUrlFromLocalAI } from './adapters/urlAdapter';
 import { extractFromDOM } from './engine/domEngine';
@@ -26,7 +29,7 @@ import { getContrastRatio } from './engine/colorUtils';
 import { InputPanel } from './components/InputPanel';
 import { PreviewCanvas, CanvasMode } from './components/PreviewCanvas';
 import { IssueRail } from './components/IssueRail';
-import { ApiKeyModal } from './components/ApiKeyModal';
+import { ApiKeyModal, KeyPromptWhy } from './components/ApiKeyModal';
 import { HistoryContext, useAuditHistoryState } from './hooks/useAuditHistory';
 import { ReportModal } from './components/ReportModal';
 import { Logo } from './components/Logo';
@@ -37,6 +40,9 @@ import {
   Moon,
   ArrowLeft,
 } from 'lucide-react';
+
+/** A detector has failed to read a screenshot when it finds fewer elements than this (and an audit needs at least this many). */
+const MIN_USABLE_REGIONS = 3;
 
 export const App: React.FC = () => {
   // Theme State (default to crisp modern Light Theme per user request)
@@ -71,7 +77,21 @@ export const App: React.FC = () => {
 
   const [isAuditing, setIsAuditing] = useState(false);
   const [liveAnnouncement, setLiveAnnouncement] = useState('');
-  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  // The Gemini key dialog: shown only when the built-in detectors could not read a screenshot, or Gemini failed.
+  // The audit waits (keyAnswer) for the user's answer: a key, or null for "skip".
+  const [keyPrompt, setKeyPrompt] = useState<KeyPromptWhy | null>(null);
+  const keyAnswer = useRef<((key: string | null) => void) | null>(null);
+  const askForGeminiKey = (why: KeyPromptWhy) =>
+    new Promise<string | null>((resolve) => {
+      keyAnswer.current = resolve;
+      setKeyPrompt(why);
+    });
+  const answerKeyPrompt = (key: string | null) => {
+    const done = keyAnswer.current;
+    keyAnswer.current = null;
+    setKeyPrompt(null);
+    done?.(key);
+  };
   const [reportModalOpen, setReportModalOpen] = useState(false);
   // The header's Export Report button appears only after the report has been opened once for this audit.
   const [hasViewedReport, setHasViewedReport] = useState(false);
@@ -557,40 +577,35 @@ export const App: React.FC = () => {
       let aiErrorNotice = '';
 
       // 1. If an explicit benchmark is loaded, use its calibrated regions
+      let source: 'sample' | 'yolo' | 'offline' | 'gemini' = 'sample';
       if (selectedSampleId) {
         const sample = SAMPLE_MOCKUPS.find((s) => s.id === selectedSampleId);
         targetRegions = sample ? sample.regions : regions;
       } else {
-        // 2. Try Google Gemini Vision API (Gemini 3.6 Flash) if key provided
-        if (geminiApiKey.trim()) {
-          setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API (Gemini 3.6 Flash) to identify UI elements...' });
-          try {
-            const res = await extractRegionsFromImageViaGemini(imageSrc, geminiApiKey);
+        // The order: (2) Hugging Face YOLOv11 on the local Python server, (3) the offline detector,
+        // (4) Gemini Vision, which is only offered when neither of those could read the screenshot.
+        // A tier has "failed" when it errors, or finds fewer than MIN_USABLE_REGIONS elements.
+
+        // 2. Hugging Face YOLOv11 (the Local AI backend)
+        setAuditNotice({ type: 'info', message: 'Calling Local AI Backend (Hugging Face YOLOv11) to identify UI elements...' });
+        try {
+          const res = await extractRegionsFromLocalAI(imageSrc);
+          if (res.regions.length >= MIN_USABLE_REGIONS) {
             targetRegions = res.regions;
             isPartial = res.isPartial;
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            console.warn('[Gemini Vision API error]', msg);
-            aiErrorNotice = `Gemini API: ${msg}`;
+            source = 'yolo';
+          } else {
+            aiErrorNotice = `Local AI: found only ${res.regions.length} elements`;
           }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn('[Local AI error]', msg);
+          aiErrorNotice = `Local AI: ${msg}`;
         }
 
-        // 3. Try Local Offline AI (Python Backend) if Gemini was not used or failed
-        if (targetRegions.length === 0) {
-          setAuditNotice({ type: 'info', message: 'Calling Local AI Backend (Hugging Face YOLOv11) to identify UI elements...' });
-          try {
-            const res = await extractRegionsFromLocalAI(imageSrc);
-            targetRegions = res.regions;
-            isPartial = res.isPartial;
-            aiErrorNotice = ''; // Clear error if local AI succeeds
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            console.warn('[Local AI error]', msg);
-            aiErrorNotice = aiErrorNotice ? `${aiErrorNotice} | Local AI: ${msg}` : `Local AI: ${msg}`;
-          }
-        }
-
-        // 4. Resilient Offline local Computer Vision fallback
+        // 3. Offline detector, measured from the real pixels. It counts as failed when fewer than
+        //    MIN_USABLE_REGIONS places had real contrast (a blank, photographic or very low-contrast image).
+        let offlineRegions: UIElementRegion[] = [];
         if (targetRegions.length === 0) {
           const canvas = hiddenCanvasRef.current || document.createElement('canvas');
           canvas.width = img.naturalWidth || img.width || 800;
@@ -598,30 +613,82 @@ export const App: React.FC = () => {
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            targetRegions = generateHeuristicRegions(canvas);
+            const found = detectHeuristicRegions(canvas);
+            offlineRegions = found.regions;
+            if (found.clearZones >= MIN_USABLE_REGIONS) {
+              targetRegions = offlineRegions;
+              source = 'offline';
+            }
           }
+        }
 
-          if (aiErrorNotice) {
+        // 4. Gemini Vision. Asked for only now. A key that is already in memory is used without asking;
+        //    the dialog comes back only if Gemini fails (limit used up, key not accepted, no connection).
+        let geminiOffered = false;
+        if (targetRegions.length === 0) {
+          geminiOffered = true;
+          let key = geminiApiKey.trim();
+          let why: KeyPromptWhy = { kind: 'needed' };
+          let lastFailure = '';
+          for (;;) {
+            if (!key) {
+              const entered = await askForGeminiKey(why);
+              if (!entered) break; // the user skipped Gemini
+              key = entered;
+              setGeminiApiKey(key);
+            }
+            setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API (Gemini 3.6 Flash) to identify UI elements...' });
+            try {
+              const res = await extractRegionsFromImageViaGemini(imageSrc, key);
+              if (res.regions.length < MIN_USABLE_REGIONS) {
+                throw new GeminiFailure('other', `Gemini found only ${res.regions.length} elements in this screenshot.`, 'fewer than 3 regions');
+              }
+              targetRegions = res.regions;
+              isPartial = res.isPartial;
+              source = 'gemini';
+              break;
+            } catch (err) {
+              console.warn('[Gemini Vision API error]', scrubKey(err instanceof Error ? err.message : String(err), key));
+              lastFailure = err instanceof GeminiFailure ? err.userMessage : 'Gemini could not read this screenshot.';
+              // The key is not shown again, so a key that failed is thrown away and a new one is asked for
+              key = '';
+              setGeminiApiKey('');
+              why = { kind: 'failed', message: lastFailure };
+            }
+          }
+          if (targetRegions.length === 0) {
+            // Skipped, or Gemini could not help: carry on with the offline detector's best effort
+            targetRegions = offlineRegions;
+            source = 'offline';
             setAuditNotice({
               type: 'warning',
-              message: `${aiErrorNotice}. Proceeding with deterministic local Computer Vision & decile sampling.`,
-            });
-          } else {
-            setAuditNotice({
-              type: 'info',
-              message: `Offline mode: identified ${targetRegions.length} contrast zones. Paste a Gemini API key or run the Python backend for deep semantic OCR.`,
+              message: lastFailure
+                ? `Gemini Vision could not read this screenshot. ${lastFailure} Continuing with the offline detector; the results may be incomplete.`
+                : 'The offline detector found few clear elements in this screenshot, so the results may be incomplete. Gemini Vision was skipped.',
             });
           }
-        } else {
+        }
+
+        if (source === 'yolo' || source === 'gemini') {
           setAuditNotice({
             type: 'success',
             message: `AI Vision: extracted ${targetRegions.length} UI elements. Running deterministic WCAG 2.2 checks...`,
           });
+        } else if (!geminiOffered) {
+          // The offline detector found enough on its own (Gemini was never asked about)
+          setAuditNotice(
+            aiErrorNotice
+              ? { type: 'warning', message: `${aiErrorNotice}. Proceeding with deterministic local Computer Vision & decile sampling.` }
+              : {
+                  type: 'info',
+                  message: `Offline mode: identified ${targetRegions.length} contrast zones. Run the Python backend for deeper results (real text and element names).`,
+                }
+          );
         }
       }
 
       // Rule R4: refuse to report on fewer than 3 regions
-      if (targetRegions.length < 3) {
+      if (targetRegions.length < MIN_USABLE_REGIONS) {
         setIsAuditing(false);
         setHasAudited(true);
         setFindings([]);
@@ -875,12 +942,7 @@ export const App: React.FC = () => {
       )}
 
       {/* Modals */}
-      <ApiKeyModal
-        isOpen={apiKeyModalOpen}
-        onClose={() => setApiKeyModalOpen(false)}
-        apiKey={geminiApiKey}
-        onSaveKey={setGeminiApiKey}
-      />
+      {keyPrompt && <ApiKeyModal why={keyPrompt} onSubmit={(key) => answerKeyPrompt(key)} onSkip={() => answerKeyPrompt(null)} />}
 
       {reportModalOpen && (
         <ReportModal

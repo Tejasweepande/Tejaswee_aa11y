@@ -2,6 +2,53 @@ import { UIElementRegion } from '../types/finding';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+/** Why a Gemini request failed, in the terms the user can act on. */
+export type GeminiFailureKind = 'quota' | 'key' | 'network' | 'other';
+
+/**
+ * A failed Gemini request. `userMessage` is safe to show: plain language, and it never contains the key.
+ * `message` (for the console) is scrubbed of the key too.
+ */
+export class GeminiFailure extends Error {
+  kind: GeminiFailureKind;
+  userMessage: string;
+  constructor(kind: GeminiFailureKind, userMessage: string, technical: string) {
+    super(technical);
+    this.name = 'GeminiFailure';
+    this.kind = kind;
+    this.userMessage = userMessage;
+  }
+}
+
+/** Remove the key (and anything shaped like one) from text that might be shown or logged. */
+export const scrubKey = (text: string, key = ''): string => {
+  let t = key ? text.split(key).join('[key]') : text;
+  t = t.replace(/AIza[0-9A-Za-z_-]{20,}/g, '[key]');
+  return t;
+};
+
+function classifyHttpFailure(status: number, message: string): GeminiFailureKind {
+  if (status === 401 || status === 403) return 'key';
+  if (status === 400 && /api[_ ]?key|key not valid/i.test(message)) return 'key';
+  if (status === 429 || /quota|RESOURCE_EXHAUSTED|rate limit/i.test(message)) return 'quota';
+  return 'other';
+}
+
+const USER_MESSAGES: Record<Exclude<GeminiFailureKind, 'other'>, string> = {
+  quota: 'This key has reached its Gemini usage limit. Free keys have a limit per minute and per day.',
+  key: 'Google did not accept this key. Check that you copied all of it.',
+  network: 'The app could not reach Google. Check your internet connection.',
+};
+
+function buildGeminiFailure(failures: { kind: GeminiFailureKind; message: string }[], apiKey: string): GeminiFailure {
+  // The most useful reason wins: a bad key, then a used-up limit, then no connection, then anything else
+  const order: GeminiFailureKind[] = ['key', 'quota', 'network', 'other'];
+  const kind = order.find((k) => failures.some((f) => f.kind === k)) ?? 'other';
+  const first = scrubKey(failures.find((f) => f.kind === kind)?.message ?? failures[0]?.message ?? 'Unknown error', apiKey);
+  const userMessage = kind === 'other' ? `Gemini could not read this screenshot (${first.slice(0, 140)}).` : USER_MESSAGES[kind];
+  return new GeminiFailure(kind, userMessage, `Gemini API failed: ${first}`);
+}
+
 interface RawRegionOutput {
   k?: 'heading' | 'button' | 'input' | 'link' | 'image' | 'text' | 'dialog';
   kind?: 'heading' | 'button' | 'input' | 'link' | 'image' | 'text' | 'dialog';
@@ -75,7 +122,9 @@ function compressImageDataUrl(dataUrl: string, maxDim = 1024, quality = 0.85): P
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext('2d')!;
+      // A CPU-backed canvas: this one is only drawn once and read back at once, and waiting on the graphics card
+      // for that can stall for many seconds on machines with weak graphics (remote desktops, virtual machines)
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
       ctx.drawImage(img, 0, 0, width, height);
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
@@ -138,7 +187,7 @@ Example:
     { model: 'gemini-1.5-flash',        apiVersion: 'v1beta' },
     { model: 'gemini-2.5-pro',          apiVersion: 'v1beta' },
   ];
-  const errors: string[] = [];
+  const failures: { kind: GeminiFailureKind; message: string }[] = [];
 
   for (const { model, apiVersion } of modelEndpoints) {
     try {
@@ -180,7 +229,9 @@ Example:
         } catch {
           errMsg = `${model}: ${errBody.slice(0, 200)}`;
         }
-        errors.push(errMsg);
+        const kind = classifyHttpFailure(response.status, errMsg);
+        failures.push({ kind, message: errMsg });
+        if (kind === 'key') break; // another model will not help: the key itself is the problem
         continue;
       }
 
@@ -189,13 +240,13 @@ Example:
 
       if (!rawText) {
         const reason = data?.candidates?.[0]?.finishReason || 'empty response';
-        errors.push(`${model}: empty (${reason})`);
+        failures.push({ kind: 'other', message: `${model}: empty (${reason})` });
         continue;
       }
 
       const rawList = salvageJsonArray(rawText) as RawRegionOutput[];
       if (rawList.length === 0) {
-        errors.push(`${model}: zero parseable regions`);
+        failures.push({ kind: 'other', message: `${model}: zero parseable regions` });
         continue;
       }
 
@@ -204,13 +255,14 @@ Example:
       return { regions, isPartial };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      errors.push(`${model}: ${msg}`);
+      // A request that never got an answer (offline, blocked) will fail the same way for every model
+      const noAnswer = err instanceof TypeError;
+      failures.push({ kind: noAnswer ? 'network' : 'other', message: `${model}: ${msg}` });
+      if (noAnswer) break;
     }
   }
 
-  throw new Error(
-    `Gemini API failed: ${errors[0] || 'Unknown error'}. Ensure you have an active Google AI Studio key from aistudio.google.com.`
-  );
+  throw buildGeminiFailure(failures, apiKey);
 }
 
 function parseRawRegions(rawList: RawRegionOutput[], prefix: string): UIElementRegion[] {
@@ -329,21 +381,22 @@ export async function extractRegionsFromLocalAI(
  * for each cell, and returns ONLY cells with real high-contrast content.
  * Labels are honest about what we can and cannot determine without OCR.
  */
-export function generateHeuristicRegions(
+export function detectHeuristicRegions(
   canvas: HTMLCanvasElement
-): UIElementRegion[] {
+): { regions: UIElementRegion[]; clearZones: number } {
+  const none = { regions: [] as UIElementRegion[], clearZones: 0 };
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return [];
+  if (!ctx) return none;
 
   const W = canvas.width;
   const H = canvas.height;
-  if (W < 10 || H < 10) return [];
+  if (W < 10 || H < 10) return none;
 
   let imgData: ImageData;
   try {
     imgData = ctx.getImageData(0, 0, W, H);
   } catch {
-    return [];
+    return none;
   }
 
   const px = imgData.data;
@@ -415,7 +468,7 @@ export function generateHeuristicRegions(
 
   finalCells.sort((a, b) => a.row !== b.row ? a.row - b.row : a.col - b.col);
 
-  return finalCells.slice(0, 14).map((c, idx) => {
+  const regions = finalCells.slice(0, 14).map((c, idx) => {
     const pctX = Math.round((c.pxX / W) * 1000) / 10;
     const pctY = Math.round((c.pxY / H) * 1000) / 10;
     const pctW = Math.max(2, Math.round((c.pxW / W) * 1000) / 10);
@@ -452,4 +505,13 @@ export function generateHeuristicRegions(
         undefined,
     };
   });
+
+  // clearZones: how many cells had real contrast or edges. When this is under 3, the regions above are
+  // only the least-bad cells, not real elements, so the caller should treat the detector as having failed.
+  return { regions, clearZones: interesting.length };
+}
+
+/** The regions only. Kept for callers that do not need to know how clear they were. */
+export function generateHeuristicRegions(canvas: HTMLCanvasElement): UIElementRegion[] {
+  return detectHeuristicRegions(canvas).regions;
 }

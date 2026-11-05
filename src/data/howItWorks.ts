@@ -7,7 +7,7 @@ export const HOW_IT_WORKS: Record<'image' | 'figma' | 'url', { title: string; st
   image: {
     title: 'How an image is evaluated',
     steps: [
-      'Finds UI elements with AI vision: Gemini, local AI, or an offline detector.',
+      'Finds UI elements with a local AI model when it is running, otherwise an offline detector. If neither can read the image, you can add a Gemini key to try Gemini Vision.',
       'Measures contrast from the real pixels.',
       'Estimates target size; measured once you pick the export scale.',
       'Keyboard, screen reader and heading checks are inferred, so marked Predicted.',
