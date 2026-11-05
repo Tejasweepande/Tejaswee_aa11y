@@ -6,7 +6,7 @@ import { auditFileName, buildHistoryFile, createdAtMs, toMeta } from '../storage
 /**
  * The saved audit history, kept on this device (IndexedDB). Each finished audit is saved
  * automatically, only the newest MAX_HISTORY are kept, and the list holds light summaries;
- * a full audit is loaded when it is opened. Each entry can be downloaded as a file or deleted.
+ * a full audit is loaded when it is opened. Each entry can be downloaded (as JSON, or as a printed report) or deleted.
  *
  * If the browser will not let the app save (a private window, full disk), audits still show up
  * for this session from memory and a notice says they will be lost on refresh.
@@ -110,11 +110,8 @@ export function useAuditHistoryState(): HistoryController {
         setNotice({ kind: 'error', text: 'That audit could not be found, so it could not be downloaded.' });
         return;
       }
+      // No message on success: the browser's own download bar is the confirmation
       saveJsonFile(auditFileName(item), buildHistoryFile([item]));
-      setNotice({
-        kind: 'success',
-        text: `Downloaded “${item.label}” as a JSON file. It contains the screenshot and the links you scanned, so keep it private. It does not contain your Figma token or Gemini key.`,
-      });
     },
     [load]
   );
