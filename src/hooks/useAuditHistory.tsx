@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { AuditHistoryItem, AuditHistoryMeta } from '../types/finding';
 import { MAX_HISTORY, deleteAudit, listAudits, loadAudit, saveAudit } from '../storage/historyStore';
 import { auditFileName, buildHistoryFile, createdAtMs, toMeta } from '../storage/historyFile';
+import { requestPersistence } from '../storage/persistence';
 
 /**
  * The saved audit history, kept on this device (IndexedDB). Each finished audit is saved
@@ -77,6 +78,8 @@ export function useAuditHistoryState(): HistoryController {
     if (res.ok) {
       memoryOnly.current.delete(stamped.id);
       setCanSave(true);
+      // Ask the browser to keep the data now that there is something worth keeping (never on page load)
+      void requestPersistence();
       return;
     }
     memoryOnly.current.set(stamped.id, stamped);
