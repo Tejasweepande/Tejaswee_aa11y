@@ -9,9 +9,9 @@ import {
   Globe,
   Play,
   History,
-  Clock,
 } from 'lucide-react';
-import { HistoryActions, HistoryNotice, HistoryStorageNote, formatWhen } from './HistoryTools';
+import { HistoryNotice } from './HistoryTools';
+import { HistoryEntries } from './HistoryEntries';
 
 // Upload progress layer (the frosted glass that fills the box left to right)
 type UploadStage = 'reading' | 'waiting' | 'fading';
@@ -268,7 +268,6 @@ export const InputPanel: React.FC<Props> = ({
                 ? 'Figma Upload'
                 : 'Live Link'}
             </h2>
-            {currentInput === 'history' && <HistoryActions />}
             {currentInput !== 'history' && (
               <InfoTip
                 label={HOW_IT_WORKS[currentInput].title}
@@ -394,38 +393,7 @@ export const InputPanel: React.FC<Props> = ({
       {currentInput === 'history' && (
         <div>
           <HistoryNotice />
-          {pastAudits.length === 0 ? (
-            <div className="text-sm text-lab-muted italic py-4 text-center bg-lab-subtle/30 rounded border border-lab-border border-dashed">
-              No saved audits yet. Each audit you run is saved on this device automatically.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {pastAudits.map((audit) => (
-                <button 
-                  key={audit.id} 
-                  type="button"
-                  onClick={() => onLoadHistoryItem(audit)}
-                  className="flex flex-col gap-2 p-3 bg-lab-subtle/50 rounded border border-lab-border text-sm shadow-sm transition-all hover:border-sky-500/50 text-left hover:bg-lab-elevated"
-                >
-                  <div className="flex justify-between items-center w-full">
-                    <span className="font-semibold text-lab-text truncate pr-2">{audit.label}</span>
-                    <span className="text-lab-muted flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {formatWhen(audit)}</span>
-                  </div>
-                  <div className="flex items-center text-xs text-lab-muted w-full">
-                    <span className="flex gap-3">
-                      <span title="Regions Scanned" className="flex items-center gap-1">
-                        <span className="font-semibold text-lab-text">{audit.regionsCount}</span> Regions
-                      </span>
-                      <span title="Barriers Found" className={`flex items-center gap-1 font-semibold ${audit.findingsCount > 0 ? "text-amber-500" : "text-emerald-500"}`}>
-                        {audit.findingsCount} Barriers
-                      </span>
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-          <HistoryStorageNote />
+          <HistoryEntries items={pastAudits} onOpen={onLoadHistoryItem} />
         </div>
       )}
 
