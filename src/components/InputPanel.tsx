@@ -4,12 +4,12 @@ import { ClearButton } from './ClearButton';
 import { InfoTip, MaterialInfoIcon } from './InfoTip';
 import { HOW_IT_WORKS } from '../data/howItWorks';
 import {
+  Key,
   UploadCloud,
   Layers,
   Globe,
   Play,
   History,
-  Key,
 } from 'lucide-react';
 import { HistoryNotice } from './HistoryTools';
 import { HistoryEntries } from './HistoryEntries';
