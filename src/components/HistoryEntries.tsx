@@ -1,22 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Clock, Trash2 } from 'lucide-react';
 import { useHistoryController } from '../hooks/useAuditHistory';
-import { AuditHistoryMeta } from '../types/finding';
+import { reportTitle } from '../storage/historyFile';
+import { AuditHistoryItem, AuditHistoryMeta } from '../types/finding';
 import { ConfirmDialog } from './ConfirmDialog';
 import { HistoryEmptyState } from './HistoryEmptyState';
 import { HistoryEntryMenu } from './HistoryEntryMenu';
+import { ReportModal } from './ReportModal';
 import { formatWhen } from './HistoryTools';
 
 /**
  * The saved audits, newest first, or the zero state when there are none.
  *
- * Clicking a card opens that audit. The ⋮ menu to the right of its date offers Download and
- * Delete; Delete asks first. After a delete, focus moves to the next entry (or to the zero
+ * Clicking a card opens that audit. The ⋮ menu to the right of its date offers Download JSON,
+ * Download Report (the full report, printed straight away so it can be saved as a PDF) and Delete;
+ * Delete asks first. After a delete, focus moves to the next entry (or to the zero
  * state), so keyboard and screen-reader users are not left stranded.
  */
 export const HistoryEntries: React.FC<{ items: AuditHistoryMeta[]; onOpen: (m: AuditHistoryMeta) => void }> = ({ items, onOpen }) => {
   const h = useHistoryController();
   const [deleting, setDeleting] = useState<AuditHistoryMeta | null>(null);
+  const [report, setReport] = useState<AuditHistoryItem | null>(null);
+  const reportTrigger = useRef<HTMLButtonElement | null>(null);
   const triggers = useRef(new Map<string, HTMLButtonElement | null>());
   const openers = useRef(new Map<string, HTMLButtonElement | null>());
   const returnTo = useRef<HTMLButtonElement | null>(null);
@@ -30,6 +35,17 @@ export const HistoryEntries: React.FC<{ items: AuditHistoryMeta[]; onOpen: (m: A
     const next = i >= 0 ? openers.current.get(items[i].id) : document.querySelector<HTMLElement>('[data-testid="history-empty-title"]');
     next?.focus();
   }, [items]);
+
+  // While a report prints, the page title is what the browser suggests as the PDF's file name
+  useEffect(() => {
+    if (!report) return;
+    const before = document.title;
+    document.title = reportTitle(report);
+    return () => {
+      document.title = before;
+      reportTrigger.current?.focus(); // back to the ⋮ button that started it
+    };
+  }, [report]);
 
   if (items.length === 0) return <HistoryEmptyState />;
 
@@ -70,7 +86,12 @@ export const HistoryEntries: React.FC<{ items: AuditHistoryMeta[]; onOpen: (m: A
                 <HistoryEntryMenu
                   entryLabel={audit.label}
                   triggerRef={(el) => void triggers.current.set(audit.id, el)}
-                  onDownload={() => void h.downloadOne(audit.id)}
+                  onDownloadJson={() => void h.downloadJson(audit.id)}
+                  onDownloadReport={async () => {
+                    reportTrigger.current = triggers.current.get(audit.id) ?? null;
+                    const item = await h.prepareReport(audit.id);
+                    if (item) setReport(item);
+                  }}
                   onDelete={() => {
                     returnTo.current = triggers.current.get(audit.id) ?? null;
                     setDeleting(audit);
@@ -81,6 +102,22 @@ export const HistoryEntries: React.FC<{ items: AuditHistoryMeta[]; onOpen: (m: A
           </div>
         ))}
       </div>
+      {report && (
+        <ReportModal
+          isOpen
+          autoPrint
+          onClose={() => setReport(null)}
+          findings={report.findings}
+          exemptedCount={report.exemptedCount}
+          exemptedDetails={report.exemptedDetails}
+          inputMode={report.inputMode}
+          exportScale={report.exportScale}
+          figmaUrl={report.figmaUrl}
+          imageSrc={report.imageSrc}
+          iframeHtml={report.iframeHtml}
+          moduleToggles={report.moduleToggles}
+        />
+      )}
       {deleting && h && (
         <ConfirmDialog
           title="Delete this audit?"

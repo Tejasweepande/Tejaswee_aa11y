@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, EllipsisVertical, Trash2 } from 'lucide-react';
+import { EllipsisVertical, FileJson, FileText, Trash2 } from 'lucide-react';
 
-const MENU_WIDTH = 176;
+const MENU_WIDTH = 192;
 
 /**
- * The ⋮ button on a history entry, and the little menu it opens: Download or Delete.
+ * The ⋮ button on a history entry, and the little menu it opens: Download JSON, Download Report or Delete.
  *
  * A standard menu button: Enter, Space or the arrow keys open it, the arrows (and Home / End) move
  * between the items, Escape or Tab close it and put focus back on the button, and a click outside
@@ -16,9 +16,10 @@ export const HistoryEntryMenu: React.FC<{
   entryLabel: string;
   /** Lets the parent put focus back on this button after a dialog closes. */
   triggerRef?: (el: HTMLButtonElement | null) => void;
-  onDownload: () => void;
+  onDownloadJson: () => void;
+  onDownloadReport: () => void;
   onDelete: () => void;
-}> = ({ entryLabel, triggerRef, onDownload, onDelete }) => {
+}> = ({ entryLabel, triggerRef, onDownloadJson, onDownloadReport, onDelete }) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement | null>(null);
@@ -127,9 +128,13 @@ export const HistoryEntryMenu: React.FC<{
             style={{ position: 'fixed', top: pos?.top ?? 0, left: pos?.left ?? 0, width: MENU_WIDTH, visibility: pos ? 'visible' : 'hidden' }}
             className="z-50 bg-lab-card border border-lab-border rounded-lg shadow-xl py-1"
           >
-            <button type="button" role="menuitem" tabIndex={-1} onClick={choose(onDownload)} className={`${itemClass} text-lab-text`}>
-              <Download className="w-4 h-4" aria-hidden="true" />
-              Download
+            <button type="button" role="menuitem" tabIndex={-1} onClick={choose(onDownloadJson)} className={`${itemClass} text-lab-text`}>
+              <FileJson className="w-4 h-4" aria-hidden="true" />
+              Download JSON
+            </button>
+            <button type="button" role="menuitem" tabIndex={-1} onClick={choose(onDownloadReport)} className={`${itemClass} text-lab-text`}>
+              <FileText className="w-4 h-4" aria-hidden="true" />
+              Download Report
             </button>
             <button type="button" role="menuitem" tabIndex={-1} onClick={choose(onDelete)} className={`${itemClass} text-red-600 dark:text-red-400`}>
               <Trash2 className="w-4 h-4" aria-hidden="true" />
