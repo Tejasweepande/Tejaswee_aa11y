@@ -1,129 +1,178 @@
-import React, { useState, useEffect } from 'react';
-import { Key, ShieldAlert, X, CheckCircle2, Sparkles } from 'lucide-react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Key, ShieldAlert, Sparkles, TriangleAlert } from 'lucide-react';
+
+/** Why the dialog is being shown. */
+export type KeyPromptWhy =
+  /** The built-in detectors could not find enough clear elements in this screenshot. */
+  | { kind: 'needed' }
+  /** Gemini was tried and could not read it. `message` is plain language and never contains the key. */
+  | { kind: 'failed'; message: string };
 
 interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-  apiKey: string;
-  onSaveKey: (key: string) => void;
+  why: KeyPromptWhy;
+  /** The user pasted a key and chose to run Gemini. */
+  onSubmit: (key: string) => void;
+  /** The user chose not to use Gemini (button or Escape). */
+  onSkip: () => void;
 }
 
-export const ApiKeyModal: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  apiKey,
-  onSaveKey,
-}) => {
-  const [val, setVal] = useState(apiKey);
+/**
+ * Asks for a Google Gemini key, but only when the built-in detectors could not read the screenshot,
+ * or when Gemini was tried and failed (a used-up limit, a key Google does not accept, no connection).
+ *
+ * The key is saved in this browser (see storage/geminiKey.ts), so it is asked for once. The field always opens
+ * EMPTY: a key entered earlier is never shown again.
+ */
+export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
+  const titleId = useId();
+  const leadId = useId();
+  const inputId = useId();
+  const [val, setVal] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setVal(apiKey);
-  }, [apiKey, isOpen]);
+    const before = document.activeElement as HTMLElement | null;
+    inputRef.current?.focus();
+    return () => {
+      if (before && document.contains(before) && !(before as HTMLButtonElement).disabled) before.focus();
+    };
+  }, []);
 
-  if (!isOpen) return null;
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      onSkip();
+      return;
+    }
+    if (e.key === 'Tab') {
+      // Keep Tab inside the dialog
+      const order = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), input:not(:disabled)') ?? []);
+      if (order.length === 0) return;
+      const at = order.indexOf(document.activeElement as HTMLElement);
+      const next = e.shiftKey ? (at <= 0 ? order.length - 1 : at - 1) : at === -1 || at === order.length - 1 ? 0 : at + 1;
+      e.preventDefault();
+      order[next].focus();
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveKey(val.trim());
-    onClose();
-  };
-
-  const handleClear = () => {
+    const key = val.trim();
+    if (!key) return;
     setVal('');
-    onSaveKey('');
-    onClose();
+    onSubmit(key);
   };
 
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="api-key-dialog-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/85 backdrop-blur-sm animate-fade-in"
-    >
-      <div className="bg-lab-card border border-lab-border rounded max-w-md w-full p-6 shadow-2xl relative">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-lab-muted hover:text-lab-text p-1.5 rounded focus-visible:ring-2 focus-visible:ring-sky-500"
-          aria-label="Close API configuration dialog"
-        >
-          <X className="w-5 h-5" aria-hidden="true" />
-        </button>
-
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 animate-fade-in overflow-y-auto">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={leadId}
+        onKeyDown={onKeyDown}
+        className="bg-lab-card border border-lab-border rounded max-w-md w-full p-6 shadow-2xl my-auto"
+      >
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-lab-accent">
+          <div className="w-10 h-10 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-lab-accent shrink-0">
             <Key className="w-5 h-5" aria-hidden="true" />
           </div>
           <div>
-            <h2 id="api-key-dialog-title" className="text-lg font-bold text-lab-text">
+            <h2 id={titleId} className="text-lg font-bold text-lab-text">
               Google Gemini Vision API Key
             </h2>
             <p className="text-sm text-lab-muted">Powered by Gemini 3.6 Flash Multimodal Vision</p>
           </div>
         </div>
 
-        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
-          <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-          <p className="text-sm text-amber-900 dark:text-amber-200/90 leading-relaxed">
-            <strong className="font-semibold">Privacy:</strong> API keys reside strictly in React memory for this active session. They are never saved to localStorage, disk, or telemetry.
+        {why.kind === 'needed' ? (
+          <p id={leadId} className="text-sm text-lab-text leading-relaxed mb-4">
+            We couldn&apos;t analyse this screenshot with our built-in methods. Add your Gemini API key to see the analysis.
           </p>
-        </div>
+        ) : (
+          <div id={leadId} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
+            <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-sm text-red-900 dark:text-red-200/90 leading-relaxed">
+              <strong className="font-semibold">Gemini could not read it.</strong> {why.message} Enter a key to try again, or skip.
+            </p>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="gemini-key-input" className="block text-sm font-semibold text-lab-text">
-                Google Gemini API Key
-              </label>
-              <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                Gemini 3.6 Flash
-              </span>
-            </div>
-            <input
-              id="gemini-key-input"
-              type="password"
-              value={val}
-              onChange={(e) => setVal(e.target.value)}
-              placeholder="AIzaSy..."
-              className="w-full bg-lab-bg border border-lab-border rounded px-3.5 py-2.5 text-sm font-mono text-lab-text focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
-            <p className="text-xs text-lab-dim mt-1.5 leading-relaxed">
-              Get an API key from <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" className="text-lab-accent underline font-medium">aistudio.google.com</a>. Leave blank to run offline with zero API calls.
+        <form onSubmit={submit}>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor={inputId} className="block text-sm font-semibold text-lab-text">
+              Google Gemini API Key
+            </label>
+            <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 flex items-center gap-1">
+              <Sparkles className="w-3 h-3" aria-hidden="true" />
+              Gemini 3.6 Flash
+            </span>
+          </div>
+          <input
+            ref={inputRef}
+            id={inputId}
+            name="gemini-key"
+            type="password"
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            placeholder="AIzaSy..."
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            data-lpignore="true"
+            data-1p-ignore="true"
+            className="w-full bg-lab-bg border border-lab-border rounded px-3.5 py-2.5 text-sm font-mono text-lab-text focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+          />
+
+          <div className="mt-3 text-xs text-lab-dim leading-relaxed" data-testid="key-instructions">
+            <p className="font-semibold text-lab-muted mb-1">How to get a key</p>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              <li>
+                Open{' '}
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-lab-accent underline font-medium">
+                  Google AI Studio
+                </a>{' '}
+                and sign in with a Google account.
+              </li>
+              <li>Click “Get API key”, then “Create API key”.</li>
+              <li>Copy the key (it starts with “AIza”) and paste it above.</li>
+            </ol>
+            <p className="mt-1.5">A free key has a limit per minute and per day. If the key runs out of credit or stops working, you will be asked again.</p>
+          </div>
+
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded p-3 mt-4 flex items-start gap-2.5">
+            <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-xs text-amber-900 dark:text-amber-200/90 leading-relaxed">
+              <strong className="font-semibold">Privacy:</strong> your key is saved in this browser only, on this device, like your audit history,
+              so you only add it once. It is never shown again and goes only to Google. Your screenshot is sent to Google to be read, and on a
+              free key Google may use it to improve its products, so skip this for confidential designs.
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-lab-border">
+          <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-lab-border">
             <button
               type="button"
-              onClick={handleClear}
-              className="text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 font-medium transition-colors"
+              onClick={onSkip}
+              className="px-3.5 py-2 rounded text-sm font-medium text-lab-muted hover:text-lab-text hover:bg-lab-subtle transition-colors"
             >
-              Use Offline Mode (Clear Key)
+              Skip
             </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-3.5 py-2 rounded text-sm font-medium text-lab-muted hover:text-lab-text hover:bg-lab-subtle transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded text-sm font-bold bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover focus-visible:ring-2 flex items-center gap-1.5 shadow-sm transition-all"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                Save for Session
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={val.trim() === ''}
+              className="px-4 py-2 rounded text-sm font-bold bg-lab-accent text-lab-onAccent hover:bg-lab-accentHover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Run with Gemini
+            </button>
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
-
-
