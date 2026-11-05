@@ -587,7 +587,7 @@ export const App: React.FC = () => {
         // A tier has "failed" when it errors, or finds fewer than MIN_USABLE_REGIONS elements.
 
         // 2. Hugging Face YOLOv11 (the Local AI backend)
-        setAuditNotice({ type: 'info', message: 'Calling Local AI Backend (Hugging Face YOLOv11) to identify UI elements...' });
+        setAuditNotice({ type: 'info', message: 'Calling Local AI Backend (Hugging Face YOLOv11) to identify UI elements (it gives up after 15 seconds)...' });
         try {
           const res = await extractRegionsFromLocalAI(imageSrc);
           if (res.regions.length >= MIN_USABLE_REGIONS) {

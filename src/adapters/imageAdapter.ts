@@ -2,6 +2,36 @@ import { UIElementRegion } from '../types/finding';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+/**
+ * How long to wait for a reader before counting it as failed. Without a limit, a request that never
+ * answers (a hosted server that is asleep, a firewall that drops the call, a browser holding a call to
+ * localhost) would freeze the audit and the next reader would never be tried.
+ */
+export const LOCAL_AI_TIMEOUT_MS = 15_000;
+export const GEMINI_TIMEOUT_MS = 30_000;
+
+/** Thrown when a request got no answer in time. */
+class NoAnswerError extends Error {
+  constructor(ms: number) {
+    super(`no answer after ${Math.round(ms / 1000)} seconds`);
+    this.name = 'NoAnswerError';
+  }
+}
+
+/** Run a request and cancel it if it has not finished (headers AND body) within `ms`. */
+async function withTimeout<T>(ms: number, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await run(controller.signal);
+  } catch (err) {
+    if (controller.signal.aborted) throw new NoAnswerError(ms);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Why a Gemini request failed, in the terms the user can act on. */
 export type GeminiFailureKind = 'quota' | 'key' | 'network' | 'other';
 
@@ -37,7 +67,7 @@ function classifyHttpFailure(status: number, message: string): GeminiFailureKind
 const USER_MESSAGES: Record<Exclude<GeminiFailureKind, 'other'>, string> = {
   quota: 'This key has reached its Gemini usage limit. Free keys have a limit per minute and per day.',
   key: 'Google did not accept this key. Check that you copied all of it.',
-  network: 'The app could not reach Google. Check your internet connection.',
+  network: 'The app could not reach Google, or Google did not answer in time. Check your internet connection.',
 };
 
 function buildGeminiFailure(failures: { kind: GeminiFailureKind; message: string }[], apiKey: string): GeminiFailure {
@@ -214,28 +244,32 @@ Example:
         },
       };
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const { ok, status, bodyText } = await withTimeout(GEMINI_TIMEOUT_MS, async (signal) => {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal,
+        });
+        return { ok: response.ok, status: response.status, bodyText: await response.text().catch(() => '') };
       });
 
-      if (!response.ok) {
-        const errBody = await response.text().catch(() => `HTTP ${response.status}`);
-        let errMsg = `${model}: HTTP ${response.status}`;
+      if (!ok) {
+        const errBody = bodyText || `HTTP ${status}`;
+        let errMsg = `${model}: HTTP ${status}`;
         try {
           const parsed = JSON.parse(errBody);
           errMsg = `${model}: ${parsed?.error?.message || errBody}`;
         } catch {
           errMsg = `${model}: ${errBody.slice(0, 200)}`;
         }
-        const kind = classifyHttpFailure(response.status, errMsg);
+        const kind = classifyHttpFailure(status, errMsg);
         failures.push({ kind, message: errMsg });
         if (kind === 'key') break; // another model will not help: the key itself is the problem
         continue;
       }
 
-      const data = await response.json();
+      const data = JSON.parse(bodyText);
       const rawText: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
       if (!rawText) {
@@ -256,7 +290,7 @@ Example:
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       // A request that never got an answer (offline, blocked) will fail the same way for every model
-      const noAnswer = err instanceof TypeError;
+      const noAnswer = err instanceof TypeError || err instanceof NoAnswerError;
       failures.push({ kind: noAnswer ? 'network' : 'other', message: `${model}: ${msg}` });
       if (noAnswer) break;
     }
@@ -351,17 +385,20 @@ export async function extractRegionsFromLocalAI(
   formData.append('file', blob, 'screenshot.jpg');
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/detect`, {
-      method: 'POST',
-      body: formData,
+    const data = await withTimeout(LOCAL_AI_TIMEOUT_MS, async (signal) => {
+      const response = await fetch(`${API_BASE_URL}/api/detect`, {
+        method: 'POST',
+        body: formData,
+        signal,
+      });
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '');
+        throw new Error(`Local AI Server returned ${response.status}: ${errText}`);
+      }
+
+      return await response.json();
     });
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      throw new Error(`Local AI Server returned ${response.status}: ${errText}`);
-    }
-
-    const data = await response.json();
     const regions: UIElementRegion[] = data.regions || [];
     
     if (regions.length === 0) {
