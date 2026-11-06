@@ -77,12 +77,20 @@ const STATUS_COLOR: Record<RuleStatus, string> = {
 };
 
 /** Dot + plain text, the same pattern as severity tags. */
-const DotLabel: React.FC<{ color: string; children: React.ReactNode }> = ({ color, children }) => (
+const DotLabel: React.FC<{ color?: string; severity?: Severity; children: React.ReactNode }> = ({ color, severity, children }) => (
   <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-lab-text">
-    <span aria-hidden="true" className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+    {severity ? (
+      <SeverityDot severity={severity} />
+    ) : (
+      <span aria-hidden="true" className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+    )}
     {children}
   </span>
 );
+
+// Labels that are drawn in a severity's color (the others, such as Good and Passes, have their own color)
+const SCORE_SEVERITY: Partial<Record<ScoreLabel, Severity>> = { Fair: 'minor', Weak: 'moderate', Poor: 'critical' };
+const STATUS_SEVERITY: Partial<Record<RuleStatus, Severity>> = { failure: 'critical', warning: 'moderate' };
 
 // Failing rules first, so the table reads like a to-do list.
 const STATUS_ORDER: RuleStatus[] = ['failure', 'warning', 'passed', 'not-checked'];
@@ -549,7 +557,7 @@ export const ReportModal: React.FC<Props> = ({
                         {score.score}
                         <span className="text-base font-semibold text-lab-dim"> / 10</span>
                       </span>
-                      <DotLabel color={SCORE_COLOR[score.label!]}>{score.label}</DotLabel>
+                      <DotLabel color={SCORE_COLOR[score.label!]} severity={SCORE_SEVERITY[score.label!]}>{score.label}</DotLabel>
                     </p>
                     <p className="mt-1.5 text-sm text-lab-muted">
                       {score.capped ? 'Critical issues hold this at Weak. Fix them before release.' : SCORE_MEANING[score.label!]}
@@ -631,7 +639,7 @@ export const ReportModal: React.FC<Props> = ({
                       <td className="py-2.5 px-3 text-lab-text">{row.name}</td>
                       <td className="py-2.5 px-3 text-lab-muted">{row.level}</td>
                       <td className="py-2.5 px-3">
-                        <DotLabel color={STATUS_COLOR[row.status]}>{STATUS_LABEL[row.status]}</DotLabel>
+                        <DotLabel color={STATUS_COLOR[row.status]} severity={STATUS_SEVERITY[row.status]}>{STATUS_LABEL[row.status]}</DotLabel>
                       </td>
                       <td className="py-2.5 px-3 text-right font-bold tabular-nums text-lab-text">{row.issueCount > 0 ? row.issueCount : '–'}</td>
                     </tr>

@@ -39,8 +39,9 @@ const Pins: React.FC<{ findings: Finding[]; onPinClick?: (finding: Finding, numb
           key={f.id}
           data-barrier-pin={idx + 1}
           // Outline in the same severity color as the issue card's edge.
+          data-severity={f.severity}
           style={{ left: `${bbox.x}%`, top: `${bbox.y}%`, width: `${bbox.w}%`, height: `${bbox.h}%`, ['--tw-ring-color' as string]: SEVERITY_BAR[f.severity] }}
-          className="absolute ring-2 rounded flex items-start justify-start"
+          className="sev-ring absolute ring-2 rounded flex items-start justify-start"
         >
           {onPinClick ? (
             <button

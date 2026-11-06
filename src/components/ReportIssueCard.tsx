@@ -2,7 +2,6 @@ import React from 'react';
 import { ExternalLink, Sparkles } from 'lucide-react';
 import { Finding } from '../types/finding';
 import { buildFindingCardModel } from '../utils/findingCard';
-import { SEVERITY_BAR } from './FindingCard';
 import { IssueCrop } from './IssueCrop';
 
 interface Props {
@@ -37,9 +36,9 @@ export const ReportIssueCard: React.FC<Props> = ({ finding, number, showCrop, im
       id={`report-issue-${finding.id}`}
       aria-labelledby={titleId}
       tabIndex={-1}
-      className="break-inside-avoid relative bg-white text-black rounded border border-black/10 shadow-sm overflow-hidden scroll-mt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600"
+      className="sev-light break-inside-avoid relative bg-white text-black rounded border border-black/10 shadow-sm overflow-hidden scroll-mt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600"
     >
-      <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: SEVERITY_BAR[model.severity] }} />
+      <span aria-hidden="true" data-severity={model.severity} className="sev-bar absolute left-0 top-0 bottom-0 w-1" />
 
       <div className="pl-6 pr-5 py-4 print:pl-4 print:pr-3 print:py-2.5">
         <div className="flex-1 min-w-0">
@@ -52,7 +51,7 @@ export const ReportIssueCard: React.FC<Props> = ({ finding, number, showCrop, im
                 iframeHtml={iframeHtml}
                 bbox={bbox}
                 number={number}
-                color={SEVERITY_BAR[model.severity]}
+                severity={model.severity}
               />
             )}
             <div className="min-w-0 flex-1">

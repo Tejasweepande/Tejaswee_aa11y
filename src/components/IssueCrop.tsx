@@ -1,13 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { BoundingBox } from '../types/finding';
+import { BoundingBox, Severity } from '../types/finding';
 
 interface Props {
   imageSrc?: string | null;
   iframeHtml?: string | null;
   bbox: BoundingBox;
   number: number;
-  /** Outline color for the element (the severity color). */
-  color: string;
+  /** The element's outline is drawn in this severity's color. */
+  severity: Severity;
 }
 
 // Size of the cropped picture, in CSS px.
@@ -26,7 +26,7 @@ const FRAME_W = 1024;
  * a full-page map. Works from the screenshot when there is one, otherwise from
  * the live copy of the page.
  */
-export const IssueCrop: React.FC<Props> = ({ imageSrc, iframeHtml, bbox, number, color }) => {
+export const IssueCrop: React.FC<Props> = ({ imageSrc, iframeHtml, bbox, number, severity }) => {
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
 
@@ -87,10 +87,7 @@ export const IssueCrop: React.FC<Props> = ({ imageSrc, iframeHtml, bbox, number,
       ) : null}
 
       {p && (
-        <span
-          className="absolute rounded border-2"
-          style={{ ...p.outline, borderColor: color }}
-        >
+        <span data-severity={severity} className="sev-box absolute rounded" style={p.outline}>
           <span className="absolute left-0 bottom-full mb-0.5 min-w-[20px] h-5 px-1 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center">
             {number}
           </span>

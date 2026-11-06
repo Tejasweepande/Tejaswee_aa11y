@@ -405,10 +405,12 @@ export const PreviewCanvas: React.FC<Props> = ({
                       ...(isSelected || isHovered ? {} : { ['--tw-ring-color' as string]: SEVERITY_BAR[finding.severity] }),
                     }}
                     onClick={() => onSelectFinding(isSelected ? null : finding.id)}
+                    // Only the resting ring takes the severity paint; a selected or hovered pin keeps its own blue ring.
+                    data-severity={isSelected || isHovered ? undefined : finding.severity}
                     className={`absolute z-20 rounded transition-all cursor-pointer flex items-start justify-start ${
                       isSelected || isHovered
                         ? 'ring-4 ring-sky-400 z-30'
-                        : 'ring-2 hover:ring-4'
+                        : 'sev-ring ring-2 hover:ring-4'
                     }`}
                   >
                     {/* Sits just above the box, so it does not cover the start of the text (inside the box only at the very top of the page). */}
