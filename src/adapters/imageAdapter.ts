@@ -8,13 +8,23 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
  * localhost) would freeze the audit and the next reader would never be tried.
  */
 export const LOCAL_AI_TIMEOUT_MS = 15_000;
-export const GEMINI_TIMEOUT_MS = 30_000;
+export const GEMINI_TIMEOUT_MS = 60_000;
+/** The whole Gemini attempt, across every model it tries. */
+export const GEMINI_TOTAL_BUDGET_MS = 150_000;
 
 /** Thrown when a request got no answer in time. */
 class NoAnswerError extends Error {
   constructor(ms: number) {
     super(`no answer after ${Math.round(ms / 1000)} seconds`);
     this.name = 'NoAnswerError';
+  }
+}
+
+/** The request itself failed before any answer came back (offline, blocked, refused). */
+class NetworkError extends Error {
+  constructor(detail: string) {
+    super(detail);
+    this.name = 'NetworkError';
   }
 }
 
@@ -198,7 +208,7 @@ Return a JSON array. Each object must have:
 - "i": true if this is an interactive element (button, link, input field)
 
 Rules:
-- Include at least 8 elements if visible
+- Include at least 8 elements if visible, and at most 40 (the most important ones)
 - DO NOT include any colour values, contrast ratios, or pixel sizes
 - DO NOT include any commentary, only the JSON array
 
@@ -209,50 +219,55 @@ Example:
   {"k":"button","t":"Sign In","b":[5,40,30,8],"o":4,"i":true}
 ]`;
 
-  // Prioritize Gemini 3.6 Flash with fallbacks across Google AI Studio models
-  const modelEndpoints: { model: string; apiVersion: string }[] = [
-    { model: 'gemini-3.6-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-2.5-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-2.0-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-1.5-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-2.5-pro',          apiVersion: 'v1beta' },
+  // The Gemini 3 family, newest first. Older models cannot be used any more: gemini-2.0-flash and 1.5 are shut down,
+  // and the 2.5 models are now limited to developers who already used them, so a new key gets "not found" from them.
+  // The last entry is Google's own moving alias, so the next retirement does not break this again.
+  // thinkingLevel 'low': these models "think" before answering, and the thinking counts against the output limit.
+  const modelEndpoints: { model: string; apiVersion: string; thinkingLevel?: 'low' }[] = [
+    { model: 'gemini-3.8-flash',      apiVersion: 'v1beta', thinkingLevel: 'low' },
+    { model: 'gemini-3.6-flash',      apiVersion: 'v1beta', thinkingLevel: 'low' },
+    { model: 'gemini-3.5-flash-lite', apiVersion: 'v1beta', thinkingLevel: 'low' },
+    { model: 'gemini-3.1-flash-lite', apiVersion: 'v1beta' },
+    { model: 'gemini-flash-latest',   apiVersion: 'v1beta' },
   ];
   const failures: { kind: GeminiFailureKind; message: string }[] = [];
 
-  for (const { model, apiVersion } of modelEndpoints) {
-    try {
+  const post = (model: string, apiVersion: string, thinkingLevel?: 'low') =>
+    withTimeout(GEMINI_TIMEOUT_MS, async (signal) => {
       const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${apiKey.trim()}`;
-
       const payload = {
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType,
-                  data: base64Data,
-                },
-              },
-            ],
-          },
-        ],
+        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType, data: base64Data } }] }],
         generationConfig: {
-          temperature: 0.05,
-          maxOutputTokens: 2048,
+          // Thinking tokens count against this limit. At 2048 the model could use it all thinking and send back nothing.
+          maxOutputTokens: 16384,
           responseMimeType: 'application/json',
+          ...(thinkingLevel ? { thinkingConfig: { thinkingLevel } } : {}),
         },
       };
-
-      const { ok, status, bodyText } = await withTimeout(GEMINI_TIMEOUT_MS, async (signal) => {
-        const response = await fetch(endpoint, {
+      let response: Response;
+      try {
+        response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
           signal,
         });
-        return { ok: response.ok, status: response.status, bodyText: await response.text().catch(() => '') };
-      });
+      } catch (err) {
+        if (signal.aborted) throw err; // the time limit: handled as "no answer"
+        throw new NetworkError(err instanceof Error ? err.message : String(err));
+      }
+      return { ok: response.ok, status: response.status, bodyText: await response.text().catch(() => '') };
+    });
+
+  const startedAt = Date.now();
+  for (const { model, apiVersion, thinkingLevel } of modelEndpoints) {
+    if (Date.now() - startedAt > GEMINI_TOTAL_BUDGET_MS) break;
+    try {
+      let { ok, status, bodyText } = await post(model, apiVersion, thinkingLevel);
+      // A model that does not accept the thinking setting is asked again without it
+      if (!ok && thinkingLevel && status === 400 && /thinking/i.test(bodyText)) {
+        ({ ok, status, bodyText } = await post(model, apiVersion, undefined));
+      }
 
       if (!ok) {
         const errBody = bodyText || `HTTP ${status}`;
@@ -270,7 +285,11 @@ Example:
       }
 
       const data = JSON.parse(bodyText);
-      const rawText: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const parts: { text?: string; thought?: boolean }[] = data?.candidates?.[0]?.content?.parts ?? [];
+      const rawText: string = parts
+        .filter((p) => typeof p.text === 'string' && !p.thought)
+        .map((p) => p.text)
+        .join('');
 
       if (!rawText) {
         const reason = data?.candidates?.[0]?.finishReason || 'empty response';
@@ -289,10 +308,18 @@ Example:
       return { regions, isPartial };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      // A request that never got an answer (offline, blocked) will fail the same way for every model
-      const noAnswer = err instanceof TypeError || err instanceof NoAnswerError;
-      failures.push({ kind: noAnswer ? 'network' : 'other', message: `${model}: ${msg}` });
-      if (noAnswer) break;
+      if (err instanceof NetworkError) {
+        // Offline or blocked: it will fail the same way for every model
+        failures.push({ kind: 'network', message: `${model}: ${msg}` });
+        break;
+      }
+      if (err instanceof NoAnswerError) {
+        // This model is slow or overloaded: try the next one
+        failures.push({ kind: 'network', message: `${model}: ${msg}` });
+        continue;
+      }
+      // Anything else is our own code meeting an unexpected answer: say so, and try the next model
+      failures.push({ kind: 'other', message: `${model}: ${msg}` });
     }
   }
 
@@ -300,7 +327,9 @@ Example:
 }
 
 function parseRawRegions(rawList: RawRegionOutput[], prefix: string): UIElementRegion[] {
-  return rawList.map((item, index) => {
+  return rawList
+    .filter((item) => item !== null && typeof item === 'object')
+    .map((item, index) => {
     let x = 5, y = 5 + index * 8, w = 40, h = 6;
     if (Array.isArray(item.b) && item.b.length >= 4) {
       x = Number(item.b[0]);

@@ -643,7 +643,7 @@ export const App: React.FC = () => {
                 key = entered;
                 keyIsSaved = false;
               }
-              setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API (Gemini 3.6 Flash) to identify UI elements...' });
+              setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API to identify UI elements...' });
               try {
                 const res = await extractRegionsFromImageViaGemini(imageSrc, key);
                 if (res.regions.length < MIN_USABLE_REGIONS) {
@@ -659,6 +659,7 @@ export const App: React.FC = () => {
                 console.warn('[Gemini Vision API error]', scrubKey(err instanceof Error ? err.message : String(err), key));
                 const failure = err instanceof GeminiFailure ? err : null;
                 lastFailure = failure ? failure.userMessage : 'Gemini could not read this screenshot.';
+                const detail = (failure ? failure.message : err instanceof Error ? scrubKey(err.message, key) : '').replace(/^Gemini API failed:\s*/, '').slice(0, 240);
                 // A key Google does not accept is useless, so forget it. A key that is out of credit, or a failed
                 // connection, may recover, so a saved key is kept until a new one replaces it.
                 if (failure?.kind === 'key' && keyIsSaved) {
@@ -666,7 +667,7 @@ export const App: React.FC = () => {
                   void forgetGeminiKey();
                 }
                 key = '';
-                why = { kind: 'failed', message: lastFailure };
+                why = { kind: 'failed', message: lastFailure, detail: detail || undefined };
               }
             }
           }
