@@ -7,7 +7,29 @@ export type KeyPromptWhy =
   /** The built-in detectors could not find enough clear elements in this screenshot. */
   | { kind: 'needed' }
   /** Gemini was tried and could not read it. `message` is plain language and never contains the key. */
-  | { kind: 'failed'; message: string; /** The underlying message, for when the plain-language one is not enough. Never contains the key. */ detail?: string };
+  | {
+      kind: 'failed';
+      message: string;
+      /** The underlying message, for when the plain-language one is not enough. Never contains the key. */
+      detail?: string;
+      /** What went wrong, so the title can say it. */
+      cause?: 'key' | 'quota' | 'network' | 'other';
+    };
+
+/**
+ * The title says what the situation is, and the line under it says what to do (the same pattern for every state).
+ * Sentence case, no full stop on the title.
+ */
+const FIRST_ASK = {
+  title: 'This screenshot needs Gemini to be analysed',
+  line: "Our built-in methods couldn't read it. Add your Gemini API key to continue.",
+};
+const FAILURE_COPY: Record<NonNullable<Extract<KeyPromptWhy, { kind: 'failed' }>['cause']>, { title: string; line: string }> = {
+  key: { title: "Google didn't accept this Gemini key", line: 'Check that you copied all of it, or enter another key.' },
+  quota: { title: 'This Gemini key has reached its limit', line: 'Free keys have a limit per minute and per day. Enter another key, or try again later.' },
+  network: { title: "We couldn't reach Gemini", line: 'Check your internet connection, then try again.' },
+  other: { title: "Gemini couldn't read this screenshot", line: '' },
+};
 
 interface Props {
   why: KeyPromptWhy;
@@ -22,7 +44,8 @@ interface Props {
  * or when Gemini was tried and failed (a used-up limit, a key Google does not accept, no connection).
  *
  * The key is saved in this browser (see storage/geminiKey.ts), so it is asked for once. The field always opens
- * EMPTY: a key entered earlier is never shown again.
+ * EMPTY: a key entered earlier is never shown again. The title says why the dialog is open; the single helper
+ * line under the field links to Google's guide for getting a key (same pattern as the Figma token field).
  */
 export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
   const titleId = useId();
@@ -30,6 +53,14 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
   const inputId = useId();
   const [val, setVal] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const failure = why.kind === 'failed' ? FAILURE_COPY[why.cause ?? 'other'] : null;
+  const title = failure ? failure.title : FIRST_ASK.title;
+  const line =
+    why.kind !== 'failed'
+      ? FIRST_ASK.line
+      : failure!.line ||
+        // Anything else: say what Gemini said when that is more than the title already does
+        (why.message.startsWith('Gemini could not read this screenshot') ? 'Try again with another key, or skip.' : `${why.message} Try again with another key, or skip.`);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,27 +108,20 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
         onKeyDown={onKeyDown}
         className="bg-lab-card border border-lab-border rounded max-w-md w-full p-6 shadow-2xl my-auto"
       >
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-lab-accent shrink-0">
             <Key className="w-5 h-5" aria-hidden="true" />
           </div>
-          <div>
-            <h2 id={titleId} className="text-lg font-bold text-lab-text">
-              Google Gemini Vision API Key
-            </h2>
-            <p className="text-sm text-lab-muted">Powered by Gemini multimodal vision</p>
-          </div>
+          <h2 id={titleId} className="text-lg font-bold text-lab-text leading-snug">
+            {title}
+          </h2>
         </div>
 
-        {why.kind === 'needed' ? (
-          <p id={leadId} className="text-sm text-lab-text leading-relaxed mb-4">
-            We couldn&apos;t analyse this screenshot with our built-in methods. Add your Gemini API key to see the analysis.
-          </p>
-        ) : (
+        {why.kind === 'failed' ? (
           <div id={leadId} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
             <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm text-red-900 dark:text-red-200/90 leading-relaxed">
-              <strong className="font-semibold">Gemini could not read it.</strong> {why.message} Enter a key to try again, or skip.
+              {line}
               {why.detail && (
                 <span data-testid="key-failure-detail" className="block mt-1.5 text-xs font-mono break-words text-red-900/80 dark:text-red-200/70">
                   Details: {why.detail}
@@ -105,6 +129,10 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
               )}
             </p>
           </div>
+        ) : (
+          <p id={leadId} className="text-sm text-lab-text leading-relaxed mb-4">
+            {line}
+          </p>
         )}
 
         <form onSubmit={submit}>
@@ -124,7 +152,7 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
             type="password"
             value={val}
             onChange={(e) => setVal(e.target.value)}
-            placeholder="AIzaSy..."
+            placeholder="Paste your key"
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"
@@ -134,28 +162,23 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
             className="w-full bg-lab-bg border border-lab-border rounded px-3.5 py-2.5 text-sm font-mono text-lab-text focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
           />
 
-          <div className="mt-3 text-xs text-lab-dim leading-relaxed" data-testid="key-instructions">
-            <p className="font-semibold text-lab-muted mb-1">How to get a key</p>
-            <ol className="list-decimal pl-4 space-y-0.5">
-              <li>
-                Open{' '}
-                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-lab-accent underline font-medium">
-                  Google AI Studio
-                </a>{' '}
-                and sign in with a Google account.
-              </li>
-              <li>Click “Get API key”, then “Create API key”.</li>
-              <li>Copy the key (it starts with “AIza”) and paste it above.</li>
-            </ol>
-            <p className="mt-1.5">A free key has a limit per minute and per day. If the key runs out of credit or stops working, you will be asked again.</p>
-          </div>
+          <p data-testid="key-helper" className="mt-2 text-xs text-lab-dim leading-relaxed">
+            Lets this tool read your screenshot with Gemini.{' '}
+            <a
+              href="https://ai.google.dev/gemini-api/docs/api-key"
+              target="_blank"
+              rel="noreferrer"
+              className="text-lab-accent underline font-semibold"
+            >
+              Get a key<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </p>
 
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded p-3 mt-4 flex items-start gap-2.5">
             <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-xs text-amber-900 dark:text-amber-200/90 leading-relaxed">
-              <strong className="font-semibold">Privacy:</strong> your key is saved in this browser only, on this device, like your audit history,
-              so you only add it once. It is never shown again and goes only to Google. Your screenshot is sent to Google to be read, and on a
-              free key Google may use it to improve its products, so skip this for confidential designs.
+              <strong className="font-semibold">Privacy:</strong> saved in this browser only and sent only to Google, so you add it once. Your
+              screenshot is also sent to Google to be read. On a free key, Google may use it to improve its products.
             </p>
           </div>
 

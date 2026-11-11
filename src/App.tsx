@@ -647,7 +647,7 @@ export const App: React.FC = () => {
               try {
                 const res = await extractRegionsFromImageViaGemini(imageSrc, key);
                 if (res.regions.length < MIN_USABLE_REGIONS) {
-                  throw new GeminiFailure('other', `Gemini found only ${res.regions.length} elements in this screenshot.`, 'fewer than 3 regions');
+                  throw new GeminiFailure('other', `Gemini found only ${res.regions.length} elements in this screenshot.`, `it returned ${res.regions.length} elements; at least ${MIN_USABLE_REGIONS} are needed`);
                 }
                 targetRegions = res.regions;
                 isPartial = res.isPartial;
@@ -667,7 +667,7 @@ export const App: React.FC = () => {
                   void forgetGeminiKey();
                 }
                 key = '';
-                why = { kind: 'failed', message: lastFailure, detail: detail || undefined };
+                why = { kind: 'failed', message: lastFailure, detail: detail || undefined, cause: failure?.kind ?? 'other' };
               }
             }
           }
