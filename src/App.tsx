@@ -643,7 +643,7 @@ export const App: React.FC = () => {
                 key = entered;
                 keyIsSaved = false;
               }
-              setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API (Gemini 3.6 Flash) to identify UI elements...' });
+              setAuditNotice({ type: 'info', message: 'Calling Google Gemini Vision API to identify UI elements...' });
               try {
                 const res = await extractRegionsFromImageViaGemini(imageSrc, key);
                 if (res.regions.length < MIN_USABLE_REGIONS) {

@@ -209,50 +209,47 @@ Example:
   {"k":"button","t":"Sign In","b":[5,40,30,8],"o":4,"i":true}
 ]`;
 
-  // Prioritize Gemini 3.6 Flash with fallbacks across Google AI Studio models
-  const modelEndpoints: { model: string; apiVersion: string }[] = [
-    { model: 'gemini-3.6-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-2.5-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-2.0-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-1.5-flash',        apiVersion: 'v1beta' },
-    { model: 'gemini-2.5-pro',          apiVersion: 'v1beta' },
+  // The Gemini 3 family, newest first. Older models cannot be used any more: gemini-2.0-flash and 1.5 are shut down,
+  // and the 2.5 models are now limited to developers who already used them, so a new key gets "not found" from them.
+  // The last entry is Google's own moving alias, so the next retirement does not break this again.
+  // thinkingLevel 'low': these models "think" before answering, and the thinking counts against the output limit.
+  const modelEndpoints: { model: string; apiVersion: string; thinkingLevel?: 'low' }[] = [
+    { model: 'gemini-3.8-flash',      apiVersion: 'v1beta', thinkingLevel: 'low' },
+    { model: 'gemini-3.6-flash',      apiVersion: 'v1beta', thinkingLevel: 'low' },
+    { model: 'gemini-3.5-flash-lite', apiVersion: 'v1beta', thinkingLevel: 'low' },
+    { model: 'gemini-3.1-flash-lite', apiVersion: 'v1beta' },
+    { model: 'gemini-flash-latest',   apiVersion: 'v1beta' },
   ];
   const failures: { kind: GeminiFailureKind; message: string }[] = [];
 
-  for (const { model, apiVersion } of modelEndpoints) {
-    try {
+  const post = (model: string, apiVersion: string, thinkingLevel?: 'low') =>
+    withTimeout(GEMINI_TIMEOUT_MS, async (signal) => {
       const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${apiKey.trim()}`;
-
       const payload = {
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType,
-                  data: base64Data,
-                },
-              },
-            ],
-          },
-        ],
+        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType, data: base64Data } }] }],
         generationConfig: {
-          temperature: 0.05,
-          maxOutputTokens: 2048,
+          // Thinking tokens count against this limit. At 2048 the model could use it all thinking and send back nothing.
+          maxOutputTokens: 16384,
           responseMimeType: 'application/json',
+          ...(thinkingLevel ? { thinkingConfig: { thinkingLevel } } : {}),
         },
       };
-
-      const { ok, status, bodyText } = await withTimeout(GEMINI_TIMEOUT_MS, async (signal) => {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal,
-        });
-        return { ok: response.ok, status: response.status, bodyText: await response.text().catch(() => '') };
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal,
       });
+      return { ok: response.ok, status: response.status, bodyText: await response.text().catch(() => '') };
+    });
+
+  for (const { model, apiVersion, thinkingLevel } of modelEndpoints) {
+    try {
+      let { ok, status, bodyText } = await post(model, apiVersion, thinkingLevel);
+      // A model that does not accept the thinking setting is asked again without it
+      if (!ok && thinkingLevel && status === 400 && /thinking/i.test(bodyText)) {
+        ({ ok, status, bodyText } = await post(model, apiVersion, undefined));
+      }
 
       if (!ok) {
         const errBody = bodyText || `HTTP ${status}`;
@@ -270,7 +267,11 @@ Example:
       }
 
       const data = JSON.parse(bodyText);
-      const rawText: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const parts: { text?: string; thought?: boolean }[] = data?.candidates?.[0]?.content?.parts ?? [];
+      const rawText: string = parts
+        .filter((p) => typeof p.text === 'string' && !p.thought)
+        .map((p) => p.text)
+        .join('');
 
       if (!rawText) {
         const reason = data?.candidates?.[0]?.finishReason || 'empty response';

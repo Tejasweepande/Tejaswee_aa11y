@@ -85,7 +85,7 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
             <h2 id={titleId} className="text-lg font-bold text-lab-text">
               Google Gemini Vision API Key
             </h2>
-            <p className="text-sm text-lab-muted">Powered by Gemini 3.6 Flash Multimodal Vision</p>
+            <p className="text-sm text-lab-muted">Powered by Gemini multimodal vision</p>
           </div>
         </div>
 
@@ -109,7 +109,7 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
             </label>
             <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 flex items-center gap-1">
               <Sparkles className="w-3 h-3" aria-hidden="true" />
-              Gemini 3.6 Flash
+              Gemini
             </span>
           </div>
           <input
