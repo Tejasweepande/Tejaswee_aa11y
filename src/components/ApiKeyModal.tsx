@@ -7,7 +7,29 @@ export type KeyPromptWhy =
   /** The built-in detectors could not find enough clear elements in this screenshot. */
   | { kind: 'needed' }
   /** Gemini was tried and could not read it. `message` is plain language and never contains the key. */
-  | { kind: 'failed'; message: string; /** The underlying message, for when the plain-language one is not enough. Never contains the key. */ detail?: string };
+  | {
+      kind: 'failed';
+      message: string;
+      /** The underlying message, for when the plain-language one is not enough. Never contains the key. */
+      detail?: string;
+      /** What went wrong, so the title can say it. */
+      cause?: 'key' | 'quota' | 'network' | 'other';
+    };
+
+/**
+ * The title says what the situation is, and the line under it says what to do (the same pattern for every state).
+ * Sentence case, no full stop on the title.
+ */
+const FIRST_ASK = {
+  title: 'This screenshot needs Gemini to be analysed',
+  line: "Our built-in methods couldn't read it. Add your Gemini API key to continue.",
+};
+const FAILURE_COPY: Record<NonNullable<Extract<KeyPromptWhy, { kind: 'failed' }>['cause']>, { title: string; line: string }> = {
+  key: { title: "Google didn't accept this Gemini key", line: 'Check that you copied all of it, or enter another key.' },
+  quota: { title: 'This Gemini key has reached its limit', line: 'Free keys have a limit per minute and per day. Enter another key, or try again later.' },
+  network: { title: "We couldn't reach Gemini", line: 'Check your internet connection, then try again.' },
+  other: { title: "Gemini couldn't read this screenshot", line: '' },
+};
 
 interface Props {
   why: KeyPromptWhy;
@@ -31,6 +53,14 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
   const inputId = useId();
   const [val, setVal] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const failure = why.kind === 'failed' ? FAILURE_COPY[why.cause ?? 'other'] : null;
+  const title = failure ? failure.title : FIRST_ASK.title;
+  const line =
+    why.kind !== 'failed'
+      ? FIRST_ASK.line
+      : failure!.line ||
+        // Anything else: say what Gemini said when that is more than the title already does
+        (why.message.startsWith('Gemini could not read this screenshot') ? 'Try again with another key, or skip.' : `${why.message} Try again with another key, or skip.`);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,7 +104,7 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={why.kind === 'failed' ? leadId : undefined}
+        aria-describedby={leadId}
         onKeyDown={onKeyDown}
         className="bg-lab-card border border-lab-border rounded max-w-md w-full p-6 shadow-2xl my-auto"
       >
@@ -83,15 +113,15 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
             <Key className="w-5 h-5" aria-hidden="true" />
           </div>
           <h2 id={titleId} className="text-lg font-bold text-lab-text leading-snug">
-            We couldn&apos;t analyse this screenshot with our built-in methods. Add your Gemini API key to see the analysis.
+            {title}
           </h2>
         </div>
 
-        {why.kind === 'failed' && (
+        {why.kind === 'failed' ? (
           <div id={leadId} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded p-3 mb-4 flex items-start gap-2.5">
             <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm text-red-900 dark:text-red-200/90 leading-relaxed">
-              <strong className="font-semibold">Gemini could not read it.</strong> {why.message} Enter a key to try again, or skip.
+              {line}
               {why.detail && (
                 <span data-testid="key-failure-detail" className="block mt-1.5 text-xs font-mono break-words text-red-900/80 dark:text-red-200/70">
                   Details: {why.detail}
@@ -99,6 +129,10 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
               )}
             </p>
           </div>
+        ) : (
+          <p id={leadId} className="text-sm text-lab-text leading-relaxed mb-4">
+            {line}
+          </p>
         )}
 
         <form onSubmit={submit}>
