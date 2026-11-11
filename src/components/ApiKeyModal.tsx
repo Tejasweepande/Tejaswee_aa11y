@@ -7,7 +7,7 @@ export type KeyPromptWhy =
   /** The built-in detectors could not find enough clear elements in this screenshot. */
   | { kind: 'needed' }
   /** Gemini was tried and could not read it. `message` is plain language and never contains the key. */
-  | { kind: 'failed'; message: string };
+  | { kind: 'failed'; message: string; /** The underlying message, for when the plain-language one is not enough. Never contains the key. */ detail?: string };
 
 interface Props {
   why: KeyPromptWhy;
@@ -98,6 +98,11 @@ export const ApiKeyModal: React.FC<Props> = ({ why, onSubmit, onSkip }) => {
             <TriangleAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm text-red-900 dark:text-red-200/90 leading-relaxed">
               <strong className="font-semibold">Gemini could not read it.</strong> {why.message} Enter a key to try again, or skip.
+              {why.detail && (
+                <span data-testid="key-failure-detail" className="block mt-1.5 text-xs font-mono break-words text-red-900/80 dark:text-red-200/70">
+                  Details: {why.detail}
+                </span>
+              )}
             </p>
           </div>
         )}
