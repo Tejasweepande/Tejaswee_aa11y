@@ -234,7 +234,7 @@ Example:
 
   const post = (model: string, apiVersion: string, thinkingLevel?: 'low') =>
     withTimeout(GEMINI_TIMEOUT_MS, async (signal) => {
-      const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${apiKey.trim()}`;
+      const endpoint = `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent`;
       const payload = {
         contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType, data: base64Data } }] }],
         generationConfig: {
@@ -248,7 +248,8 @@ Example:
       try {
         response = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          // The key goes in a header (as Google's guide shows), not in the web address where it would end up in logs
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey.trim() },
           body: JSON.stringify(payload),
           signal,
         });
